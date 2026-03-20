@@ -1,0 +1,87 @@
+---
+title: "Quickstart"
+description: "Get started with Rendobar in 5 minutes"
+---
+
+Rendobar is a serverless media processing API. Submit a job with one API call, get a processed result back.
+
+## 1. Get your API key
+
+Sign up at [app.rendobar.com](https://app.rendobar.com) and create an API key from the dashboard. Keys are prefixed with `rb_`.
+
+## 2. Submit a job
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/transcode \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": { "source": "https://example.com/video.mp4" },
+    "params": { "codec": "h264", "preset": "fast", "crf": 23 }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/transcode", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: { source: "https://example.com/video.mp4" },
+    params: { codec: "h264", preset: "fast", crf: 23 },
+  }),
+});
+const { data } = await response.json();
+console.log(data.id); // job_abc123
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/transcode",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source": "https://example.com/video.mp4"},
+        "params": {"codec": "h264", "preset": "fast", "crf": 23},
+    },
+)
+data = response.json()["data"]
+print(data["id"])  # job_abc123
+```
+
+</CodeGroup>
+
+The response includes a job ID and status:
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```
+
+## 3. Check job status
+
+Poll the job endpoint until the status is `complete`:
+
+```bash
+curl https://api.rendobar.com/jobs/job_abc123 \
+  -H "Authorization: Bearer rb_your_key"
+```
+
+## 4. Download the result
+
+Once complete, the job response includes a download URL for the processed file.
+
+## What's next?
+
+- [Authentication](/docs/authentication) -- session cookies vs API keys
+- [Job types](/docs/job-types/overview) -- all 21 processing operations
+- [Credits](/docs/credits) -- how billing works
