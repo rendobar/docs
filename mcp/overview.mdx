@@ -1,0 +1,165 @@
+---
+title: "MCP Integration"
+description: "How to use Rendobar from AI agents via the Model Context Protocol -- available tools, authentication, and example workflows"
+sidebarTitle: "Overview"
+icon: "plug"
+---
+
+Rendobar is MCP-native, meaning AI agents can interact with the API directly through the Model Context Protocol. All 15 MCP tools map 1:1 with the REST API endpoints, so anything you can do with the REST API, an agent can do via MCP.
+
+<Note>
+MCP access is available on Starter plans and above.
+</Note>
+
+## What is MCP?
+
+The Model Context Protocol (MCP) is a standard for AI agents to interact with external tools and services. Instead of writing custom API client code, an agent discovers available tools and calls them directly using structured inputs and outputs.
+
+Rendobar exposes its full API surface as MCP tools, allowing AI agents to submit jobs, check status, manage API keys, and query usage without manual integration code.
+
+## Connecting to Rendobar
+
+Point your MCP client to the Rendobar MCP endpoint:
+
+```
+https://api.rendobar.com/mcp
+```
+
+### Claude Desktop / Claude Code
+
+Add to your MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "rendobar": {
+      "url": "https://api.rendobar.com/mcp",
+      "headers": {
+        "Authorization": "Bearer rb_live_YOUR_KEY"
+      }
+    }
+  }
+}
+```
+
+### Custom agents
+
+Any MCP-compatible agent can connect using the SSE transport protocol with an API key in the `Authorization` header.
+
+## Available tools
+
+Rendobar provides 15 MCP tools:
+
+| Tool | Description | REST equivalent |
+|------|-------------|-----------------|
+| `submit_job` | Submit a video processing job | `POST /jobs` |
+| `submit_batch` | Submit multiple jobs as a batch | `POST /jobs/batch` |
+| `get_job` | Get job status and details | `GET /jobs/:id` |
+| `get_job_result` | Get the output URL and metadata | `GET /jobs/:id/result` |
+| `list_jobs` | List jobs with filters and pagination | `GET /jobs` |
+| `cancel_job` | Cancel a running or waiting job | `POST /jobs/:id/cancel` |
+| `list_job_types` | List all available job types | `GET /job-types` |
+| `get_job_schema` | Get the Zod schema for a job type | `GET /job-types/:type/schema` |
+| `get_balance` | Get current usage balance | `GET /billing/balance` |
+| `get_usage` | Get usage stats for a date range | `GET /billing/usage` |
+| `get_org` | Get organization details | `GET /orgs/:id` |
+| `list_members` | List organization members | `GET /orgs/:id/members` |
+| `list_api_keys` | List API keys for the org | `GET /api-keys` |
+| `create_api_key` | Create a new API key | `POST /api-keys` |
+| `revoke_api_key` | Revoke an existing API key | `DELETE /api-keys/:id` |
+
+## Authentication
+
+MCP agents authenticate with Rendobar using OAuth, handled by the Better Auth MCP plugin. The flow:
+
+<Steps>
+
+<Step title="Initiate">
+  The agent initiates an OAuth handshake with the Rendobar MCP server.
+</Step>
+
+<Step title="Authorize">
+  The user authorizes the agent in their browser (one-time).
+</Step>
+
+<Step title="Token">
+  The agent receives an access token scoped to the user's organization.
+</Step>
+
+<Step title="Operate">
+  All subsequent MCP tool calls use this token automatically.
+</Step>
+
+</Steps>
+
+This means agents authenticate once and then operate autonomously within the permissions of the authorized organization.
+
+## Example: Agent submits a watermark job
+
+```
+Agent: I'll add a watermark to the video.
+
+1. Call submit_job({
+     type: "watermark.add",
+     inputs: {
+       source: "https://example.com/video.mp4",
+       watermark: "https://cdn.rendobar.com/assets/brand/logo-full.png"
+     },
+     params: {
+       position: "bottom-right",
+       scale: 0.15,
+       opacity: 0.8
+     }
+   })
+   -> { jobId: "job_x1y2z3", status: "dispatched" }
+
+2. Call get_job({ jobId: "job_x1y2z3" })
+   -> { status: "complete", price: 3000000000 }
+
+3. Call get_job_result({ jobId: "job_x1y2z3" })
+   -> { url: "https://r2...", meta: { durationMs: 127500 } }
+```
+
+The agent can also check credits before submitting, list available job types to discover capabilities, and handle errors from failed jobs.
+
+## Tool discovery
+
+Agents discover available tools by connecting to the Rendobar MCP server endpoint. The server returns tool definitions with:
+
+- Tool name and description
+- Input schema (Zod-based, auto-generated from the API route schemas)
+- Output schema
+
+This allows agents to understand what each tool does and what parameters it accepts without any prior knowledge of the Rendobar API.
+
+## Supported agents
+
+Any MCP-compatible agent can use Rendobar, including:
+
+- Claude (Anthropic) with MCP tool use
+- Custom agents built with the MCP SDK
+- Automation platforms with MCP support
+
+## Rate limits and billing
+
+MCP tool calls are subject to the same rate limits and credit checks as REST API calls. Each `submit_job` tool call deducts credits from the organization's balance, and rate limits are enforced per organization.
+
+<CardGroup cols={2}>
+
+<Card title="Authentication" icon="key" href="/authentication">
+  API key and session auth details
+</Card>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  All 23 supported operations
+</Card>
+
+<Card title="Webhooks" icon="bell" href="/guides/webhooks">
+  Push-based status updates
+</Card>
+
+<Card title="Credits" icon="coins" href="/credits">
+  Billing and usage tracking
+</Card>
+
+</CardGroup>

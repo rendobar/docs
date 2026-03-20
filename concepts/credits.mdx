@@ -1,0 +1,85 @@
+---
+title: "How Credits Work"
+description: "Understanding Rendobar's credit-based billing -- balance pre-checks, debit flow, rollover, and overage"
+sidebarTitle: "Credits"
+icon: "coins"
+---
+
+Credits are the universal billing unit for all Rendobar jobs. Every operation -- watermarking, transcoding, rendering -- costs credits based on the job type and input/output duration.
+
+## Credit lifecycle
+
+<Steps>
+
+<Step title="Pre-check">
+  When you submit a job, Rendobar checks that your balance covers the estimated cost. No credits are deducted at this stage. If your balance is too low, the API returns `402 INSUFFICIENT_CREDITS`.
+</Step>
+
+<Step title="Execution">
+  The job runs. Your balance is not touched during processing.
+</Step>
+
+<Step title="Debit">
+  On successful completion, the actual cost is calculated (based on real output duration) and atomically deducted from your balance.
+</Step>
+
+<Step title="Refund">
+  If a job fails or is cancelled, no credits are charged. If credits were pre-deducted (rare edge case), they are refunded automatically.
+</Step>
+
+</Steps>
+
+## Cost models
+
+Different job types use different cost models:
+
+| Cost Model | How it works | Example job types |
+|-----------|-------------|-------------------|
+| Per minute (output) | Credits scale with output video duration | watermark.add, transcode, caption.burn |
+| Per minute (input) | Credits scale with input video duration | caption.extract, compliance.gdpr.redact |
+| Flat rate | Fixed credit cost regardless of duration | thumbnail, qr.generate, compliance.moderate (image) |
+| Per compute time | Credits based on actual processing time | raw.ffmpeg |
+
+## Rollover
+
+Unused balance rolls over to the next billing cycle, up to a cap:
+
+- The rollover cap is **2x your monthly allocation**
+- Balance beyond the cap expires when your new monthly allocation is added
+- Example: Pro plan ($500/month) can accumulate up to $1,000
+
+## Overage
+
+On paid plans, if you exceed your included balance, jobs continue to process and overage accrues at the same per-job rates. On the Free plan, jobs are rejected when balance runs out -- no overage is allowed.
+
+## Checking your balance
+
+```bash
+curl https://api.rendobar.com/billing/balance \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
+
+```json
+{
+  "data": {
+    "balance": 75000000000,
+    "rollover": 0
+  }
+}
+```
+
+<Info>
+The `balance` field is in nanodollars (1,000,000,000 = $1.00). The dashboard displays this as a formatted dollar amount.
+</Info>
+
+<CardGroup cols={2}>
+
+<Card title="Credits & Billing" icon="credit-card" href="/credits">
+  Plan details and pricing table
+</Card>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  Per-type cost estimates
+</Card>
+
+</CardGroup>

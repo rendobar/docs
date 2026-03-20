@@ -1,0 +1,105 @@
+---
+title: "Job Lifecycle"
+description: "How a Rendobar job moves from submission to completion -- status transitions, timeouts, retries, and failure handling"
+sidebarTitle: "Job Lifecycle"
+icon: "rotate"
+---
+
+Every job in Rendobar follows a defined lifecycle with clear status transitions. Understanding this lifecycle helps you build reliable integrations.
+
+## Status flow
+
+```
+waiting -> dispatched -> running -> complete
+                                 -> failed
+                      -> cancelled
+```
+
+| Status | Meaning |
+|--------|---------|
+| `waiting` | Job is saved and queued for dispatch to a processing provider |
+| `dispatched` | Job has been sent to the execution provider (Trigger.dev) |
+| `running` | Provider has started processing the job |
+| `complete` | Job finished successfully -- output is available |
+| `failed` | Job encountered an error -- see `error_code` and `error_message` |
+| `cancelled` | Job was cancelled by the user before completion |
+
+## What happens at each stage
+
+### 1. Submission (waiting)
+
+Your API call is validated (auth, rate limits, plan check, credit pre-check, schema validation). If all checks pass, the job is saved to the database with status `waiting`.
+
+### 2. Dispatch (dispatched)
+
+The job is routed to an available processing provider based on capabilities and load. The provider receives the job payload including presigned URLs for downloading inputs and uploading outputs.
+
+### 3. Execution (running)
+
+The provider downloads your input files, processes them (FFmpeg, AI detection, rendering), and uploads the result. For long-running jobs, you can monitor progress via SSE events on the dashboard.
+
+### 4. Completion (complete)
+
+The provider calls back to the API with the result. Credits are deducted, the job status is updated, and your webhook is fired (if configured).
+
+### 5. Failure (failed)
+
+If processing fails, the job is marked as failed with an error code. No credits are charged for failed jobs. Common error codes:
+
+| Code | Meaning |
+|------|---------|
+| `PROVIDER_ERROR` | Processing failed on the execution provider |
+| `PROVIDER_TIMEOUT` | Job exceeded the maximum allowed time |
+| `VALIDATION_ERROR` | Input file was invalid or corrupted |
+| `DISPATCH_EXHAUSTED` | Job could not be dispatched after all retry attempts |
+
+## Timeouts
+
+Each job type has a maximum execution time defined by the job registry. If a job exceeds its timeout, it is automatically marked as failed and credits are refunded.
+
+<Info>
+A background cron job runs every 2 minutes to detect stuck jobs -- jobs that were dispatched or started running but never reported back.
+</Info>
+
+## Retries
+
+Jobs that fail during dispatch are automatically retried up to 3 times with exponential backoff. After all retry attempts are exhausted, the job moves to the dead-letter queue and is marked as failed.
+
+You can also manually retry a failed job:
+
+```bash
+curl -X POST https://api.rendobar.com/jobs/job_abc/retry \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
+
+## Webhooks
+
+Configure a webhook URL on your organization to receive real-time notifications when jobs complete or fail. See the [Webhooks guide](/guides/webhooks) for details.
+
+## Real-time updates (SSE)
+
+The dashboard connects to a Server-Sent Events stream for real-time job status updates. You can also use the SSE endpoint programmatically:
+
+```
+GET https://api.rendobar.com/events/connect
+```
+
+<CardGroup cols={2}>
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Submit your first job
+</Card>
+
+<Card title="Webhooks" icon="bell" href="/guides/webhooks">
+  Configure notifications
+</Card>
+
+<Card title="Credits" icon="coins" href="/credits">
+  How billing works
+</Card>
+
+<Card title="Error Codes" icon="triangle-exclamation" href="/support/errors">
+  Full error reference
+</Card>
+
+</CardGroup>

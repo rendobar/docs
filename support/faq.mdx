@@ -1,0 +1,45 @@
+---
+title: "FAQ"
+description: "Frequently asked questions about Rendobar"
+icon: "circle-question"
+---
+
+<Accordion title="How much does Rendobar cost?">
+  Rendobar uses credit-based billing. The free tier includes $2/month in credits with no credit card required. Paid plans start at $19/month (Starter).
+</Accordion>
+
+<Accordion title="What video formats are supported?">
+  Rendobar supports all FFmpeg-compatible formats including MP4, WebM, MOV, AVI, and MKV. Output defaults to MP4 (H.264) but can be configured per job.
+</Accordion>
+
+<Accordion title="Can I use Rendobar from AI agents?">
+  Yes. Rendobar is MCP-native. Connect any MCP-compatible AI agent to `api.rendobar.com/mcp` with your API key. 15 tools are available covering job submission, status, billing, and account management.
+</Accordion>
+
+<Accordion title="How long do jobs take?">
+  Most jobs complete in seconds to minutes depending on input size. Transcoding a 1-minute video typically takes 10-30 seconds. Maximum timeout varies by plan.
+</Accordion>
+
+<Accordion title="Is there a rate limit?">
+  Yes. Rate limits depend on your plan. Free tier allows 10 requests/minute. Paid plans allow up to 120 requests/minute.
+</Accordion>
+
+<Accordion title="What happens if a job fails?">
+  No credits are charged for failed jobs. If credits were pre-deducted (rare), they are refunded automatically. You can retry failed jobs via the API.
+</Accordion>
+
+<Accordion title="Do unused credits roll over?">
+  Yes. Unused balance rolls over to the next billing cycle, up to a cap of 2x your monthly allocation. Balance beyond the cap expires when new credits are added.
+</Accordion>
+
+<Accordion title="Can I run custom FFmpeg commands?">
+  Yes, via the `raw.ffmpeg` job type. Your command is validated against a flag whitelist and executed in an isolated container. Available on Starter plans and above.
+</Accordion>
+
+<Accordion title="How do I get real-time job updates?">
+  Two options: configure a webhook URL on your organization for push-based notifications, or use the SSE endpoint for real-time streaming updates. Both are available on Starter plans and above.
+</Accordion>
+
+<Accordion title="What AI models does Rendobar use?">
+  Rendobar uses Deepgram for speech-to-text, MediaPipe for face detection, OpenALPR for license plate recognition, and Meta VideoSeal for invisible watermarking. All detection models run on Rendobar's processing servers -- no data is sent to external AI services.
+</Accordion>
