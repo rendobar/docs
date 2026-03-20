@@ -1,0 +1,133 @@
+---
+title: "GDPR Compliance Guide"
+description: "Automatically detect and redact faces and license plates in videos for GDPR, CCPA, and privacy compliance"
+sidebarTitle: "GDPR"
+icon: "shield-halved"
+---
+
+Rendobar provides automated face and license plate detection and redaction for privacy compliance. These features help you meet GDPR, CCPA, and other data protection requirements for video content.
+
+## How it works
+
+The compliance pipeline has two stages:
+
+<Steps>
+
+<Step title="Detect">
+  `compliance.gdpr.detect` -- AI scans every frame for faces and license plates, returning timestamped bounding boxes.
+</Step>
+
+<Step title="Redact">
+  `compliance.gdpr.redact` -- Applies blur or solid fills to detected regions across the entire video, producing a clean output.
+</Step>
+
+</Steps>
+
+You can run detection alone (to review what will be redacted) or run redaction directly (which includes detection automatically).
+
+## Detect faces and plates
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "compliance.gdpr.detect",
+    "inputs": {
+      "source": "https://example.com/street-footage.mp4"
+    }
+  }'
+```
+
+### Detection output
+
+```json
+{
+  "data": {
+    "detections": [
+      {
+        "type": "face",
+        "timestamp": 1.2,
+        "bbox": { "x": 120, "y": 80, "width": 60, "height": 75 },
+        "confidence": 0.94
+      },
+      {
+        "type": "plate",
+        "timestamp": 3.8,
+        "bbox": { "x": 450, "y": 320, "width": 140, "height": 40 },
+        "confidence": 0.87
+      }
+    ],
+    "summary": {
+      "totalFaces": 12,
+      "totalPlates": 3,
+      "framesAnalyzed": 450
+    }
+  }
+}
+```
+
+## Redact detected regions
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "compliance.gdpr.redact",
+    "inputs": {
+      "source": "https://example.com/street-footage.mp4"
+    },
+    "params": {
+      "targets": ["face", "plate"],
+      "method": "blur"
+    }
+  }'
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `targets` | string[] | `["face", "plate"]` | What to redact: `face`, `plate`, or both |
+| `method` | string | `"blur"` | Redaction style: `blur` (gaussian blur) or `fill` (solid black box) |
+| `blurStrength` | number | `20` | Blur radius (only for `method: "blur"`) |
+
+### Output
+
+A new video with all detected faces and/or plates obscured. The original video is untouched.
+
+## Use cases
+
+- **Street-level imagery** -- dashcam, drone, or security footage with bystander faces
+- **User-generated content** -- social media platforms moderating uploaded videos
+- **Real estate** -- property walkthrough videos with neighbor faces/plates
+- **Corporate** -- internal training videos shared externally
+- **News media** -- protecting source identity or minor privacy
+
+## Detection technology
+
+<Info>
+Rendobar uses MediaPipe for face detection and OpenALPR for license plate recognition. Both run on the processing server -- no data is sent to external AI services for detection.
+</Info>
+
+## Cost
+
+| Job Type | Cost |
+|----------|------|
+| `compliance.gdpr.detect` | $0.50/min of input |
+| `compliance.gdpr.redact` | $2.00/min of input |
+
+Redaction costs more because it includes both detection and video re-encoding.
+
+<CardGroup cols={2}>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  Content moderation and more
+</Card>
+
+<Card title="Credits" icon="coins" href="/credits">
+  Billing details
+</Card>
+
+</CardGroup>

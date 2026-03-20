@@ -1,0 +1,111 @@
+---
+title: "Credits & Billing"
+description: "How Rendobar credits work, plan allocations, cost estimates, rollover rules, and usage tracking"
+sidebarTitle: "Credits"
+icon: "coins"
+---
+
+Rendobar uses a credit-based billing system. Every job costs credits based on either a flat rate or the duration of the input/output video.
+
+## How credits work
+
+Credits are the universal billing unit. Credit values represent dollar amounts -- your balance is denominated in dollars and jobs are priced accordingly.
+
+### Credit flow
+
+<Steps>
+
+<Step title="Pre-check">
+  Before a job is dispatched, Rendobar checks that your organization can afford the estimated cost. This does not deduct credits.
+</Step>
+
+<Step title="Execution">
+  The job runs on the execution provider.
+</Step>
+
+<Step title="Debit">
+  On completion, the actual cost is calculated and credits are atomically deducted from your balance.
+</Step>
+
+<Step title="Refund">
+  If a job fails or is cancelled, no credits are deducted (or previously deducted credits are refunded).
+</Step>
+
+</Steps>
+
+## Plans and allocations
+
+| Plan | Price | Included Balance | Rollover Cap |
+|------|-------|-----------------|--------------|
+| Free | $0/mo | $5 | $10 |
+| Starter | $19/mo | $100 | $200 |
+| Pro | $49/mo | $500 | $1,000 |
+| Scale | $149/mo | $2,000 | $4,000 |
+
+Each plan includes a monthly balance allocation that refreshes at the start of each billing cycle.
+
+## Cost estimates
+
+Before submitting a job, Rendobar checks whether your balance covers the estimated cost. Estimates are defined per job type and plan:
+
+| Job Type | Cost Model | Typical Cost |
+|----------|-----------|-------------|
+| watermark.apply | Per minute of output | ~$1.00/min |
+| transcode | Per minute of output | ~$1.00/min |
+| thumbnail | Flat rate | $0.50 |
+| caption.extract | Per minute of input | $0.50/min |
+| caption.burn | Per minute of output | ~$1.00/min |
+| compliance.moderate | Flat rate (image) | $0.10 |
+| compliance.gdpr.redact | Per minute of input | $2.00/min |
+| raw.ffmpeg | Per compute time | $1.00/2min |
+
+If your balance is too low, the API returns:
+
+```json
+{
+  "error": {
+    "code": "INSUFFICIENT_CREDITS",
+    "message": "Not enough credits for this job"
+  }
+}
+```
+
+HTTP status: `402`
+
+## Rollover
+
+Unused balance rolls over to the next month, up to a cap of 2x your monthly allocation:
+
+- Free: up to $10
+- Starter: up to $200
+- Pro: up to $1,000
+- Scale: up to $4,000
+
+Balance beyond the rollover cap expires at the start of the new billing cycle.
+
+## Overage
+
+On paid plans, if you exceed your included balance, overage costs continue to accrue at the same per-job rates. On the Free plan, jobs are rejected when balance runs out.
+
+## Usage tracking
+
+The API provides usage data per organization:
+
+```bash
+curl "https://api.rendobar.com/billing/usage?start=2026-02-01&end=2026-02-09" \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
+
+Usage is tracked daily by job type, including job count, amount charged, and compute seconds.
+
+<CardGroup cols={2}>
+
+<Card title="Pricing" icon="tag" href="https://rendobar.com/pricing">
+  Full plan comparison
+</Card>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  Detailed cost breakdowns
+</Card>
+
+</CardGroup>
