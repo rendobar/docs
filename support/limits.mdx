@@ -1,0 +1,68 @@
+---
+title: "Limits"
+description: "Plan limits, rate limits, and quotas"
+icon: "gauge"
+---
+
+## Plan limits
+
+| Limit | Free | Starter | Pro | Scale |
+|-------|------|---------|-----|-------|
+| Included credits | $2/mo | $19/mo | $49/mo | $149/mo |
+| Concurrent jobs | 2 | 5 | 10 | 25 |
+| API requests/min | 10 | 30 | 60 | 120 |
+| Max input file | 100 MB | 500 MB | 1 GB | 5 GB |
+| Max batch size | 5 | 10 | 25 | 50 |
+| Max job timeout | 120s | 300s | 600s | 900s |
+
+## Feature availability
+
+| Feature | Free | Starter | Pro | Scale |
+|---------|------|---------|-----|-------|
+| Raw FFmpeg | No | Yes | Yes | Yes |
+| MCP | No | Yes | Yes | Yes |
+| Webhooks | No | Yes | Yes | Yes |
+| Priority queue | No | No | Yes | Yes |
+| Invisible watermarking | No | Yes | Yes | Yes |
+
+## Overage
+
+| Plan | Max overage |
+|------|-------------|
+| Free | $0 (hard cap -- jobs are rejected) |
+| Starter | $38 |
+| Pro | $98 |
+| Scale | $298 |
+
+On paid plans, overage allows jobs to continue processing beyond your included balance, up to the overage limit. Overage costs accrue at the same per-job rates.
+
+## Rollover caps
+
+| Plan | Rollover cap |
+|------|-------------|
+| Free | $4 |
+| Starter | $38 |
+| Pro | $98 |
+| Scale | $298 |
+
+Unused balance rolls over up to 2x your monthly allocation. Balance beyond the cap expires at the start of the next billing cycle.
+
+## API response limits
+
+| Limit | Value |
+|-------|-------|
+| Default page size | 50 items |
+| Maximum page size | 100 items |
+| Maximum request body | 100 MB |
+
+## File format support
+
+Rendobar supports all FFmpeg-compatible formats for input. Default output formats:
+
+| Input type | Default output |
+|-----------|---------------|
+| Video | MP4 (H.264) |
+| Audio | MP3 |
+| Image | PNG |
+
+Output format can be configured per job type via the `outputFormat` parameter where applicable.

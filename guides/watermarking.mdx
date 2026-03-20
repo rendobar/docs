@@ -1,0 +1,368 @@
+---
+title: "Watermarking Guide"
+description: "Add, composite, remove, detect, and invisibly embed watermarks on images and videos with the Rendobar API"
+sidebarTitle: "Watermarking"
+icon: "droplet"
+---
+
+Rendobar provides four watermarking job types: simple single-image overlay, multi-watermark compositing with mixed image and text, AI-powered removal, and watermark detection.
+
+## Add a single image watermark
+
+Use `watermark.add` for the simplest case -- one image watermark on a video.
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "watermark.add",
+    "inputs": {
+      "source": "https://example.com/video.mp4",
+      "watermark": "https://cdn.rendobar.com/assets/brand/logo-full.png"
+    },
+    "params": {
+      "position": "bottom-right",
+      "scale": 0.15,
+      "opacity": 0.8,
+      "padding": 20,
+      "quality": "balanced"
+    }
+  }'
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `position` | enum | `bottom-right` | One of 9 positions: `top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center`, `bottom-right` |
+| `scale` | number | `0.15` | Watermark size relative to video width (0.01--1) |
+| `opacity` | number | `0.8` | Watermark transparency (0--1) |
+| `padding` | integer | `20` | Distance from edge in pixels (0--500) |
+| `quality` | enum | `balanced` | Output encoding: `fast` (quick, larger file), `balanced`, `high` (slow, best quality) |
+| `timeRange` | object | -- | Optional. Show watermark only during `{ start, end? }` seconds |
+
+### Time-ranged watermark
+
+Show the watermark only between 5 and 30 seconds:
+
+```json
+{
+  "params": {
+    "position": "top-right",
+    "timeRange": { "start": 5, "end": 30 }
+  }
+}
+```
+
+Omit `end` to show the watermark from a timestamp through the end of the video.
+
+## Composite multiple watermarks
+
+Use `watermark.composite` to apply multiple watermarks (images and text) in a single pass.
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "watermark.composite",
+    "inputs": {
+      "source": "https://example.com/video.mp4"
+    },
+    "params": {
+      "watermarks": [
+        {
+          "type": "image",
+          "url": "https://cdn.rendobar.com/assets/brand/logo-full.png",
+          "position": "bottom-right",
+          "scale": 0.12,
+          "opacity": 0.9
+        },
+        {
+          "type": "text",
+          "content": "(c) 2026 Acme Corp",
+          "position": "bottom-left",
+          "fontSize": 18,
+          "color": "#FFFFFF"
+        },
+        {
+          "type": "image",
+          "url": "https://example.com/badge.png",
+          "position": "top-right",
+          "scale": 0.08
+        }
+      ],
+      "quality": "balanced"
+    }
+  }'
+```
+
+### Image watermark fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `type` | `"image"` | -- | Required discriminator |
+| `url` | string | -- | Required. URL to watermark image |
+| `position` | enum | `bottom-right` | 9-position grid |
+| `scale` | number | `0.15` | Size relative to video width |
+| `opacity` | number | `0.8` | Transparency (0--1) |
+| `padding` | integer | `20` | Edge distance in pixels |
+| `timeRange` | object | -- | Optional `{ start, end? }` |
+
+### Text watermark fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `type` | `"text"` | -- | Required discriminator |
+| `content` | string | -- | Required. Text to display (1--500 chars) |
+| `position` | enum | `bottom-left` | 9-position grid |
+| `fontSize` | integer | `24` | Font size (8--200) |
+| `font` | enum | `Arial` | One of: `Arial`, `Roboto`, `Courier`, `Georgia` |
+| `color` | string | `#FFFFFF` | Hex color (`#RRGGBB`) |
+| `boxColor` | string | -- | Optional background box hex color |
+| `boxPadding` | integer | `5` | Background box padding (0--50) |
+| `opacity` | number | `0.8` | Transparency (0--1) |
+| `padding` | integer | `15` | Edge distance in pixels |
+| `timeRange` | object | -- | Optional `{ start, end? }` |
+
+Up to 10 watermarks per job. Source video URL goes in `inputs`, watermark URLs go inside each watermark object in `params.watermarks`.
+
+## Remove a watermark
+
+Use `watermark.remove` to remove watermarks using AI detection or manual region coordinates.
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "watermark.remove",
+    "inputs": {
+      "source": "https://example.com/video.mp4"
+    },
+    "params": {
+      "mode": "auto",
+      "method": "inpaint",
+      "strength": 20,
+      "quality": "balanced"
+    }
+  }'
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `mode` | enum | `auto` | `auto` (AI detection) or `manual` (specify regions) |
+| `method` | enum | `inpaint` | `inpaint` (AI fill) or `blur` (gaussian blur) |
+| `strength` | integer | `20` | Blur/inpaint strength (1--100) |
+| `quality` | enum | `balanced` | Output quality preset |
+| `regions` | array | -- | Manual mode only: `[{ x, y, width, height }]` |
+
+## Detect watermarks
+
+Use `watermark.check` to analyze frames for watermark presence. This is a P1 (sync) job -- results return immediately.
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "watermark.check",
+    "inputs": {
+      "frames": ["https://example.com/frame1.jpg", "https://example.com/frame2.jpg"]
+    },
+    "params": {
+      "threshold": 0.5
+    }
+  }'
+```
+
+Returns detection results with per-frame confidence, bounding boxes, watermark type classification (`logo`, `text`, `pattern`), and a summary with the dominant watermark region.
+
+## Cost
+
+| Job Type | Cost Model |
+|----------|-----------|
+| `watermark.apply` | ~$0.50/min of output |
+| `watermark.composite` | ~$0.50/min of output |
+| `watermark.remove` | ~$0.50/min of output |
+| `watermark.check` | $0.10 flat |
+
+## Invisible watermarking
+
+Invisible watermarks are imperceptible to the human eye but can be reliably detected and decoded by Rendobar. They survive JPEG compression, resizing, screenshots, and moderate image editing.
+
+<Note>
+Invisible watermarking requires the Starter plan or higher.
+</Note>
+
+**Use cases:**
+- Copyright tracking and proof of origin
+- Authenticating AI-generated images
+- Tracing unauthorized distribution
+- Linking images to specific users or sessions
+
+Rendobar uses [Meta VideoSeal 1.0](https://github.com/facebookresearch/videoseal) (MIT license) for invisible watermarking, with BCH error-correcting codes for robustness.
+
+### Embed an invisible watermark
+
+Supports UUID payloads (for unique tracking) or plain text up to 16 bytes (for labels like `"ACME-42"`).
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "watermark.embed",
+    "inputs": {
+      "source": "https://example.com/photo.jpg"
+    },
+    "params": {
+      "payload": "a3f8c2d1-b4e5-4f67-8a9b-c0d1e2f3a4b5",
+      "strength": "standard",
+      "outputFormat": "match",
+      "outputQuality": 95
+    }
+  }'
+```
+
+#### Embed parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `payload` | string | -- | **Required.** UUID or plain text up to 16 bytes |
+| `strength` | enum | `standard` | `standard` (balanced quality) or `robust` (survives heavier transforms, slight PSNR reduction) |
+| `outputFormat` | enum | `match` | `match` (same as input), `png`, `jpeg`, or `webp` |
+| `outputQuality` | integer | `95` | JPEG/WebP quality (60--100). Ignored for PNG. |
+
+#### Embed response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "result": {
+      "ref": "jobs/job_abc123/output.jpg",
+      "format": "jpeg",
+      "dimensions": [1920, 1080],
+      "payloadType": "uuid",
+      "strength": "standard",
+      "algorithm": "videoseal-1.0"
+    }
+  }
+}
+```
+
+### Detect an invisible watermark
+
+Extracts the watermark from an image and returns the decoded payload.
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "watermark.detect",
+    "inputs": {
+      "source": "https://example.com/watermarked.jpg"
+    },
+    "params": {}
+  }'
+```
+
+#### Detect response (extract mode)
+
+```json
+{
+  "data": {
+    "id": "job_xyz789",
+    "status": "complete",
+    "result": {
+      "found": true,
+      "payload": "a3f8c2d1-b4e5-4f67-8a9b-c0d1e2f3a4b5",
+      "payloadType": "uuid",
+      "confidence": 0.94,
+      "bitsRecovered": 256,
+      "bitsCorrected": 3,
+      "algorithm": "videoseal-1.0"
+    }
+  }
+}
+```
+
+### Verify mode
+
+Pass `expectedPayload` to check whether a specific watermark is present, without revealing the decoded payload in the response.
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "watermark.detect",
+    "inputs": {
+      "source": "https://example.com/photo.jpg"
+    },
+    "params": {
+      "expectedPayload": "a3f8c2d1-b4e5-4f67-8a9b-c0d1e2f3a4b5"
+    }
+  }'
+```
+
+#### Verify response
+
+```json
+{
+  "data": {
+    "id": "job_xyz789",
+    "status": "complete",
+    "result": {
+      "match": true,
+      "confidence": 0.94,
+      "bitsRecovered": 256,
+      "bitsCorrected": 3,
+      "algorithm": "videoseal-1.0"
+    }
+  }
+}
+```
+
+### Requirements
+
+- **Image format:** JPEG, PNG, or WebP
+- **Minimum dimensions:** 256x256 pixels
+- **Plan:** Starter or higher (invisible watermarking is not available on the Free plan)
+- **Cost:** $0.03 flat per image (both embed and detect)
+
+### Reliability notes
+
+Invisible watermarks survive:
+- JPEG re-encoding at quality 70 or above
+- Resizing to at least 50% of original dimensions
+- Moderate brightness/contrast adjustments
+- Screenshots (screen capture)
+
+<Warning>
+Invisible watermarks may not survive heavy cropping (removing more than 50% of the image), severe compression (JPEG quality below 60), or artistic filters, heavy blurring, and style transfer.
+</Warning>
+
+<CardGroup cols={2}>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  All supported job types
+</Card>
+
+<Card title="Job Lifecycle" icon="rotate" href="/concepts/job-lifecycle">
+  Status transitions and webhooks
+</Card>
+
+<Card title="Credits" icon="coins" href="/concepts/credits">
+  How credit billing works
+</Card>
+
+<Card title="API Reference" icon="code" href="/api-reference">
+  Full REST API documentation
+</Card>
+
+</CardGroup>
