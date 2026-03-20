@@ -1,0 +1,95 @@
+---
+title: "Render Engines"
+description: "Understanding Rendobar's render engine architecture -- Rendley for compositions, FFmpeg for transformations, and when to use each"
+sidebarTitle: "Render Engines"
+icon: "microchip"
+---
+
+Rendobar uses different rendering engines depending on the job type. Understanding which engine handles your job helps you choose the right approach.
+
+## Two rendering paths
+
+### FFmpeg -- Single-input transformations
+
+Most job types use FFmpeg under the hood. FFmpeg excels at operations on individual files: watermarking, transcoding, trimming, format conversion, caption burning, face redaction.
+
+**FFmpeg-based job types:** watermark.add, watermark.remove, transcode, thumbnail, caption.burn, compliance.gdpr.redact, raw.ffmpeg
+
+### Rendley -- Multi-clip compositions
+
+For composing new videos from multiple inputs (clips, text, audio, images), Rendobar uses the Rendley SDK. Rendley provides a timeline-based editing model with layers, transitions, and effects.
+
+**Rendley-based job types:** render.rendley
+
+## When to use which
+
+| Use case | Engine | Job type |
+|----------|--------|----------|
+| Add a logo to a video | FFmpeg | `watermark.add` |
+| Convert MP4 to WebM | FFmpeg | `transcode` |
+| Burn subtitles | FFmpeg | `caption.burn` |
+| Blur faces for privacy | FFmpeg | `compliance.gdpr.redact` |
+| Combine 5 clips with transitions | Rendley | `render.rendley` |
+| Add animated text overlays | Rendley | `render.rendley` |
+| Create a video from images + audio | Rendley | `render.rendley` |
+| Custom FFmpeg command | FFmpeg | `raw.ffmpeg` |
+
+## The processing pipeline
+
+Regardless of engine, every job follows the same pipeline:
+
+<Steps>
+
+<Step title="Download">
+  Input files are fetched from your provided URLs to the processing server.
+</Step>
+
+<Step title="Probe">
+  FFmpeg's ffprobe analyzes input metadata (resolution, duration, codecs).
+</Step>
+
+<Step title="Detect (AI jobs)">
+  Face detection, plate detection, or transcription runs on the input.
+</Step>
+
+<Step title="Translate">
+  Job parameters + probe data + detections are translated into an execution plan.
+</Step>
+
+<Step title="Execute">
+  FFmpeg or Rendley processes the job according to the plan.
+</Step>
+
+<Step title="Upload">
+  The output is uploaded to cloud storage.
+</Step>
+
+<Step title="Callback">
+  The API is notified of completion with result metadata.
+</Step>
+
+</Steps>
+
+## Execution plans
+
+The translation step produces an **execution plan** -- either an FFmpeg command specification or a Rendley composition JSON. This separation means:
+
+- Translators are pure functions with no side effects
+- Plans can be validated before execution
+- The same translator works regardless of where the job runs
+
+<CardGroup cols={2}>
+
+<Card title="Rendering Guide" icon="film" href="/guides/rendering">
+  Rendley composition examples
+</Card>
+
+<Card title="Raw FFmpeg" icon="terminal" href="/guides/raw-ffmpeg">
+  Custom FFmpeg commands
+</Card>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  Full list of operations
+</Card>
+
+</CardGroup>

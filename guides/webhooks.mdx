@@ -1,0 +1,201 @@
+---
+title: "Webhooks"
+description: "Receive real-time job status updates via webhooks -- setup, HMAC signature verification, event types, retry policy, and error handling"
+sidebarTitle: "Webhooks"
+icon: "bell"
+---
+
+Rendobar can send HTTP POST requests to your server when job status changes. Webhooks provide a push-based alternative to polling the jobs endpoint, allowing your application to react to completed, failed, or cancelled jobs in real time.
+
+<Note>
+Webhooks are available on Starter plans and above.
+</Note>
+
+## Setting up webhooks
+
+Configure a webhook URL for your organization by updating your org settings via the API:
+
+```bash
+curl -X PATCH https://api.rendobar.com/orgs/YOUR_ORG_ID \
+  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhookUrl": "https://your-server.com/webhooks/rendobar",
+    "webhookSecret": "your-secret-string"
+  }'
+```
+
+The `webhookSecret` is used to generate HMAC signatures so you can verify that incoming requests actually came from Rendobar.
+
+## Event types
+
+Rendobar sends webhooks for the following events:
+
+| Event | Description |
+|-------|-------------|
+| `job.completed` | A job finished successfully. Includes output URL and metadata. |
+| `job.failed` | A job failed. Includes error code and message. |
+| `job.running` | A job started executing on a provider. |
+| `batch.completed` | All jobs in a batch have finished (completed or failed). |
+
+## Webhook payload
+
+Every webhook delivery sends a JSON payload with this structure:
+
+```json
+{
+  "event": "job.completed",
+  "jobId": "job_a1b2c3d4",
+  "result": {
+    "url": "https://r2.rendobar.com/...",
+    "metadata": {
+      "durationMs": 127500,
+      "width": 1920,
+      "height": 1080,
+      "fileSize": 15234567
+    }
+  },
+  "cost": {
+    "credits": 3,
+    "breakdown": "2m7s video"
+  },
+  "timing": {
+    "createdAt": 1707436800000,
+    "startedAt": 1707436805000,
+    "completedAt": 1707436815000
+  }
+}
+```
+
+For `job.failed` events, the payload includes `error` instead of `result`:
+
+```json
+{
+  "event": "job.failed",
+  "jobId": "job_a1b2c3d4",
+  "error": {
+    "code": "PROVIDER_ERROR",
+    "message": "FFmpeg process exited with code 1"
+  },
+  "timing": {
+    "createdAt": 1707436800000,
+    "startedAt": 1707436805000,
+    "completedAt": 1707436810000
+  }
+}
+```
+
+## HMAC signature verification
+
+Every webhook request includes a signature header for verification:
+
+```
+X-Rendobar-Signature: sha256=abc123def456...
+X-Rendobar-Event: job.completed
+X-Rendobar-Delivery: del_x1y2z3
+X-Rendobar-Attempt: 1
+```
+
+To verify the signature, compute an HMAC-SHA256 digest of the raw request body using your webhook secret, then compare it with the value in the `X-Rendobar-Signature` header.
+
+### Verification example
+
+<CodeGroup>
+
+```javascript Node.js
+import { createHmac, timingSafeEqual } from "crypto";
+
+function verifySignature(body, signature, secret) {
+  const expected = createHmac("sha256", secret)
+    .update(body, "utf8")
+    .digest("hex");
+
+  const received = signature.replace("sha256=", "");
+
+  return timingSafeEqual(
+    Buffer.from(expected, "hex"),
+    Buffer.from(received, "hex")
+  );
+}
+
+// In your webhook handler:
+app.post("/webhooks/rendobar", (req, res) => {
+  const signature = req.headers["x-rendobar-signature"];
+  const rawBody = req.rawBody; // raw string, not parsed JSON
+
+  if (!verifySignature(rawBody, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  const event = req.body;
+  // Process the event...
+  res.status(200).send("OK");
+});
+```
+
+```python Python
+import hmac
+import hashlib
+
+def verify_signature(body: bytes, signature: str, secret: str) -> bool:
+    expected = hmac.new(
+        secret.encode(), body, hashlib.sha256
+    ).hexdigest()
+    received = signature.replace("sha256=", "")
+    return hmac.compare_digest(expected, received)
+```
+
+</CodeGroup>
+
+<Warning>
+Always use a timing-safe comparison function to prevent timing attacks.
+</Warning>
+
+## Retry policy
+
+If your endpoint does not return a `2xx` status code within 10 seconds, Rendobar retries the delivery:
+
+| Attempt | Delay |
+|---------|-------|
+| 1st retry | 5 seconds |
+| 2nd retry | 25 seconds |
+| 3rd retry | 125 seconds |
+
+After 3 failed attempts, the delivery is marked as failed. You can check delivery status via the API:
+
+```bash
+curl https://api.rendobar.com/jobs/job_a1b2c3d4 \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
+
+The job record includes webhook delivery metadata in the response.
+
+## Best practices
+
+<Tip>
+**Return 200 quickly.** Process the webhook payload asynchronously. If your handler takes too long, Rendobar may time out and retry, leading to duplicate deliveries.
+</Tip>
+
+- **Handle duplicates.** Use the `X-Rendobar-Delivery` header or `jobId` to deduplicate. The same event may be delivered more than once due to retries.
+- **Verify signatures.** Always validate the HMAC signature before processing any webhook payload.
+- **Use HTTPS.** Webhook URLs must use HTTPS in production to protect the payload in transit.
+
+<CardGroup cols={2}>
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Submit your first job
+</Card>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  All available operations
+</Card>
+
+<Card title="Credits" icon="coins" href="/credits">
+  Billing details
+</Card>
+
+<Card title="MCP Integration" icon="robot" href="/mcp/overview">
+  AI agent access
+</Card>
+
+</CardGroup>

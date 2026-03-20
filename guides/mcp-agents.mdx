@@ -1,0 +1,121 @@
+---
+title: "MCP Integration Guide"
+description: "Use Rendobar from AI agents via the Model Context Protocol -- 15 tools for video processing, billing, and account management"
+sidebarTitle: "MCP Agents"
+icon: "robot"
+---
+
+Rendobar is MCP-native -- AI agents can process videos, check job status, and manage billing through the Model Context Protocol without writing HTTP code.
+
+## What is MCP?
+
+The Model Context Protocol (MCP) is a standard for AI agents to interact with external services. Instead of making REST API calls, agents use typed tools with structured inputs and outputs.
+
+## Available MCP tools
+
+Rendobar exposes 15 MCP tools, mirroring the REST API:
+
+### Job management
+
+| Tool | Description |
+|------|-------------|
+| `submit_job` | Submit a video processing job |
+| `submit_batch` | Submit multiple jobs at once |
+| `get_job` | Get job status and details |
+| `get_job_result` | Get the output URL for a completed job |
+| `list_jobs` | List jobs with filtering and pagination |
+| `cancel_job` | Cancel a running or queued job |
+| `list_job_types` | List all available job types |
+| `get_job_schema` | Get the Zod schema for a specific job type |
+
+### Billing
+
+| Tool | Description |
+|------|-------------|
+| `get_balance` | Check current usage balance |
+| `get_usage` | Get usage analytics for a date range |
+
+### Account
+
+| Tool | Description |
+|------|-------------|
+| `get_org` | Get organization details and plan info |
+| `list_members` | List organization members |
+| `list_api_keys` | List API keys |
+| `create_api_key` | Create a new API key |
+| `revoke_api_key` | Revoke an existing API key |
+
+## Connecting an agent
+
+### Claude Desktop / Claude Code
+
+Add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "rendobar": {
+      "url": "https://api.rendobar.com/mcp",
+      "headers": {
+        "Authorization": "Bearer rb_live_YOUR_KEY"
+      }
+    }
+  }
+}
+```
+
+### Custom agents
+
+Any MCP-compatible agent can connect to Rendobar's MCP endpoint. The server supports the SSE transport protocol.
+
+## Example: Agent workflow
+
+An AI agent can process videos end-to-end:
+
+<Steps>
+
+<Step title="Check credits">
+  Call `get_balance` to verify sufficient balance.
+</Step>
+
+<Step title="Submit job">
+  Call `submit_job` with type and parameters.
+</Step>
+
+<Step title="Monitor">
+  Call `get_job` to poll for completion.
+</Step>
+
+<Step title="Retrieve">
+  Call `get_job_result` to get the output URL.
+</Step>
+
+<Step title="Report">
+  Present the result to the user.
+</Step>
+
+</Steps>
+
+## Authentication
+
+MCP tools authenticate via API key in the `Authorization` header. The same API keys used for REST work with MCP.
+
+<CardGroup cols={2}>
+
+<Card title="Authentication" icon="key" href="/authentication">
+  API key setup
+</Card>
+
+<Card title="Job Types" icon="list" href="/job-types/overview">
+  All available operations
+</Card>
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  REST API getting started
+</Card>
+
+<Card title="MCP Overview" icon="plug" href="/mcp/overview">
+  Full MCP reference
+</Card>
+
+</CardGroup>
