@@ -1,0 +1,21 @@
+<CodeGroup>
+
+```bash cURL
+curl https://api.rendobar.com/jobs/job_abc123 \
+  -H "Authorization: Bearer rb_your_key"
+```
+
+```javascript JavaScript
+const job = await fetch("https://api.rendobar.com/jobs/job_abc123", {
+  headers: { "Authorization": "Bearer rb_your_key" },
+}).then(r => r.json());
+```
+
+```python Python
+job = requests.get(
+    "https://api.rendobar.com/jobs/job_abc123",
+    headers={"Authorization": "Bearer rb_your_key"},
+).json()
+```
+
+</CodeGroup>

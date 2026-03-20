@@ -6,7 +6,10 @@
     "primary": "#155dfc",
     "light": "#3B7BFD",
     "dark": "#0F4AD4",
-    "background": { "dark": "#08090a", "light": "#FFFFFF" }
+    "background": {
+      "dark": "#08090a",
+      "light": "#FFFFFF"
+    }
   },
   "logo": {
     "dark": "https://cdn.rendobar.com/assets/brand/logo-full.svg",
@@ -21,19 +24,102 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["quickstart"]
+            "pages": [
+              "quickstart",
+              "authentication",
+              "credits"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/watermarking",
+              "guides/captions",
+              "guides/gdpr",
+              "guides/rendering",
+              "guides/mcp-agents",
+              "guides/raw-ffmpeg",
+              "guides/webhooks"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "concepts/job-lifecycle",
+              "concepts/credits",
+              "concepts/render-engines"
+            ]
+          },
+          {
+            "group": "Job Types",
+            "pages": [
+              "job-types/overview",
+              "job-types/caption-burn",
+              "job-types/caption-extract",
+              "job-types/compliance-gdpr-detect",
+              "job-types/compliance-gdpr-redact",
+              "job-types/compliance-moderate",
+              "job-types/extract-metadata",
+              "job-types/extract-scenes",
+              "job-types/extract-text",
+              "job-types/mockup-render",
+              "job-types/qr-generate",
+              "job-types/raw-ffmpeg",
+              "job-types/render-remotion",
+              "job-types/render-rendley",
+              "job-types/render-veed",
+              "job-types/thumbnail",
+              "job-types/transcode",
+              "job-types/watermark-apply",
+              "job-types/watermark-check",
+              "job-types/watermark-detect",
+              "job-types/watermark-embed",
+              "job-types/watermark-remove"
+            ]
+          },
+          {
+            "group": "MCP",
+            "pages": [
+              "mcp/overview",
+              "mcp/tools-reference"
+            ]
+          },
+          {
+            "group": "Support",
+            "pages": [
+              "support/faq",
+              "support/limits",
+              "support/errors"
+            ]
           }
         ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.json"
       }
     ]
   },
   "navbar": {
     "links": [
-      { "label": "Dashboard", "href": "https://app.rendobar.com" },
-      { "label": "Blog", "href": "https://rendobar.com/blog" },
-      { "label": "Pricing", "href": "https://rendobar.com/pricing" }
+      {
+        "label": "Dashboard",
+        "href": "https://app.rendobar.com"
+      },
+      {
+        "label": "Blog",
+        "href": "https://rendobar.com/blog"
+      },
+      {
+        "label": "Pricing",
+        "href": "https://rendobar.com/pricing"
+      }
     ],
-    "primary": { "type": "button", "label": "Get API Key", "href": "https://app.rendobar.com" }
+    "primary": {
+      "type": "button",
+      "label": "Get API Key",
+      "href": "https://app.rendobar.com"
+    }
   },
   "footer": {
     "socials": {
@@ -45,28 +131,55 @@
       {
         "title": "Product",
         "items": [
-          { "label": "Pricing", "href": "https://rendobar.com/pricing" },
-          { "label": "Dashboard", "href": "https://app.rendobar.com" }
+          {
+            "label": "Pricing",
+            "href": "https://rendobar.com/pricing"
+          },
+          {
+            "label": "Dashboard",
+            "href": "https://app.rendobar.com"
+          }
         ]
       },
       {
         "title": "Legal",
         "items": [
-          { "label": "Terms of Service", "href": "https://rendobar.com/terms" },
-          { "label": "Privacy Policy", "href": "https://rendobar.com/privacy" }
+          {
+            "label": "Terms of Service",
+            "href": "https://rendobar.com/terms"
+          },
+          {
+            "label": "Privacy Policy",
+            "href": "https://rendobar.com/privacy"
+          }
         ]
       }
     ]
   },
   "api": {
-    "openapi": ["openapi.json"],
-    "playground": { "display": "interactive", "proxy": true },
+    "openapi": [
+      "openapi.json"
+    ],
+    "playground": {
+      "display": "interactive",
+      "proxy": true
+    },
     "mdx": {
-      "auth": { "method": "bearer", "name": "Authorization" },
+      "auth": {
+        "method": "bearer",
+        "name": "Authorization"
+      },
       "server": "https://api.rendobar.com"
     }
   },
-  "seo": { "indexing": "all" },
-  "search": { "prompt": "Search docs..." },
-  "feedback": { "thumbsRating": true, "suggestEdit": true }
+  "seo": {
+    "indexing": "all"
+  },
+  "search": {
+    "prompt": "Search docs..."
+  },
+  "feedback": {
+    "thumbsRating": true,
+    "suggestEdit": true
+  }
 }

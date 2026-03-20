@@ -1,0 +1,109 @@
+---
+title: "Transcode video or audio"
+description: "Convert a video or audio file to a different codec, resolution, frame rate, or container format."
+icon: "arrow-right-left"
+tag: "Preview"
+---
+
+Convert a video or audio file to a different codec, resolution, frame rate, or container format. Video: H.264, H.265, VP9, AV1. Audio: passthrough with container conversion.
+
+<Info>
+**Timeout:** 600s | **Provider:** triggerdev | **Accepts:** video, audio
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/ \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {
+    "codec": "h264",
+    "preset": "fast",
+    "crf": 23,
+    "format": "mp4"
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+    params: {"codec":"h264","preset":"fast","crf":23,"format":"mp4"},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"codec":"h264","preset":"fast","crf":23,"format":"mp4"},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="codec" type=""h264" | "h265" | "vp9" | "av1"" default=""h264"">
+  Video codec
+</ParamField>
+
+<ParamField body="preset" type=""ultrafast" | "superfast" | "veryfast" | "faster" | "fast" | "medium" | "slow" | "slower" | "veryslow"" default=""fast"">
+  Encoding speed preset (slower = smaller file, better quality)
+</ParamField>
+
+<ParamField body="crf" type="integer" default="23">
+  Constant rate factor (0 = lossless, 51 = worst)
+</ParamField>
+
+<ParamField body="width" type="integer">
+  Target width in pixels (omit to preserve original)
+</ParamField>
+
+<ParamField body="height" type="integer">
+  Target height in pixels (omit to preserve original)
+</ParamField>
+
+<ParamField body="fps" type="number">
+  Target frame rate (omit to preserve original)
+</ParamField>
+
+<ParamField body="audioBitrate" type="string">
+  Audio bitrate (e.g. "128k", "256k")
+</ParamField>
+
+<ParamField body="format" type=""mp4" | "webm" | "mkv" | "mov"" default=""mp4"">
+  Output container format
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

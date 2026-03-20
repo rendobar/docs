@@ -1,0 +1,213 @@
+---
+title: "Apply watermarks to video or image"
+description: "Overlay one or more watermarks (images and/or text) onto a video or image."
+icon: "droplet"
+---
+
+Overlay one or more watermarks (images and/or text) onto a video or image. Supports 9-position grid, rotation, shadow, outline, opacity, quality presets, and time-ranged visibility (video only). Up to 10 watermarks per job.
+
+<Info>
+**Timeout:** 600s | **Provider:** triggerdev | **Accepts:** video, image
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/apply \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {
+    "watermarks": [
+      {
+        "type": "image",
+        "url": "https://cdn.rendobar.com/assets/brand/logo-full.png",
+        "position": "bottom-right"
+      },
+      {
+        "type": "text",
+        "content": "© 2026 Rendobar",
+        "position": "bottom-left",
+        "shadow": true
+      }
+    ]
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/apply", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+    params: {"watermarks":[{"type":"image","url":"https://cdn.rendobar.com/assets/brand/logo-full.png","position":"bottom-right"},{"type":"text","content":"© 2026 Rendobar","position":"bottom-left","shadow":true}]},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/apply",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"watermarks":[{"type":"image","url":"https://cdn.rendobar.com/assets/brand/logo-full.png","position":"bottom-right"},{"type":"text","content":"© 2026 Rendobar","position":"bottom-left","shadow":true}]},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="watermarks" type=""image" | "text"[]" required>
+  Array of watermarks to apply (1-10)
+  <Expandable title="variant (type: "image")">
+    <ParamField body="type" type=""image"" required>
+      Watermark type: image
+    </ParamField>
+
+    <ParamField body="url" type="string" required>
+      URL to the watermark image file
+    </ParamField>
+
+    <ParamField body="scale" type="number" default="0.15">
+      Scale relative to source dimensions (0.01-1)
+    </ParamField>
+
+    <ParamField body="position" type=""top-left" | "top-center" | "top-right" | "center-left" | "center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right"" default=""bottom-right"">
+      Watermark position on the 9-point grid
+    </ParamField>
+
+    <ParamField body="opacity" type="number" default="0.8">
+      Watermark opacity (0 = transparent, 1 = opaque)
+    </ParamField>
+
+    <ParamField body="rotation" type="number" default="0">
+      Rotation angle in degrees
+    </ParamField>
+
+    <ParamField body="padding" type="integer" default="20">
+      Padding from edges in pixels
+    </ParamField>
+
+    <ParamField body="timeRange" type="object">
+      Time range for watermark visibility (video only)
+      <Expandable title="properties">
+        <ParamField body="start" type="number" required>
+          Start time in seconds
+        </ParamField>
+
+        <ParamField body="end" type="number">
+          End time in seconds
+        </ParamField>
+
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="fade" type="boolean | object">
+      Fade in/out effect for the watermark
+    </ParamField>
+
+  </Expandable>
+  <Expandable title="variant (type: "text")">
+    <ParamField body="type" type=""text"" required>
+      Watermark type: text
+    </ParamField>
+
+    <ParamField body="content" type="string" required>
+      Text content to render as watermark
+    </ParamField>
+
+    <ParamField body="font" type=""Arial" | "Roboto" | "Inter" | "Poppins" | "Montserrat" | "Lato" | "Open Sans" | "Raleway" | "Playfair Display" | "Oswald" | "Nunito" | "Source Sans" | "Ubuntu" | "Courier" | "Georgia"" default=""Inter"">
+      Font family name
+    </ParamField>
+
+    <ParamField body="fontUrl" type="string">
+      URL to a custom font file (must use HTTPS)
+    </ParamField>
+
+    <ParamField body="fontSize" type="integer" default="24">
+      Font size in pixels
+    </ParamField>
+
+    <ParamField body="color" type="string" default=""#FFFFFF"">
+      Text color in hex format
+    </ParamField>
+
+    <ParamField body="shadow" type="boolean | object">
+      Text shadow (true for defaults, or object with color/offset)
+    </ParamField>
+
+    <ParamField body="outline" type="boolean | object">
+      Text outline (true for defaults, or object with color/width)
+    </ParamField>
+
+    <ParamField body="background" type="string">
+      Background color behind text in hex format
+    </ParamField>
+
+    <ParamField body="position" type=""top-left" | "top-center" | "top-right" | "center-left" | "center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right"" default=""bottom-right"">
+      Watermark position on the 9-point grid
+    </ParamField>
+
+    <ParamField body="opacity" type="number" default="0.8">
+      Watermark opacity (0 = transparent, 1 = opaque)
+    </ParamField>
+
+    <ParamField body="rotation" type="number" default="0">
+      Rotation angle in degrees
+    </ParamField>
+
+    <ParamField body="padding" type="integer" default="20">
+      Padding from edges in pixels
+    </ParamField>
+
+    <ParamField body="timeRange" type="object">
+      Time range for watermark visibility (video only)
+      <Expandable title="properties">
+        <ParamField body="start" type="number" required>
+          Start time in seconds
+        </ParamField>
+
+        <ParamField body="end" type="number">
+          End time in seconds
+        </ParamField>
+
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="fade" type="boolean | object">
+      Fade in/out effect for the watermark
+    </ParamField>
+
+  </Expandable>
+</ParamField>
+
+<ParamField body="quality" type=""fast" | "balanced" | "high"" default=""balanced"">
+  Output quality preset
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

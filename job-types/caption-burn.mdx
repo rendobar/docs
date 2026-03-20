@@ -1,0 +1,100 @@
+---
+title: "Burn captions into video"
+description: "Permanently render subtitles onto a video."
+icon: "closed-captioning"
+tag: "Preview"
+---
+
+Permanently render subtitles onto a video. Provide an existing subtitle file or let the system auto-extract captions first. Supports font, size, color, and position customization.
+
+<Info>
+**Timeout:** 600s | **Provider:** triggerdev | **Accepts:** video
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/burn \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {}
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/burn", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+    params: {},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/burn",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="subtitlesUrl" type="string">
+  URL to existing subtitle file (omit to auto-extract captions)
+</ParamField>
+
+<ParamField body="fontName" type="string" default=""Arial"">
+  Font name for rendered captions
+</ParamField>
+
+<ParamField body="fontSize" type="integer" default="24">
+  Font size in pixels
+</ParamField>
+
+<ParamField body="primaryColor" type="string" default=""&HFFFFFF"">
+  Primary text color in ASS hex format (e.g. "&HFFFFFF")
+</ParamField>
+
+<ParamField body="outlineColor" type="string" default=""&H000000"">
+  Outline color in ASS hex format (e.g. "&H000000")
+</ParamField>
+
+<ParamField body="outline" type="integer" default="2">
+  Outline thickness in pixels
+</ParamField>
+
+<ParamField body="position" type=""bottom" | "top" | "center"" default=""bottom"">
+  Vertical position of captions
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

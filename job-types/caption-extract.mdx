@@ -1,0 +1,83 @@
+---
+title: "Extract captions from video or audio"
+description: "Transcribe speech from a video or audio file using AI (Deepgram) and output captions in SRT, VTT, or JSON format.."
+icon: "closed-captioning"
+tag: "Preview"
+---
+
+Transcribe speech from a video or audio file using AI (Deepgram) and output captions in SRT, VTT, or JSON format.
+
+<Info>
+**Timeout:** 300s | **Provider:** triggerdev | **Accepts:** video, audio
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/extract \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {
+    "language": "en",
+    "format": "srt"
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/extract", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+    params: {"language":"en","format":"srt"},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/extract",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"language":"en","format":"srt"},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="language" type="string" default=""en"">
+  Language code for transcription (BCP-47, e.g. "en", "es", "fr")
+</ParamField>
+
+<ParamField body="format" type=""srt" | "vtt" | "json"" default=""srt"">
+  Output caption format
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```
