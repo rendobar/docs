@@ -1,0 +1,72 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Rendobar",
+  "theme": "mint",
+  "colors": {
+    "primary": "#155dfc",
+    "light": "#3B7BFD",
+    "dark": "#0F4AD4",
+    "background": { "dark": "#08090a", "light": "#FFFFFF" }
+  },
+  "logo": {
+    "dark": "https://cdn.rendobar.com/assets/brand/logo-full.svg",
+    "light": "https://cdn.rendobar.com/assets/brand/logo-full-black.svg",
+    "href": "https://rendobar.com"
+  },
+  "favicon": "https://cdn.rendobar.com/assets/brand/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["quickstart"]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      { "label": "Dashboard", "href": "https://app.rendobar.com" },
+      { "label": "Blog", "href": "https://rendobar.com/blog" },
+      { "label": "Pricing", "href": "https://rendobar.com/pricing" }
+    ],
+    "primary": { "type": "button", "label": "Get API Key", "href": "https://app.rendobar.com" }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/rendobar",
+      "x": "https://x.com/rendobar",
+      "discord": "https://discord.gg/rendobar"
+    },
+    "links": [
+      {
+        "title": "Product",
+        "items": [
+          { "label": "Pricing", "href": "https://rendobar.com/pricing" },
+          { "label": "Dashboard", "href": "https://app.rendobar.com" }
+        ]
+      },
+      {
+        "title": "Legal",
+        "items": [
+          { "label": "Terms of Service", "href": "https://rendobar.com/terms" },
+          { "label": "Privacy Policy", "href": "https://rendobar.com/privacy" }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "openapi": ["openapi.json"],
+    "playground": { "display": "interactive", "proxy": true },
+    "mdx": {
+      "auth": { "method": "bearer", "name": "Authorization" },
+      "server": "https://api.rendobar.com"
+    }
+  },
+  "seo": { "indexing": "all" },
+  "search": { "prompt": "Search docs..." },
+  "feedback": { "thumbsRating": true, "suggestEdit": true }
+}
