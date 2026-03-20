@@ -1,0 +1,88 @@
+---
+title: "Execute raw FFmpeg command"
+description: "Execute a custom FFmpeg command with whitelisted flags."
+icon: "terminal"
+---
+
+Execute a custom FFmpeg command with whitelisted flags. Input files are referenced by name and resolved securely. Pro/Scale plans only.
+
+<Info>
+**Timeout:** 900s | **Provider:** triggerdev | **Accepts:** video
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/ffmpeg \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {},
+  "params": {
+    "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
+    "inputRefs": {}
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/ffmpeg", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {},
+    params: {"command":"ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4","inputRefs":{}},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/ffmpeg",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {},
+        "params": {"command":"ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4","inputRefs":{}},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="command" type="string" required>
+  Raw FFmpeg command string (without the "ffmpeg" prefix)
+</ParamField>
+
+<ParamField body="inputRefs" type="object" required>
+  Map of input placeholder names to R2 refs
+</ParamField>
+
+<ParamField body="outputFormat" type=""mp4" | "mkv" | "webm" | "mov" | "avi" | "ts" | "gif" | "png" | "jpg" | "mp3" | "wav" | "flac" | "ogg" | "aac" | "opus" | "m4a" | "srt" | "vtt"" default=""mp4"">
+  Output container/format
+</ParamField>
+
+<ParamField body="timeout" type="integer" default="120">
+  Maximum execution time in seconds
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

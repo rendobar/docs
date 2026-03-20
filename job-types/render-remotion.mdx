@@ -1,0 +1,106 @@
+---
+title: "Render Remotion composition"
+description: "Render a video from a Remotion bundle."
+icon: "clapperboard"
+tag: "Preview"
+---
+
+Render a video from a Remotion bundle. Provide the bundle URL, composition ID, and input props. Supports H.264, H.265, VP8, and VP9 codecs.
+
+<Info>
+**Timeout:** 600s | **Provider:** triggerdev | **Accepts:** video
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/remotion \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {},
+  "params": {
+    "bundleUrl": "https://example.com/remotion-bundle/index.html",
+    "composition": "MyVideo",
+    "inputProps": {
+      "title": "Hello World"
+    },
+    "codec": "h264",
+    "fps": 30
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/remotion", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {},
+    params: {"bundleUrl":"https://example.com/remotion-bundle/index.html","composition":"MyVideo","inputProps":{"title":"Hello World"},"codec":"h264","fps":30},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/remotion",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {},
+        "params": {"bundleUrl":"https://example.com/remotion-bundle/index.html","composition":"MyVideo","inputProps":{"title":"Hello World"},"codec":"h264","fps":30},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="bundleUrl" type="string" required>
+  URL to the Remotion bundle
+</ParamField>
+
+<ParamField body="composition" type="string" required>
+  Composition ID within the bundle
+</ParamField>
+
+<ParamField body="inputProps" type="object" default="&#123;&#125;">
+  Input props to pass to the Remotion composition
+</ParamField>
+
+<ParamField body="codec" type=""h264" | "h265" | "vp8" | "vp9"" default=""h264"">
+  Output video codec
+</ParamField>
+
+<ParamField body="fps" type="integer" default="30">
+  Output frame rate
+</ParamField>
+
+<ParamField body="width" type="integer">
+  Output width in pixels (uses composition default if omitted)
+</ParamField>
+
+<ParamField body="height" type="integer">
+  Output height in pixels (uses composition default if omitted)
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

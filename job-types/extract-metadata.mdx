@@ -1,0 +1,84 @@
+---
+title: "Extract metadata from video, image, or audio"
+description: "Extract detailed metadata from a video, image, or audio file including codec, resolution, duration, bitrate, streams, and chapter information.."
+icon: "file-search"
+tag: "Preview"
+---
+
+Extract detailed metadata from a video, image, or audio file including codec, resolution, duration, bitrate, streams, and chapter information.
+
+<Info>
+**Timeout:** 60s | **Provider:** triggerdev | **Accepts:** video, image, audio
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/metadata \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {}
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/metadata", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+    params: {},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/metadata",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="includeStreams" type="boolean" default="true">
+  Include detailed stream information
+</ParamField>
+
+<ParamField body="includeFormat" type="boolean" default="true">
+  Include format/container information
+</ParamField>
+
+<ParamField body="includeChapters" type="boolean" default="false">
+  Include chapter information (if available)
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

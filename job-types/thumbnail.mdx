@@ -1,0 +1,91 @@
+---
+title: "Generate thumbnail from video or image"
+description: "Extract a single frame from a video or resize an image as a JPG, PNG, or WebP."
+icon: "image"
+tag: "Preview"
+---
+
+Extract a single frame from a video or resize an image as a JPG, PNG, or WebP. Optionally specify a timestamp (video) or let the system auto-detect the best frame.
+
+<Info>
+**Timeout:** 300s | **Provider:** triggerdev | **Accepts:** video, image
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/ \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {
+    "timestamp": 5,
+    "format": "jpg"
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+    params: {"timestamp":5,"format":"jpg"},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"timestamp":5,"format":"jpg"},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="timestamp" type="number">
+  Timestamp in seconds to extract frame from (omit for auto-detect best frame)
+</ParamField>
+
+<ParamField body="width" type="integer">
+  Target width in pixels (omit to preserve original)
+</ParamField>
+
+<ParamField body="height" type="integer">
+  Target height in pixels (omit to preserve original)
+</ParamField>
+
+<ParamField body="format" type=""jpg" | "png" | "webp"" default=""jpg"">
+  Output image format
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

@@ -1,0 +1,115 @@
+---
+title: "Remove watermark from video or image"
+description: "Remove a watermark from a video or image using AI-based detection (auto mode) or manual region specification."
+icon: "droplet"
+tag: "Preview"
+---
+
+Remove a watermark from a video or image using AI-based detection (auto mode) or manual region specification. Supports blur and inpaint methods with quality presets.
+
+<Info>
+**Timeout:** 600s | **Provider:** triggerdev | **Accepts:** video, image
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/remove \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {
+    "mode": "auto",
+    "method": "blur",
+    "strength": 20,
+    "quality": "balanced"
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/remove", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+    params: {"mode":"auto","method":"blur","strength":20,"quality":"balanced"},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/remove",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"mode":"auto","method":"blur","strength":20,"quality":"balanced"},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="mode" type=""auto" | "manual"" default=""auto"">
+  Detection mode: auto (AI-based) or manual (specify regions)
+</ParamField>
+
+<ParamField body="regions" type="object[]">
+  Manual watermark regions to remove (required when mode is manual)
+  <Expandable title="item properties">
+    <ParamField body="x" type="integer" required>
+      X coordinate of region top-left corner
+    </ParamField>
+
+    <ParamField body="y" type="integer" required>
+      Y coordinate of region top-left corner
+    </ParamField>
+
+    <ParamField body="width" type="integer" required>
+      Region width in pixels
+    </ParamField>
+
+    <ParamField body="height" type="integer" required>
+      Region height in pixels
+    </ParamField>
+
+  </Expandable>
+</ParamField>
+
+<ParamField body="method" type=""blur" | "inpaint"" default=""inpaint"">
+  Removal method: blur or inpaint
+</ParamField>
+
+<ParamField body="strength" type="integer" default="20">
+  Removal strength (1-100)
+</ParamField>
+
+<ParamField body="quality" type=""fast" | "balanced" | "high"" default=""balanced"">
+  Output quality preset
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```

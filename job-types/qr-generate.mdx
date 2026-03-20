@@ -1,0 +1,135 @@
+---
+title: "Generate styled QR code"
+description: "Generate a styled QR code image (PNG or SVG) with 9 content types: URL, WhatsApp, phone, SMS, email, vCard, WiFi, geo, and plain text."
+icon: "qrcode"
+---
+
+Generate a styled QR code image (PNG or SVG) with 9 content types: URL, WhatsApp, phone, SMS, email, vCard, WiFi, geo, and plain text. Supports branded styling with custom colors, dot styles, and logo embedding.
+
+<Info>
+**Timeout:** 30s | **Provider:** none | **Accepts:** none (no input media)
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/generate \
+  -H "Authorization: Bearer rb_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": {},
+  "params": {
+    "content": {
+      "type": "url",
+      "url": "https://rendobar.com"
+    },
+    "style": {
+      "size": 512,
+      "foregroundColor": "#6366F1",
+      "dotStyle": "rounded"
+    }
+  }
+}'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.rendobar.com/generate", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    inputs: {},
+    params: {"content":{"type":"url","url":"https://rendobar.com"},"style":{"size":512,"foregroundColor":"#6366F1","dotStyle":"rounded"}},
+  }),
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.rendobar.com/generate",
+    headers={"Authorization": "Bearer rb_your_key"},
+    json={
+        "inputs": {},
+        "params": {"content":{"type":"url","url":"https://rendobar.com"},"style":{"size":512,"foregroundColor":"#6366F1","dotStyle":"rounded"}},
+    },
+)
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="content" type=""url" | "whatsapp" | "phone" | "sms" | "email" | "vcard" | "wifi" | "geo" | "text"" required>
+  QR code content (URL, text, phone, email, vCard, WiFi, geo, SMS, or WhatsApp)
+</ParamField>
+
+<ParamField body="style" type="object">
+  QR code visual style options
+  <Expandable title="properties">
+    <ParamField body="size" type="integer" default="512">
+      QR code image size in pixels
+    </ParamField>
+
+    <ParamField body="margin" type="integer" default="1">
+      Quiet zone margin in modules
+    </ParamField>
+
+    <ParamField body="errorCorrection" type=""L" | "M" | "Q" | "H"" default=""M"">
+      Error correction level (L=7%, M=15%, Q=25%, H=30%)
+    </ParamField>
+
+    <ParamField body="foregroundColor" type="string" default=""#000000"">
+      Foreground (dot) color in hex format
+    </ParamField>
+
+    <ParamField body="backgroundColor" type="string | string" default=""#FFFFFF"">
+      Background color in hex format or "transparent"
+    </ParamField>
+
+    <ParamField body="dotStyle" type=""square" | "rounded" | "dots" | "extra-rounded"" default=""square"">
+      QR code dot style
+    </ParamField>
+
+    <ParamField body="logo" type="object">
+      Optional center logo overlay
+      <Expandable title="properties">
+        <ParamField body="url" type="string" required>
+          URL to the logo image
+        </ParamField>
+
+        <ParamField body="sizeRatio" type="number" default="0.2">
+          Logo size relative to QR code (0.1-0.35)
+        </ParamField>
+
+        <ParamField body="margin" type="integer" default="5">
+          Margin around the logo in modules
+        </ParamField>
+
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="format" type=""png" | "svg"" default=""png"">
+      Output image format
+    </ParamField>
+
+  </Expandable>
+</ParamField>
+
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "dispatched"
+  }
+}
+```
