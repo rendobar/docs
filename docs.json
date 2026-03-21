@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Rendobar",
-  "theme": "mint",
+  "theme": "maple",
   "colors": {
     "primary": "#155dfc",
-    "light": "#3B7BFD",
-    "dark": "#0F4AD4"
+    "light": "#3B82F6",
+    "dark": "#1249C8"
   },
   "logo": {
     "dark": "https://cdn.rendobar.com/assets/brand/logo-full.svg",
@@ -105,7 +105,21 @@
           }
         ]
       }
-    ]
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Dashboard",
+          "href": "https://app.rendobar.com",
+          "icon": "gauge"
+        },
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/rendobar",
+          "icon": "github"
+        }
+      ]
+    }
   },
   "navbar": {
     "links": [
@@ -178,6 +192,18 @@
       },
       "server": "https://api.rendobar.com"
     }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "seo": {
     "indexing": "all"
