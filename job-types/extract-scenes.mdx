@@ -16,10 +16,11 @@ Analyze a video and detect scene change boundaries. Returns timestamps and confi
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/scenes \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "extract.scenes",
   "inputs": {
     "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
   },
@@ -30,13 +31,14 @@ curl -X POST https://api.rendobar.com/scenes \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/scenes", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "extract.scenes",
     inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
     params: {"threshold":0.3},
   }),
@@ -48,9 +50,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/scenes",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "extract.scenes",
         "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
         "params": {"threshold":0.3},
     },

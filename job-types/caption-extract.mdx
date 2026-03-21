@@ -16,10 +16,11 @@ Transcribe speech from a video or audio file using AI (Deepgram) and output capt
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/extract \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "caption.extract",
   "inputs": {
     "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
   },
@@ -31,13 +32,14 @@ curl -X POST https://api.rendobar.com/extract \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/extract", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "caption.extract",
     inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
     params: {"language":"en","format":"srt"},
   }),
@@ -49,9 +51,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/extract",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "caption.extract",
         "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
         "params": {"language":"en","format":"srt"},
     },

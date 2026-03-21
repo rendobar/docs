@@ -16,10 +16,11 @@ Convert a video or audio file to a different codec, resolution, frame rate, or c
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/ \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "transcode",
   "inputs": {
     "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
   },
@@ -33,13 +34,14 @@ curl -X POST https://api.rendobar.com/ \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "transcode",
     inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
     params: {"codec":"h264","preset":"fast","crf":23,"format":"mp4"},
   }),
@@ -51,9 +53,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "transcode",
         "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
         "params": {"codec":"h264","preset":"fast","crf":23,"format":"mp4"},
     },

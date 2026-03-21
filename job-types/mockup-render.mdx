@@ -16,10 +16,11 @@ Generate a photorealistic product mockup by replacing smart object layers in a P
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/mockup \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "mockup.render",
   "inputs": {
     "template": "tmpl_example123"
   },
@@ -41,13 +42,14 @@ curl -X POST https://api.rendobar.com/mockup \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/mockup", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "mockup.render",
     inputs: {"template":"tmpl_example123"},
     params: {"layers":[{"name":"Screen","image":"https://cdn.rendobar.com/assets/brand/logo-full.png","placement":{"x":0,"y":0,"scale":1,"rotation":0}}]},
   }),
@@ -59,9 +61,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/mockup",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "mockup.render",
         "inputs": {"template":"tmpl_example123"},
         "params": {"layers":[{"name":"Screen","image":"https://cdn.rendobar.com/assets/brand/logo-full.png","placement":{"x":0,"y":0,"scale":1,"rotation":0}}]},
     },

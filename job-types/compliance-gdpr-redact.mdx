@@ -16,10 +16,11 @@ Automatically detect and redact faces, license plates, and text from a video or 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/gdpr/redact \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "compliance.gdpr.redact",
   "inputs": {
     "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
   },
@@ -34,13 +35,14 @@ curl -X POST https://api.rendobar.com/gdpr/redact \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/gdpr/redact", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "compliance.gdpr.redact",
     inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
     params: {"redactTypes":["faces","license_plates"],"method":"blur"},
   }),
@@ -52,9 +54,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/gdpr/redact",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "compliance.gdpr.redact",
         "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
         "params": {"redactTypes":["faces","license_plates"],"method":"blur"},
     },
