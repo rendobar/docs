@@ -5,11 +5,7 @@
   "colors": {
     "primary": "#155dfc",
     "light": "#3B7BFD",
-    "dark": "#0F4AD4",
-    "background": {
-      "dark": "#08090a",
-      "light": "#FFFFFF"
-    }
+    "dark": "#0F4AD4"
   },
   "logo": {
     "dark": "https://cdn.rendobar.com/assets/brand/logo-full.svg",

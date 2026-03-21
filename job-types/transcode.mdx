@@ -67,11 +67,11 @@ response = requests.post(
 
 ## Parameters
 
-<ParamField body="codec" type=""h264" | "h265" | "vp9" | "av1"" default=""h264"">
+<ParamField body="codec" type="h264 | h265 | vp9 | av1" default="h264">
   Video codec
 </ParamField>
 
-<ParamField body="preset" type=""ultrafast" | "superfast" | "veryfast" | "faster" | "fast" | "medium" | "slow" | "slower" | "veryslow"" default=""fast"">
+<ParamField body="preset" type="ultrafast | superfast | veryfast | faster | fast | medium | slow | slower | veryslow" default="fast">
   Encoding speed preset (slower = smaller file, better quality)
 </ParamField>
 
@@ -95,7 +95,7 @@ response = requests.post(
   Audio bitrate (e.g. "128k", "256k")
 </ParamField>
 
-<ParamField body="format" type=""mp4" | "webm" | "mkv" | "mov"" default=""mp4"">
+<ParamField body="format" type="mp4 | webm | mkv | mov" default="mp4">
   Output container format
 </ParamField>
 
