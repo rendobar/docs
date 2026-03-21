@@ -84,19 +84,19 @@ response = requests.post(
       Quiet zone margin in modules
     </ParamField>
 
-    <ParamField body="errorCorrection" type=""L" | "M" | "Q" | "H"" default=""M"">
+    <ParamField body="errorCorrection" type="L | M | Q | H" default="M">
       Error correction level (L=7%, M=15%, Q=25%, H=30%)
     </ParamField>
 
-    <ParamField body="foregroundColor" type="string" default=""#000000"">
+    <ParamField body="foregroundColor" type="string" default="#000000">
       Foreground (dot) color in hex format
     </ParamField>
 
-    <ParamField body="backgroundColor" type="string | string" default=""#FFFFFF"">
+    <ParamField body="backgroundColor" type="string | string" default="#FFFFFF">
       Background color in hex format or "transparent"
     </ParamField>
 
-    <ParamField body="dotStyle" type=""square" | "rounded" | "dots" | "extra-rounded"" default=""square"">
+    <ParamField body="dotStyle" type="square | rounded | dots | extra-rounded" default="square">
       QR code dot style
     </ParamField>
 
@@ -118,7 +118,7 @@ response = requests.post(
       </Expandable>
     </ParamField>
 
-    <ParamField body="format" type=""png" | "svg"" default=""png"">
+    <ParamField body="format" type="png | svg" default="png">
       Output image format
     </ParamField>
 

@@ -68,11 +68,11 @@ response = requests.post(
 
 ## Parameters
 
-<ParamField body="redactTypes" type=""faces" | "license_plates" | "text"[]" default="["faces","license_plates"]">
+<ParamField body="redactTypes" type="faces | license_plates | text[]" default="["faces","license_plates"]">
   Types of PII to redact
 </ParamField>
 
-<ParamField body="method" type=""blur" | "pixelate" | "blackbox"" default=""blur"">
+<ParamField body="method" type="blur | pixelate | blackbox" default="blur">
   Redaction method
 </ParamField>
 

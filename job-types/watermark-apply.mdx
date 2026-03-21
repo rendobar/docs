@@ -90,7 +90,7 @@ response = requests.post(
       Scale relative to source dimensions (0.01-1)
     </ParamField>
 
-    <ParamField body="position" type=""top-left" | "top-center" | "top-right" | "center-left" | "center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right"" default=""bottom-right"">
+    <ParamField body="position" type="top-left | top-center | top-right | center-left | center | center-right | bottom-left | bottom-center | bottom-right" default="bottom-right">
       Watermark position on the 9-point grid
     </ParamField>
 
@@ -134,7 +134,7 @@ response = requests.post(
       Text content to render as watermark
     </ParamField>
 
-    <ParamField body="font" type=""Arial" | "Roboto" | "Inter" | "Poppins" | "Montserrat" | "Lato" | "Open Sans" | "Raleway" | "Playfair Display" | "Oswald" | "Nunito" | "Source Sans" | "Ubuntu" | "Courier" | "Georgia"" default=""Inter"">
+    <ParamField body="font" type="Arial | Roboto | Inter | Poppins | Montserrat | Lato | Open Sans | Raleway | Playfair Display | Oswald | Nunito | Source Sans | Ubuntu | Courier | Georgia" default="Inter">
       Font family name
     </ParamField>
 
@@ -146,7 +146,7 @@ response = requests.post(
       Font size in pixels
     </ParamField>
 
-    <ParamField body="color" type="string" default=""#FFFFFF"">
+    <ParamField body="color" type="string" default="#FFFFFF">
       Text color in hex format
     </ParamField>
 
@@ -162,7 +162,7 @@ response = requests.post(
       Background color behind text in hex format
     </ParamField>
 
-    <ParamField body="position" type=""top-left" | "top-center" | "top-right" | "center-left" | "center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right"" default=""bottom-right"">
+    <ParamField body="position" type="top-left | top-center | top-right | center-left | center | center-right | bottom-left | bottom-center | bottom-right" default="bottom-right">
       Watermark position on the 9-point grid
     </ParamField>
 
@@ -199,7 +199,7 @@ response = requests.post(
   </Expandable>
 </ParamField>
 
-<ParamField body="quality" type=""fast" | "balanced" | "high"" default=""balanced"">
+<ParamField body="quality" type="fast | balanced | high" default="balanced">
   Output quality preset
 </ParamField>
 

@@ -79,14 +79,14 @@ response = requests.post(
   Canvas height in pixels
 </ParamField>
 
-<ParamField body="backgroundColor" type="string" default=""#000000"">
+<ParamField body="backgroundColor" type="string" default="#000000">
   Background color in hex format
 </ParamField>
 
 <ParamField body="clips" type="object[]" required>
   Array of clips to compose on the timeline
   <Expandable title="item properties">
-    <ParamField body="type" type=""video" | "image" | "audio" | "text" | "lottie"" required>
+    <ParamField body="type" type="video | image | audio | text | lottie" required>
       Clip media type
     </ParamField>
 
@@ -151,7 +151,7 @@ response = requests.post(
           Text content to display
         </ParamField>
 
-        <ParamField body="fontFamily" type="string" default=""Arial"">
+        <ParamField body="fontFamily" type="string" default="Arial">
           Font family name
         </ParamField>
 
@@ -159,7 +159,7 @@ response = requests.post(
           Font size in pixels
         </ParamField>
 
-        <ParamField body="color" type="string" default=""#FFFFFF"">
+        <ParamField body="color" type="string" default="#FFFFFF">
           Text color in hex format
         </ParamField>
 
@@ -228,7 +228,7 @@ response = requests.post(
       URL to the subtitle file
     </ParamField>
 
-    <ParamField body="format" type=""srt" | "vtt" | "ass"" default=""srt"">
+    <ParamField body="format" type="srt | vtt | ass" default="srt">
       Subtitle file format
     </ParamField>
 

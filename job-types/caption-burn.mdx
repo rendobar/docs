@@ -66,7 +66,7 @@ response = requests.post(
   URL to existing subtitle file (omit to auto-extract captions)
 </ParamField>
 
-<ParamField body="fontName" type="string" default=""Arial"">
+<ParamField body="fontName" type="string" default="Arial">
   Font name for rendered captions
 </ParamField>
 
@@ -74,11 +74,11 @@ response = requests.post(
   Font size in pixels
 </ParamField>
 
-<ParamField body="primaryColor" type="string" default=""&HFFFFFF"">
+<ParamField body="primaryColor" type="string" default="&HFFFFFF">
   Primary text color in ASS hex format (e.g. "&HFFFFFF")
 </ParamField>
 
-<ParamField body="outlineColor" type="string" default=""&H000000"">
+<ParamField body="outlineColor" type="string" default="&H000000">
   Outline color in ASS hex format (e.g. "&H000000")
 </ParamField>
 
@@ -86,7 +86,7 @@ response = requests.post(
   Outline thickness in pixels
 </ParamField>
 
-<ParamField body="position" type=""bottom" | "top" | "center"" default=""bottom"">
+<ParamField body="position" type="bottom | top | center" default="bottom">
   Vertical position of captions
 </ParamField>
 

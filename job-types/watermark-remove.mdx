@@ -67,7 +67,7 @@ response = requests.post(
 
 ## Parameters
 
-<ParamField body="mode" type=""auto" | "manual"" default=""auto"">
+<ParamField body="mode" type="auto | manual" default="auto">
   Detection mode: auto (AI-based) or manual (specify regions)
 </ParamField>
 
@@ -93,7 +93,7 @@ response = requests.post(
   </Expandable>
 </ParamField>
 
-<ParamField body="method" type=""blur" | "inpaint"" default=""inpaint"">
+<ParamField body="method" type="blur | inpaint" default="inpaint">
   Removal method: blur or inpaint
 </ParamField>
 
@@ -101,7 +101,7 @@ response = requests.post(
   Removal strength (1-100)
 </ParamField>
 
-<ParamField body="quality" type=""fast" | "balanced" | "high"" default=""balanced"">
+<ParamField body="quality" type="fast | balanced | high" default="balanced">
   Output quality preset
 </ParamField>
 
