@@ -8,11 +8,11 @@
     "dark": "#1249C8"
   },
   "logo": {
-    "dark": "https://cdn.rendobar.com/assets/brand/logo-full.svg",
-    "light": "https://cdn.rendobar.com/assets/brand/logo-full-black.svg",
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg",
     "href": "https://rendobar.com"
   },
-  "favicon": "https://cdn.rendobar.com/assets/brand/favicon.svg",
+  "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
