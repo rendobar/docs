@@ -1,0 +1,93 @@
+---
+title: "MCP tools reference"
+description: "All 18 MCP tools available in the Rendobar MCP server"
+icon: "wrench"
+---
+
+Rendobar exposes 18 tools through its MCP server at `api.rendobar.com/mcp`. These map 1:1 with the REST API endpoints.
+
+## Job management
+
+<ParamField body="submit_job" type="tool">
+  Submit a new media processing job. Accepts `type`, `inputs`, and `params`.
+</ParamField>
+
+<ParamField body="submit_batch" type="tool">
+  Submit multiple jobs as a batch. Returns a batch ID for tracking.
+</ParamField>
+
+<ParamField body="get_job" type="tool">
+  Get job status, result, and metadata by job ID.
+</ParamField>
+
+<ParamField body="get_job_result" type="tool">
+  Get the job output including download URL and processing metadata.
+</ParamField>
+
+<ParamField body="list_jobs" type="tool">
+  List jobs with optional filters (status, type, date range) and pagination.
+</ParamField>
+
+<ParamField body="cancel_job" type="tool">
+  Cancel a job that is in `waiting` or `dispatched` status.
+</ParamField>
+
+## Job discovery
+
+<ParamField body="list_job_types" type="tool">
+  List all available job types with summaries, tags, and accepted media types.
+</ParamField>
+
+<ParamField body="get_job_schema" type="tool">
+  Get the full JSON Schema for a job type's parameters. Useful for validating inputs before submission.
+</ParamField>
+
+## Billing
+
+<ParamField body="get_credits" type="tool">
+  Get the organization's current credit balance in nanodollars and formatted credits.
+</ParamField>
+
+<ParamField body="get_usage" type="tool">
+  Get usage summary for a date range including job counts, costs, and compute time.
+</ParamField>
+
+## Organization
+
+<ParamField body="get_org" type="tool">
+  Get organization details including plan, limits, and feature flags.
+</ParamField>
+
+<ParamField body="list_members" type="tool">
+  List organization members with their roles.
+</ParamField>
+
+## API keys
+
+<ParamField body="list_api_keys" type="tool">
+  List all API keys for the organization (keys are masked).
+</ParamField>
+
+<ParamField body="create_api_key" type="tool">
+  Create a new API key with an optional name. Returns the full key (shown only once).
+</ParamField>
+
+<ParamField body="revoke_api_key" type="tool">
+  Revoke an existing API key by ID. The key immediately stops working.
+</ParamField>
+
+## Media
+
+<ParamField body="probe_media" type="tool">
+  Probe a media file's metadata (codecs, duration, resolution, bitrate). Maps to the `extract.metadata` job type.
+</ParamField>
+
+## FFmpeg
+
+<ParamField body="run_ffmpeg" type="tool">
+  Execute a raw FFmpeg command with safety guardrails. The command is validated against 8 security layers before execution.
+</ParamField>
+
+<ParamField body="validate_ffmpeg" type="tool">
+  Validate an FFmpeg command without executing it. Returns whether the command is allowed and what inputs/outputs were detected.
+</ParamField>

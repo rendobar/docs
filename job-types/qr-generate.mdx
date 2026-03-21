@@ -15,10 +15,11 @@ Generate a styled QR code image (PNG or SVG) with 9 content types: URL, WhatsApp
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/generate \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "qr.generate",
   "inputs": {},
   "params": {
     "content": {
@@ -35,13 +36,14 @@ curl -X POST https://api.rendobar.com/generate \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/generate", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "qr.generate",
     inputs: {},
     params: {"content":{"type":"url","url":"https://rendobar.com"},"style":{"size":512,"foregroundColor":"#6366F1","dotStyle":"rounded"}},
   }),
@@ -53,9 +55,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/generate",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "qr.generate",
         "inputs": {},
         "params": {"content":{"type":"url","url":"https://rendobar.com"},"style":{"size":512,"foregroundColor":"#6366F1","dotStyle":"rounded"}},
     },

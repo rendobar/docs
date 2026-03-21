@@ -16,10 +16,11 @@ Compose and render a multi-track video using the Rendley engine. Supports clips,
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/rendley \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "render.rendley",
   "inputs": {},
   "params": {
     "width": 1920,
@@ -37,13 +38,14 @@ curl -X POST https://api.rendobar.com/rendley \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/rendley", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "render.rendley",
     inputs: {},
     params: {"width":1920,"height":1080,"clips":[{"type":"video","url":"https://cdn.rendobar.com/assets/examples/sample.mp4","startTime":0,"duration":10}]},
   }),
@@ -55,9 +57,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/rendley",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "render.rendley",
         "inputs": {},
         "params": {"width":1920,"height":1080,"clips":[{"type":"video","url":"https://cdn.rendobar.com/assets/examples/sample.mp4","startTime":0,"duration":10}]},
     },

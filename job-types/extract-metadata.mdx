@@ -16,10 +16,11 @@ Extract detailed metadata from a video, image, or audio file including codec, re
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/metadata \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "extract.metadata",
   "inputs": {
     "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
   },
@@ -28,13 +29,14 @@ curl -X POST https://api.rendobar.com/metadata \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/metadata", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "extract.metadata",
     inputs: {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
     params: {},
   }),
@@ -46,9 +48,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/metadata",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "extract.metadata",
         "inputs": {"source":"https://cdn.rendobar.com/assets/examples/sample.mp4"},
         "params": {},
     },

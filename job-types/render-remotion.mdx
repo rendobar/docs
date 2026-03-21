@@ -16,10 +16,11 @@ Render a video from a Remotion bundle. Provide the bundle URL, composition ID, a
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.rendobar.com/remotion \
+curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
+  "type": "render.remotion",
   "inputs": {},
   "params": {
     "bundleUrl": "https://example.com/remotion-bundle/index.html",
@@ -34,13 +35,14 @@ curl -X POST https://api.rendobar.com/remotion \
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/remotion", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer rb_your_key",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
+    type: "render.remotion",
     inputs: {},
     params: {"bundleUrl":"https://example.com/remotion-bundle/index.html","composition":"MyVideo","inputProps":{"title":"Hello World"},"codec":"h264","fps":30},
   }),
@@ -52,9 +54,10 @@ const { data } = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.rendobar.com/remotion",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
     json={
+        "type": "render.remotion",
         "inputs": {},
         "params": {"bundleUrl":"https://example.com/remotion-bundle/index.html","composition":"MyVideo","inputProps":{"title":"Hello World"},"codec":"h264","fps":30},
     },
