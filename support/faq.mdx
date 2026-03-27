@@ -5,7 +5,7 @@ icon: "circle-question"
 ---
 
 <Accordion title="How much does Rendobar cost?">
-  Rendobar uses credit-based billing. The free tier includes $2/month in credits with no credit card required. Paid plans start at $19/month (Starter).
+  Rendobar uses credit-based billing. The free tier includes a one-time $5 signup grant with no credit card required. The Pro plan is $9/month and includes $5/month in credits plus a 20% bonus on every credit purchase. Credit packs ($10-$100) are available on both plans. Credits never expire.
 </Accordion>
 
 <Accordion title="What video formats are supported?">
@@ -13,33 +13,33 @@ icon: "circle-question"
 </Accordion>
 
 <Accordion title="Can I use Rendobar from AI agents?">
-  Yes. Rendobar is MCP-native. Connect any MCP-compatible AI agent to `api.rendobar.com/mcp` with your API key. 15 tools are available covering job submission, status, billing, and account management.
+  Yes. Rendobar is MCP-native. Connect any MCP-compatible AI agent to `api.rendobar.com/mcp` with your API key. 6 tools are available covering job submission, status polling, media probing, file upload, and account management. MCP is available on all plans, including Free.
 </Accordion>
 
 <Accordion title="How long do jobs take?">
-  Most jobs complete in seconds to minutes depending on input size. Transcoding a 1-minute video typically takes 10-30 seconds. Maximum timeout varies by plan.
+  Most jobs complete in seconds to minutes depending on input size and the operation. Maximum timeout varies by plan: 5 minutes on Free, 15 minutes on Pro.
 </Accordion>
 
 <Accordion title="Is there a rate limit?">
-  Yes. Rate limits depend on your plan. Free tier allows 10 requests/minute. Paid plans allow up to 120 requests/minute.
+  Yes. The Free plan allows 30 API requests per minute. The Pro plan allows 300 requests per minute. Rate limits apply to both REST API and MCP tool calls.
 </Accordion>
 
 <Accordion title="What happens if a job fails?">
-  No credits are charged for failed jobs. If credits were pre-deducted (rare), they are refunded automatically. You can retry failed jobs via the API.
-</Accordion>
-
-<Accordion title="Do unused credits roll over?">
-  Yes. Unused balance rolls over to the next billing cycle, up to a cap of 2x your monthly allocation. Balance beyond the cap expires when new credits are added.
+  No credits are charged for failed jobs. You can retry failed jobs via the API or MCP.
 </Accordion>
 
 <Accordion title="Can I run custom FFmpeg commands?">
-  Yes, via the `raw.ffmpeg` job type. Your command is validated against a flag whitelist and executed in an isolated container. Available on Starter plans and above.
+  Yes, via the `raw.ffmpeg` job type. Your command is validated against a flag whitelist and security layers before execution in an isolated container. Raw FFmpeg is available on all plans, including Free.
 </Accordion>
 
 <Accordion title="How do I get real-time job updates?">
-  Two options: configure a webhook URL on your organization for push-based notifications, or use the SSE endpoint for real-time streaming updates. Both are available on Starter plans and above.
+  The dashboard receives real-time updates via WebSocket (OrgHub). For programmatic use, configure a webhook endpoint on your organization for push-based notifications, or poll the `GET /jobs/:id` endpoint.
 </Accordion>
 
 <Accordion title="What AI models does Rendobar use?">
   Rendobar uses Deepgram for speech-to-text, MediaPipe for face detection, OpenALPR for license plate recognition, and Meta VideoSeal for invisible watermarking. All detection models run on Rendobar's processing servers -- no data is sent to external AI services.
+</Accordion>
+
+<Accordion title="What job types are available?">
+  Currently live: `raw.ffmpeg` (arbitrary FFmpeg commands) and `extract.metadata` (media probing). Additional job types including watermarking, transcoding, captions, GDPR compliance, rendering, and QR generation are in development. Check the [job types overview](/job-types/overview) for the latest status.
 </Accordion>

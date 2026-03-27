@@ -36,7 +36,7 @@ The job is routed to an available processing provider based on capabilities and 
 
 ### 3. Execution (running)
 
-The provider downloads your input files, processes them (FFmpeg, AI detection, rendering), and uploads the result. For long-running jobs, you can monitor progress via SSE events on the dashboard.
+The provider downloads your input files, processes them (FFmpeg, AI detection, rendering), and uploads the result. For long-running jobs, you can monitor progress via real-time WebSocket events on the dashboard.
 
 ### 4. Completion (complete)
 
@@ -76,13 +76,11 @@ curl -X POST https://api.rendobar.com/jobs/job_abc/retry \
 
 Configure a webhook URL on your organization to receive real-time notifications when jobs complete or fail. See the [Webhooks guide](/guides/webhooks) for details.
 
-## Real-time updates (SSE)
+## Real-time updates (WebSocket)
 
-The dashboard connects to a Server-Sent Events stream for real-time job status updates. You can also use the SSE endpoint programmatically:
+The dashboard connects to a per-organization WebSocket hub (OrgHub) for real-time job status updates. Events include job creation, status changes, progress, and balance updates. The connection uses Cloudflare Durable Objects with hibernation for zero-cost idle connections.
 
-```
-GET https://api.rendobar.com/events/connect
-```
+For programmatic use, configure [webhooks](/guides/webhooks) to receive push-based HTTP notifications when jobs complete or fail.
 
 <CardGroup cols={2}>
 

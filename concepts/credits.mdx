@@ -1,11 +1,11 @@
 ---
 title: "How Credits Work"
-description: "Understanding Rendobar's credit-based billing -- balance pre-checks, debit flow, rollover, and overage"
+description: "Understanding Rendobar's credit-based billing -- balance pre-checks, debit flow, and refunds"
 sidebarTitle: "Credits"
 icon: "coins"
 ---
 
-Credits are the universal billing unit for all Rendobar jobs. Every operation -- watermarking, transcoding, rendering -- costs credits based on the job type and input/output duration.
+Credits are the universal billing unit for all Rendobar jobs. Every operation costs credits based on the job type and input/output duration.
 
 ## Credit lifecycle
 
@@ -20,11 +20,11 @@ Credits are the universal billing unit for all Rendobar jobs. Every operation --
 </Step>
 
 <Step title="Debit">
-  On successful completion, the actual cost is calculated (based on real output duration) and atomically deducted from your balance.
+  On successful completion, the actual cost is calculated (based on real output duration or compute time) and atomically deducted from your balance.
 </Step>
 
 <Step title="Refund">
-  If a job fails or is cancelled, no credits are charged. If credits were pre-deducted (rare edge case), they are refunded automatically.
+  If a job fails or is cancelled, no credits are charged. Failed jobs never cost anything.
 </Step>
 
 </Steps>
@@ -35,22 +35,10 @@ Different job types use different cost models:
 
 | Cost Model | How it works | Example job types |
 |-----------|-------------|-------------------|
-| Per minute (output) | Credits scale with output video duration | watermark.add, transcode, caption.burn |
+| Per minute (output) | Credits scale with output video duration | watermark.apply, transcode, caption.burn |
 | Per minute (input) | Credits scale with input video duration | caption.extract, compliance.gdpr.redact |
-| Flat rate | Fixed credit cost regardless of duration | thumbnail, qr.generate, compliance.moderate (image) |
+| Flat rate | Fixed credit cost regardless of duration | extract.metadata, qr.generate, compliance.moderate (image) |
 | Per compute time | Credits based on actual processing time | raw.ffmpeg |
-
-## Rollover
-
-Unused balance rolls over to the next billing cycle, up to a cap:
-
-- The rollover cap is **2x your monthly allocation**
-- Balance beyond the cap expires when your new monthly allocation is added
-- Example: Pro plan ($500/month) can accumulate up to $1,000
-
-## Overage
-
-On paid plans, if you exceed your included balance, jobs continue to process and overage accrues at the same per-job rates. On the Free plan, jobs are rejected when balance runs out -- no overage is allowed.
 
 ## Checking your balance
 
@@ -62,7 +50,7 @@ curl https://api.rendobar.com/billing/balance \
 ```json
 {
   "data": {
-    "balance": 75000000000,
+    "balance": 5000000000,
     "rollover": 0
   }
 }

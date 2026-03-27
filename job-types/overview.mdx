@@ -1,80 +1,86 @@
 ---
 title: "Job Types"
-description: "All 23 Rendobar job types for media processing -- watermarking, transcoding, captions, GDPR compliance, AI analysis, rendering, and QR code generation"
+description: "All Rendobar job types for media processing -- current availability, planned operations, and pricing"
 sidebarTitle: "Overview"
 icon: "list"
 ---
 
-Rendobar supports 23 job types organized into categories. Each job type has a specific Zod schema for input validation, a cost model, and execution requirements. Most job types accept multiple media formats -- the system automatically detects whether your input is video, image, or audio and adjusts processing, output format, and billing accordingly.
+Rendobar organizes media processing into job types. Each job type has a specific Zod schema for input validation, a cost model, and execution requirements. Submit any job type via the REST API or MCP tools.
 
-## Watermarking
+## Live Now
 
-| Job Type | Description | Cost |
-|----------|-------------|------|
-| [watermark.add](/job-types/watermark-apply) | Add a single image watermark to a video or image | ~$0.50/min (video), $0.20 flat (image) |
-| [watermark.composite](/job-types/watermark-apply) | Overlay multiple watermarks (images and text) in a single pass | ~$0.50/min (video), $0.20 flat (image) |
-| [watermark.remove](/job-types/watermark-remove) | Remove a watermark using AI detection or manual region specification | ~$0.50/min (video), $0.20 flat (image) |
-| [watermark.check](/job-types/watermark-check) | Analyze frames for watermark presence using AI classification | $0.10 flat |
-| [watermark.embed](/job-types/watermark-embed) | Embed an invisible watermark using VideoSeal | $0.03 flat |
-| [watermark.detect](/job-types/watermark-detect) | Detect and decode an invisible watermark | $0.03 flat |
-
-## Transcoding
+These job types are available in production:
 
 | Job Type | Description | Cost |
 |----------|-------------|------|
-| [transcode](/job-types/transcode) | Convert between video or audio formats, adjust codecs, bitrate, resolution | ~$0.50/min (video), $0.20 flat (audio) |
-| [thumbnail](/job-types/thumbnail) | Extract a thumbnail image from a video at a specified timestamp | $0.50 flat |
+| [raw.ffmpeg](/job-types/raw-ffmpeg) | Execute arbitrary FFmpeg commands with safety guardrails | ~$0.05/min compute |
+| [extract.metadata](/job-types/extract-metadata) | Extract comprehensive metadata from media files (also available via MCP `probe_media`) | $0.02 flat |
 
-## Captions (AI-powered)
+## Coming Soon
 
-| Job Type | Description | Cost |
-|----------|-------------|------|
-| [caption.extract](/job-types/caption-extract) | AI-powered speech-to-text transcription (Deepgram) | $0.50/min of input |
-| [caption.burn](/job-types/caption-burn) | Burn subtitles into video with customizable styling | ~$1.00/min |
+These job types are defined and will be available shortly:
 
-## Compliance (AI-powered)
+### Watermarking
 
-| Job Type | Description | Cost |
-|----------|-------------|------|
-| [compliance.moderate](/job-types/compliance-moderate) | Content moderation for video or image using AI frame analysis | ~$0.50/min (video), $0.10 flat (image) |
-| [compliance.gdpr.detect](/job-types/compliance-gdpr-detect) | Detect faces and license plates for GDPR compliance | ~$0.50/min (video), $0.10 flat (image) |
-| [compliance.gdpr.redact](/job-types/compliance-gdpr-redact) | Automatically blur or pixelate detected faces and plates | ~$2.00/min (video), $0.50 flat (image) |
+| Job Type | Description | Estimated Cost |
+|----------|-------------|----------------|
+| watermark.apply | Add a single image watermark to video or image | ~$0.50/min (video), $0.20 flat (image) |
+| watermark.composite | Overlay multiple watermarks in a single pass | ~$0.50/min (video), $0.20 flat (image) |
+| watermark.remove | Remove a watermark using AI detection or manual regions | ~$0.50/min (video), $0.20 flat (image) |
+| watermark.check | Analyze frames for watermark presence using AI | $0.10 flat |
+| watermark.embed | Embed an invisible watermark using VideoSeal | $0.03 flat |
+| watermark.detect | Detect and decode an invisible watermark | $0.03 flat |
 
-## Extraction (AI-powered)
+### Transcoding
 
-| Job Type | Description | Cost |
-|----------|-------------|------|
-| [extract.metadata](/job-types/extract-metadata) | Extract comprehensive metadata from media files | $0.10 flat |
-| [extract.scenes](/job-types/extract-scenes) | Detect scene changes in video with timestamps | $0.20 flat |
-| [extract.text](/job-types/extract-text) | OCR-based text extraction from video frames or images | ~$0.50/min (video), $0.10 flat (image) |
+| Job Type | Description | Estimated Cost |
+|----------|-------------|----------------|
+| transcode | Convert between formats, adjust codecs, bitrate, resolution | ~$0.50/min (video), $0.20 flat (audio) |
+| thumbnail | Extract a thumbnail image at a specified timestamp | $0.50 flat |
 
-## Rendering
+### Captions (AI-powered)
 
-| Job Type | Description | Cost |
-|----------|-------------|------|
-| [render.rendley](/job-types/render-rendley) | Compose multi-clip videos with Rendley SDK | ~$1.00/min |
-| [render.remotion](/job-types/render-remotion) | Render video from a Remotion bundle | ~$1.00/min |
-| [render.veed](/job-types/render-veed) | Render from a VEED project | ~$1.00/min |
+| Job Type | Description | Estimated Cost |
+|----------|-------------|----------------|
+| caption.extract | AI-powered speech-to-text transcription (Deepgram) | $0.50/min of input |
+| caption.burn | Burn subtitles into video with customizable styling | ~$1.00/min |
 
-## Raw FFmpeg
+### Compliance (AI-powered)
 
-| Job Type | Description | Cost |
-|----------|-------------|------|
-| [raw.ffmpeg](/job-types/raw-ffmpeg) | Execute arbitrary FFmpeg commands with safety guardrails | $1.00/2min compute |
+| Job Type | Description | Estimated Cost |
+|----------|-------------|----------------|
+| compliance.moderate | Content moderation for video or image using AI | ~$0.50/min (video), $0.10 flat (image) |
+| compliance.gdpr.detect | Detect faces and license plates for GDPR compliance | ~$0.50/min (video), $0.10 flat (image) |
+| compliance.gdpr.redact | Automatically blur or pixelate detected faces and plates | ~$2.00/min (video), $0.50 flat (image) |
 
-<Note>
-Raw FFmpeg is available on Starter plans and above.
-</Note>
+### Extraction (AI-powered)
 
-## QR Code Generation
+| Job Type | Description | Estimated Cost |
+|----------|-------------|----------------|
+| extract.scenes | Detect scene changes in video with timestamps | $0.20 flat |
+| extract.text | OCR-based text extraction from video frames or images | ~$0.50/min (video), $0.10 flat (image) |
 
-| Job Type | Description | Cost |
-|----------|-------------|------|
-| [qr.generate](/job-types/qr-generate) | Generate styled QR codes with 9 content types and custom styling | $0.10 flat |
+### Rendering
 
-**Content types:** `url`, `text`, `phone`, `sms`, `email`, `vcard`, `wifi`, `geo`, `whatsapp`
+| Job Type | Description | Estimated Cost |
+|----------|-------------|----------------|
+| render.rendley | Compose multi-clip videos with Rendley SDK | ~$1.00/min |
+| render.remotion | Render video from a Remotion bundle | ~$1.00/min |
+| render.veed | Render from a VEED project | ~$1.00/min |
 
-**Style options:** size (100--2000px), margin, error correction (L/M/Q/H), foreground/background color, dot style (square/rounded/dots/extra-rounded), format (png/svg), optional logo with auto-upgraded error correction.
+### QR Code Generation
+
+| Job Type | Description | Estimated Cost |
+|----------|-------------|----------------|
+| qr.generate | Generate styled QR codes with 9 content types and custom styling | $0.02 flat |
+
+**QR content types:** `url`, `text`, `phone`, `sms`, `email`, `vcard`, `wifi`, `geo`, `whatsapp`
+
+**QR style options:** size (64-2048px), margin, error correction (L/M/Q/H), foreground/background color, dot style (square/rounded/dots/extra-rounded), format (png/svg), optional logo with auto-upgraded error correction.
+
+<Info>
+Pricing shown for "Coming Soon" job types is estimated and may change before launch. All job types will be available on both Free and Pro plans.
+</Info>
 
 <CardGroup cols={2}>
 

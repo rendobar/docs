@@ -1,15 +1,13 @@
 ---
 title: "Credits & Billing"
-description: "How Rendobar credits work, plan allocations, cost estimates, rollover rules, and usage tracking"
+description: "How Rendobar credits work, plan allocations, cost estimates, and usage tracking"
 sidebarTitle: "Credits"
 icon: "coins"
 ---
 
-Rendobar uses a credit-based billing system. Every job costs credits based on either a flat rate or the duration of the input/output video.
+Rendobar uses a credit-based billing system. Every job costs credits based on either a flat rate or the duration of the input/output media. Your balance is denominated in dollars.
 
 ## How credits work
-
-Credits are the universal billing unit. Credit values represent dollar amounts -- your balance is denominated in dollars and jobs are priced accordingly.
 
 ### Credit flow
 
@@ -28,36 +26,48 @@ Credits are the universal billing unit. Credit values represent dollar amounts -
 </Step>
 
 <Step title="Refund">
-  If a job fails or is cancelled, no credits are deducted (or previously deducted credits are refunded).
+  If a job fails or is cancelled, no credits are deducted. Failed jobs never cost anything.
 </Step>
 
 </Steps>
 
-## Plans and allocations
+## Plans
 
-| Plan | Price | Included Balance | Rollover Cap |
-|------|-------|-----------------|--------------|
-| Free | $0/mo | $5 | $10 |
-| Starter | $19/mo | $100 | $200 |
-| Pro | $49/mo | $500 | $1,000 |
-| Scale | $149/mo | $2,000 | $4,000 |
+| | Free | Pro |
+|---|------|-----|
+| **Price** | $0/mo | $9/mo |
+| **Signup credits** | $5 (one-time) | -- |
+| **Monthly credits** | -- | $5/mo included |
+| **Credit bonus** | -- | +20% on every purchase |
+| **Concurrent jobs** | 1 | 25 |
+| **API requests/min** | 30 | 300 |
+| **Max file size** | 100 MB | 2 GB |
+| **Job timeout** | 5 min | 15 min |
+| **Output retention** | 7 days | 30 days |
+| **Priority queue** | No | Yes |
 
-Each plan includes a monthly balance allocation that refreshes at the start of each billing cycle.
+Both plans have access to all job types, MCP, webhooks, and raw FFmpeg.
+
+## Credit packs
+
+Purchase additional credits at any time: $10 / $25 / $50 / $100 or custom (minimum $10).
+
+Pro subscribers receive a **20% bonus** on every purchase. Buy $25, get $30 in credits. Buy $100, get $120.
+
+Credits never expire.
 
 ## Cost estimates
 
-Before submitting a job, Rendobar checks whether your balance covers the estimated cost. Estimates are defined per job type and plan:
+Before submitting a job, Rendobar checks whether your balance covers the estimated cost:
 
 | Job Type | Cost Model | Typical Cost |
 |----------|-----------|-------------|
-| watermark.apply | Per minute of output | ~$1.00/min |
-| transcode | Per minute of output | ~$1.00/min |
-| thumbnail | Flat rate | $0.50 |
-| caption.extract | Per minute of input | $0.50/min |
-| caption.burn | Per minute of output | ~$1.00/min |
-| compliance.moderate | Flat rate (image) | $0.10 |
-| compliance.gdpr.redact | Per minute of input | $2.00/min |
-| raw.ffmpeg | Per compute time | $1.00/2min |
+| raw.ffmpeg | Per compute time | ~$0.05/min |
+| extract.metadata | Flat rate | $0.02 |
+
+<Info>
+More job types are being added. Check the [job types overview](/job-types/overview) for the latest availability and pricing.
+</Info>
 
 If your balance is too low, the API returns:
 
@@ -71,21 +81,6 @@ If your balance is too low, the API returns:
 ```
 
 HTTP status: `402`
-
-## Rollover
-
-Unused balance rolls over to the next month, up to a cap of 2x your monthly allocation:
-
-- Free: up to $10
-- Starter: up to $200
-- Pro: up to $1,000
-- Scale: up to $4,000
-
-Balance beyond the rollover cap expires at the start of the new billing cycle.
-
-## Overage
-
-On paid plans, if you exceed your included balance, overage costs continue to accrue at the same per-job rates. On the Free plan, jobs are rejected when balance runs out.
 
 ## Usage tracking
 
