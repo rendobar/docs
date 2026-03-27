@@ -1,34 +1,30 @@
 ---
 title: "Raw FFmpeg"
-description: "Run arbitrary FFmpeg commands with Rendobar's safety guardrails -- allowed flags, input substitution, timeout limits, and examples"
+description: "Run arbitrary FFmpeg commands with Rendobar's safety guardrails -- allowed flags, input handling, timeout limits, and examples"
 sidebarTitle: "Raw FFmpeg"
 icon: "terminal"
 ---
 
 The `raw.ffmpeg` job type lets you execute arbitrary FFmpeg commands through the Rendobar API. This gives you full FFmpeg power while Rendobar handles file transfer, execution isolation, timeout enforcement, and output upload.
 
-<Note>
-Raw FFmpeg is available on Starter plans and above.
-</Note>
-
 ## How it works
 
 <Steps>
 
 <Step title="Validate">
-  Your command is validated against a whitelist of allowed flags.
+  Your command is validated against 8 security layers including a flag whitelist, format blocklist, and filter blocklist.
 </Step>
 
 <Step title="Download">
-  Input files are downloaded to a sandboxed execution environment.
+  Input URLs in your command are downloaded to a sandboxed execution environment.
 </Step>
 
 <Step title="Substitute">
-  Input references in your command are replaced with local file paths.
+  URLs are replaced with local file paths before execution.
 </Step>
 
 <Step title="Execute">
-  The FFmpeg command runs inside an isolated container.
+  The FFmpeg command runs inside an isolated container with network access disabled.
 </Step>
 
 <Step title="Upload">
@@ -36,14 +32,14 @@ Raw FFmpeg is available on Starter plans and above.
 </Step>
 
 <Step title="Return">
-  A presigned download URL is returned.
+  A presigned download URL is available via `GET /jobs/:id`.
 </Step>
 
 </Steps>
 
-You provide the input file URLs and the FFmpeg command string. Rendobar handles everything else.
-
 ## Submitting a raw FFmpeg job
+
+Submit via `POST /jobs` with a real FFmpeg command. Put input URLs directly in `-i` flags:
 
 ```bash
 curl -X POST https://api.rendobar.com/jobs \
@@ -51,34 +47,48 @@ curl -X POST https://api.rendobar.com/jobs \
   -H "Content-Type: application/json" \
   -d '{
     "type": "raw.ffmpeg",
-    "inputs": {
-      "files": [
-        "https://example.com/video.mp4",
-        "https://example.com/audio.mp3"
-      ]
-    },
+    "inputs": {},
     "params": {
-      "command": "-i {0} -i {1} -c:v libx264 -c:a aac -map 0:v -map 1:a {output}"
+      "command": "ffmpeg -i https://example.com/video.mp4 -i https://example.com/audio.mp3 -c:v libx264 -c:a aac -map 0:v -map 1:a output.mp4"
     }
   }'
 ```
 
-### Input references
+### Request fields
 
-Use `{0}`, `{1}`, `{2}`, etc. to reference input files by their position in the `files` array. Use `{output}` for the output file path.
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | Must be `"raw.ffmpeg"` |
+| `inputs` | Record\<string, string\> | Yes | Additional named inputs (use `{}` when URLs are in the command) |
+| `params.command` | string | Yes | Real FFmpeg command with input URLs in `-i` positions |
+| `params.outputFormat` | string | No | Override output format (default: inferred from trailing filename, or `"mp4"`) |
+| `params.timeout` | number | No | Max execution time in seconds (1-900, default 120) |
 
-The executor replaces these placeholders with actual local file paths before running the command. You never handle file paths directly.
+### Output format
+
+The output format is inferred from the trailing filename in your command (e.g., `output.mp4` → MP4, `output.webm` → WebM). You can override it with `params.outputFormat`.
+
+## Validation endpoint
+
+You can validate a command without executing it (free, no auth required):
+
+```bash
+curl -X POST https://api.rendobar.com/ffmpeg/validate \
+  -H "Content-Type: application/json" \
+  -d '{ "command": "ffmpeg -i video.mp4 -vf scale=1280:720 output.mp4" }'
+```
+
+Returns `{ data: { valid: true, args: [...], inferredOutputFormat: "mp4" } }` or `{ data: { valid: false, error: "..." } }`.
 
 ## Allowed flags
 
-Only whitelisted FFmpeg flags are permitted. Any flag not on this list causes the job to be rejected with a validation error.
+Only whitelisted FFmpeg flags are permitted (~120 flags). Common ones include:
 
 | Flag | Purpose |
 |------|---------|
 | `-i` | Input file |
 | `-f` | Force format |
-| `-c:v` | Video codec |
-| `-c:a` | Audio codec |
+| `-c:v`, `-c:a` | Video/audio codec (stream specifiers like `-c:v:0` supported) |
 | `-vf` | Video filter |
 | `-af` | Audio filter |
 | `-filter_complex` | Complex filter graph |
@@ -87,72 +97,55 @@ Only whitelisted FFmpeg flags are permitted. Any flag not on this list causes th
 | `-t` | Duration |
 | `-r` | Frame rate |
 | `-s` | Resolution |
-| `-b:v` | Video bitrate |
-| `-b:a` | Audio bitrate |
+| `-b:v`, `-b:a` | Video/audio bitrate |
 | `-crf` | Constant rate factor |
 | `-preset` | Encoding preset |
-| `-an` | Disable audio |
-| `-vn` | Disable video |
+| `-an`, `-vn` | Disable audio/video |
 | `-y` | Overwrite output |
 | `-movflags` | MOV/MP4 flags |
+| `-strict` | Strict standards compliance |
 
-## Blocked flags
-
-The following flags are explicitly blocked because they enable network access or other unsafe behavior:
-
-<Warning>
-Any command containing a blocked flag is rejected immediately.
-</Warning>
-
-| Flag | Reason |
-|------|--------|
-| `-protocol_whitelist` | Could enable network protocols |
-| `-re` | Real-time streaming |
-| `-listen` | Opens a listening socket |
-| `-rtmp_live` | RTMP streaming |
-| `-http_proxy` | HTTP proxy access |
-| `-ftp_proxy` | FTP proxy access |
+Any unrecognized flag causes the job to be rejected with a validation error.
 
 ## Security model
 
-Rendobar applies multiple security layers to raw FFmpeg jobs:
+Rendobar applies 8 security layers to raw FFmpeg jobs:
 
-1. **Flag whitelist.** Only known-safe flags are permitted.
-2. **Network isolation.** Blocked flags prevent any network access from within the FFmpeg process.
-3. **Input substitution.** You provide R2 keys or public URLs. The executor downloads files and substitutes local paths, so FFmpeg only accesses local files.
-4. **Output sandboxing.** The output path is forced to a sandboxed directory. FFmpeg cannot write to arbitrary file system locations.
-5. **Timeout enforcement.** Each plan has a maximum job timeout. The FFmpeg process is killed if it exceeds this limit.
-6. **Container isolation.** The execution environment runs in an isolated Trigger.dev container with no access to other jobs or system resources.
+1. **Clean environment.** All inherited env vars are stripped. Only `PATH`, `HOME`, `TMPDIR` remain.
+2. **Flag whitelist.** ~120 known-safe flags permitted, including stream specifiers.
+3. **Format blocklist.** Dangerous `-f` values blocked: `lavfi`, `concat`, `hls`, `tee`, `segment`, `dash`, `null`.
+4. **Filter function blocklist.** File-reading filters blocked: `movie`, `amovie`, `sendcmd`, `zmq`, `ladspa`, `frei0r`.
+5. **Filter parameter blocklist.** `textfile=`, `filename=` in subtitles, absolute paths in subtitle filters.
+6. **Pattern blocklist + URL extraction.** Protocols, path traversal (`../`), `/proc/`, `/sys/`, `subfile:` blocked.
+7. **Per-input protocol restriction.** `-protocol_whitelist file` injected before each `-i` server-side.
+8. **Container isolation.** Trigger.dev container sandboxing with restricted stdio.
 
 ## Cost
 
-Raw FFmpeg jobs cost $1.00 per 2 minutes of compute time. Compute time is measured from when FFmpeg starts to when it finishes, not including file transfer time.
-
-For example, a command that takes 3 minutes of FFmpeg execution time costs $1.50.
+Raw FFmpeg jobs are priced based on compute time. Compute time is measured from when FFmpeg starts to when it finishes, not including file transfer.
 
 ## Timeout limits
 
-Maximum job timeout varies by plan:
-
 | Plan | Max timeout |
 |------|-------------|
-| Starter | 5 minutes |
+| Free | 5 minutes |
 | Pro | 15 minutes |
-| Scale | 30 minutes |
 
 If your FFmpeg command exceeds the timeout, the job fails with a `PROVIDER_TIMEOUT` error and no credits are deducted.
 
 ## Examples
+
+All examples use `POST /jobs` with `type: "raw.ffmpeg"`.
 
 ### Scale a video to 720p
 
 ```json
 {
   "type": "raw.ffmpeg",
-  "inputs": { "files": ["https://example.com/video.mp4"] },
+  "inputs": {},
   "params": {
-    "command": "-i {0} -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 {output}"
-  }
+    "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4",
+}
 }
 ```
 
@@ -161,10 +154,10 @@ If your FFmpeg command exceeds the timeout, the job fails with a `PROVIDER_TIMEO
 ```json
 {
   "type": "raw.ffmpeg",
-  "inputs": { "files": ["https://example.com/video.mp4"] },
+  "inputs": {},
   "params": {
-    "command": "-i {0} -vn -c:a aac -b:a 128k {output}"
-  }
+    "command": "ffmpeg -i https://example.com/video.mp4 -vn -c:a aac -b:a 128k output.m4a",
+}
 }
 ```
 
@@ -173,10 +166,10 @@ If your FFmpeg command exceeds the timeout, the job fails with a `PROVIDER_TIMEO
 ```json
 {
   "type": "raw.ffmpeg",
-  "inputs": { "files": ["https://example.com/video.mp4"] },
+  "inputs": {},
   "params": {
-    "command": "-i {0} -ss 00:01:00 -t 00:00:30 -c:v libx264 -c:a aac {output}"
-  }
+    "command": "ffmpeg -i https://example.com/video.mp4 -ss 00:01:00 -t 00:00:30 -c:v libx264 -c:a aac output.mp4",
+}
 }
 ```
 
@@ -185,15 +178,10 @@ If your FFmpeg command exceeds the timeout, the job fails with a `PROVIDER_TIMEO
 ```json
 {
   "type": "raw.ffmpeg",
-  "inputs": {
-    "files": [
-      "https://example.com/video.mp4",
-      "https://example.com/narration.mp3"
-    ]
-  },
+  "inputs": {},
   "params": {
-    "command": "-i {0} -i {1} -c:v libx264 -c:a aac -map 0:v -map 1:a {output}"
-  }
+    "command": "ffmpeg -i https://example.com/video.mp4 -i https://example.com/narration.mp3 -c:v libx264 -c:a aac -map 0:v -map 1:a output.mp4",
+}
 }
 ```
 
@@ -224,7 +212,7 @@ If the command contains disallowed flags, it is rejected before dispatch:
 <CardGroup cols={2}>
 
 <Card title="Job Types" icon="list" href="/job-types/overview">
-  Simplified alternatives to raw FFmpeg
+  All available operations
 </Card>
 
 <Card title="Credits" icon="coins" href="/credits">

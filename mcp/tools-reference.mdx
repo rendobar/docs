@@ -1,93 +1,95 @@
 ---
-title: "MCP tools reference"
-description: "All 18 MCP tools available in the Rendobar MCP server"
+title: "MCP Tools Reference"
+description: "All 6 MCP tools available in the Rendobar MCP server with parameters and response formats"
 icon: "wrench"
 ---
 
-Rendobar exposes 18 tools through its MCP server at `api.rendobar.com/mcp`. These map 1:1 with the REST API endpoints.
+Rendobar exposes 6 tools through its MCP server at `api.rendobar.com/mcp`. All tools require authentication via API key or OAuth token.
 
-## Job management
+## Job submission
 
 <ParamField body="submit_job" type="tool">
-  Submit a new media processing job. Accepts `type`, `inputs`, and `params`.
+  Submit any media processing job. The tool description dynamically lists all available job types from the registry.
+
+  **Parameters:**
+  - `type` (string, required) -- Job type from the registry (e.g., `raw.ffmpeg`) or use the dynamic list in the tool description
+  - `inputs` (Record\<string, string\>, required) -- Map of input name to URL. For FFmpeg jobs, keys should match filenames referenced in your command
+  - `params` (Record\<string, unknown\>, optional) -- Type-specific parameters. For `raw.ffmpeg`: `{ command: "..." }`
+  - `idempotencyKey` (string, optional) -- Prevents duplicate jobs on retry
+
+  **Response:** `{ jobId, status, estimatedCost, timeoutSeconds }`
 </ParamField>
 
-<ParamField body="submit_batch" type="tool">
-  Submit multiple jobs as a batch. Returns a batch ID for tracking.
-</ParamField>
+## Job monitoring
 
 <ParamField body="get_job" type="tool">
-  Get job status, result, and metadata by job ID.
-</ParamField>
+  Get job status, progress, results, and output URL by job ID.
 
-<ParamField body="get_job_result" type="tool">
-  Get the job output including download URL and processing metadata.
+  **Parameters:**
+  - `jobId` (string, required) -- Job ID returned by `submit_job`
+
+  **Response includes:**
+  - `status` -- waiting, dispatched, running, complete, failed, cancelled
+  - `progress` -- fraction complete (e.g., "3/7 steps") when running
+  - `cost` -- formatted cost (e.g., "$0.05") when complete
+  - `outputUrl` -- download URL when complete
+  - `output` -- metadata (format, resolution, duration, file size) when complete
+  - `error` -- error details when failed
 </ParamField>
 
 <ParamField body="list_jobs" type="tool">
-  List jobs with optional filters (status, type, date range) and pagination.
+  List recent jobs with optional filters.
+
+  **Parameters:**
+  - `status` (enum, optional) -- Filter: waiting, dispatched, running, complete, failed, cancelled
+  - `type` (string, optional) -- Filter by job type
+  - `limit` (number, 1-50, default 10) -- Number of jobs to return
+
+  **Response:** `{ jobs: [{ id, type, status, createdAt, cost }], total }`
 </ParamField>
 
-<ParamField body="cancel_job" type="tool">
-  Cancel a job that is in `waiting` or `dispatched` status.
-</ParamField>
-
-## Job discovery
-
-<ParamField body="list_job_types" type="tool">
-  List all available job types with summaries, tags, and accepted media types.
-</ParamField>
-
-<ParamField body="get_job_schema" type="tool">
-  Get the full JSON Schema for a job type's parameters. Useful for validating inputs before submission.
-</ParamField>
-
-## Billing
-
-<ParamField body="get_credits" type="tool">
-  Get the organization's current credit balance in nanodollars and formatted credits.
-</ParamField>
-
-<ParamField body="get_usage" type="tool">
-  Get usage summary for a date range including job counts, costs, and compute time.
-</ParamField>
-
-## Organization
-
-<ParamField body="get_org" type="tool">
-  Get organization details including plan, limits, and feature flags.
-</ParamField>
-
-<ParamField body="list_members" type="tool">
-  List organization members with their roles.
-</ParamField>
-
-## API keys
-
-<ParamField body="list_api_keys" type="tool">
-  List all API keys for the organization (keys are masked).
-</ParamField>
-
-<ParamField body="create_api_key" type="tool">
-  Create a new API key with an optional name. Returns the full key (shown only once).
-</ParamField>
-
-<ParamField body="revoke_api_key" type="tool">
-  Revoke an existing API key by ID. The key immediately stops working.
-</ParamField>
-
-## Media
+## Media inspection
 
 <ParamField body="probe_media" type="tool">
-  Probe a media file's metadata (codecs, duration, resolution, bitrate). Maps to the `extract.metadata` job type.
+  Inspect a media file's metadata (duration, resolution, codecs, bitrate, file size). Creates an async `extract.metadata` job -- poll with `get_job` for results.
+
+  **Parameters:**
+  - `url` (string, required) -- Direct download URL of the media file
+
+  **Response:** Same as `submit_job` (returns a job ID to poll). Cost: $0.02 flat.
 </ParamField>
 
-## FFmpeg
+## Account
 
-<ParamField body="run_ffmpeg" type="tool">
-  Execute a raw FFmpeg command with safety guardrails. The command is validated against 8 security layers before execution.
+<ParamField body="get_account" type="tool">
+  Check credit balance, plan limits, active jobs, and rate limit usage. Call before submitting expensive jobs to verify affordability.
+
+  **Parameters:** None
+
+  **Response:**
+  - `balance` -- formatted balance (e.g., "$10.50")
+  - `balanceNanodollars` -- raw balance in nanodollars
+  - `plan` -- current plan name (free or pro)
+  - `limits` -- active jobs count vs max, max file size, job timeout
+  - `costGuidance` -- brief pricing guide for common job types
 </ParamField>
 
-<ParamField body="validate_ffmpeg" type="tool">
-  Validate an FFmpeg command without executing it. Returns whether the command is allowed and what inputs/outputs were detected.
+## File upload
+
+<ParamField body="upload_media" type="tool">
+  Get upload instructions for a local file. Returns the upload endpoint URL and a curl command. After uploading, the response contains a `downloadUrl` to use as input in `submit_job`.
+
+  **Parameters:**
+  - `filename` (string, required) -- Filename with extension (e.g., `video.mp4`)
+  - `contentType` (string, optional) -- MIME type. Auto-detected from extension if omitted.
+
+  **Response:**
+  - `uploadEndpoint` -- URL to POST the file to (with same API key auth)
+  - `method` -- POST
+  - `contentType` -- detected MIME type
+  - `maxFileSize` -- plan-based size limit
+  - `expiresIn` -- 24 hours
+  - `instructions` -- step-by-step upload guide
+
+  Files are stored in ephemeral R2 storage and auto-deleted after 24 hours.
 </ParamField>

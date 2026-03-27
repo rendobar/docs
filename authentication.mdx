@@ -81,7 +81,9 @@ This context is used for rate limiting, plan enforcement, and credit checks on e
 
 ## MCP agent auth
 
-AI agents can authenticate with Rendobar via the Model Context Protocol (MCP). The Better Auth MCP plugin handles OAuth so agents can authenticate once and maintain self-serve access. MCP tools map 1:1 with the REST API.
+AI agents can authenticate with Rendobar via the Model Context Protocol (MCP). The primary method is API key authentication -- the same keys used for the REST API work with MCP by passing them in the `Authorization` header.
+
+For MCP clients that support it, Rendobar also offers OAuth 2.1 via the Better Auth OAuth Provider plugin with dynamic client registration, PKCE, and org-scoped tokens. See the [MCP overview](/mcp/overview) for setup details.
 
 ## Error responses
 

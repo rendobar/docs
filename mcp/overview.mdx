@@ -5,17 +5,11 @@ sidebarTitle: "Overview"
 icon: "plug"
 ---
 
-Rendobar is MCP-native, meaning AI agents can interact with the API directly through the Model Context Protocol. All 15 MCP tools map 1:1 with the REST API endpoints, so anything you can do with the REST API, an agent can do via MCP.
-
-<Note>
-MCP access is available on Starter plans and above.
-</Note>
+Rendobar is MCP-native, meaning AI agents can submit jobs, check status, and manage their account through the Model Context Protocol. The MCP server exposes 6 tools that cover the core job lifecycle.
 
 ## What is MCP?
 
 The Model Context Protocol (MCP) is a standard for AI agents to interact with external tools and services. Instead of writing custom API client code, an agent discovers available tools and calls them directly using structured inputs and outputs.
-
-Rendobar exposes its full API surface as MCP tools, allowing AI agents to submit jobs, check status, manage API keys, and query usage without manual integration code.
 
 ## Connecting to Rendobar
 
@@ -44,42 +38,39 @@ Add to your MCP configuration:
 
 ### Custom agents
 
-Any MCP-compatible agent can connect using the SSE transport protocol with an API key in the `Authorization` header.
+Any MCP-compatible agent can connect using the Streamable HTTP transport protocol with an API key in the `Authorization` header.
 
 ## Available tools
 
-Rendobar provides 15 MCP tools:
+Rendobar provides 6 MCP tools:
 
-| Tool | Description | REST equivalent |
-|------|-------------|-----------------|
-| `submit_job` | Submit a video processing job | `POST /jobs` |
-| `submit_batch` | Submit multiple jobs as a batch | `POST /jobs/batch` |
-| `get_job` | Get job status and details | `GET /jobs/:id` |
-| `get_job_result` | Get the output URL and metadata | `GET /jobs/:id/result` |
-| `list_jobs` | List jobs with filters and pagination | `GET /jobs` |
-| `cancel_job` | Cancel a running or waiting job | `POST /jobs/:id/cancel` |
-| `list_job_types` | List all available job types | `GET /job-types` |
-| `get_job_schema` | Get the Zod schema for a job type | `GET /job-types/:type/schema` |
-| `get_balance` | Get current usage balance | `GET /billing/balance` |
-| `get_usage` | Get usage stats for a date range | `GET /billing/usage` |
-| `get_org` | Get organization details | `GET /orgs/:id` |
-| `list_members` | List organization members | `GET /orgs/:id/members` |
-| `list_api_keys` | List API keys for the org | `GET /api-keys` |
-| `create_api_key` | Create a new API key | `POST /api-keys` |
-| `revoke_api_key` | Revoke an existing API key | `DELETE /api-keys/:id` |
+| Tool | Description |
+|------|-------------|
+| `submit_job` | Submit any media processing job (including raw FFmpeg) |
+| `get_job` | Get job status, progress, results, and output URL |
+| `list_jobs` | List recent jobs with optional status and type filters |
+| `probe_media` | Inspect a media file's metadata (creates an `extract.metadata` job) |
+| `get_account` | Check credit balance, plan limits, and active job count |
+| `upload_media` | Get upload instructions for a local file (returns endpoint URL and curl command) |
+
+<Tip>
+The `submit_job` tool dynamically lists all available job types in its description, so agents can discover capabilities without a separate discovery tool.
+</Tip>
 
 ## Authentication
 
-MCP agents authenticate with Rendobar using OAuth, handled by the Better Auth MCP plugin. The flow:
+MCP tools authenticate using an API key in the `Authorization` header -- the same keys used for the REST API.
+
+For interactive MCP clients (like Claude Desktop), Rendobar also supports OAuth 2.1 via the Better Auth OAuth Provider plugin:
 
 <Steps>
 
-<Step title="Initiate">
-  The agent initiates an OAuth handshake with the Rendobar MCP server.
+<Step title="Register">
+  The MCP client dynamically registers itself with the Rendobar authorization server.
 </Step>
 
 <Step title="Authorize">
-  The user authorizes the agent in their browser (one-time).
+  The user authorizes the agent in their browser (one-time consent).
 </Step>
 
 <Step title="Token">
@@ -92,43 +83,63 @@ MCP agents authenticate with Rendobar using OAuth, handled by the Better Auth MC
 
 </Steps>
 
-This means agents authenticate once and then operate autonomously within the permissions of the authorized organization.
+API key authentication is simpler and recommended for most integrations. OAuth is available for MCP clients that support it natively.
 
-## Example: Agent submits a watermark job
+## Example: Agent submits a raw FFmpeg job
 
 ```
-Agent: I'll add a watermark to the video.
+Agent: I'll scale the video to 720p.
 
-1. Call submit_job({
-     type: "watermark.add",
-     inputs: {
-       source: "https://example.com/video.mp4",
-       watermark: "https://cdn.rendobar.com/assets/brand/logo-full.png"
-     },
-     params: {
-       position: "bottom-right",
-       scale: 0.15,
-       opacity: 0.8
-     }
+1. Call get_account()
+   -> { balance: "$10.50", plan: "pro", limits: { activeJobs: "0/25" } }
+
+2. Call submit_job({
+     type: "raw.ffmpeg",
+     inputs: { "video.mp4": "https://example.com/video.mp4" },
+     params: { command: "ffmpeg -i video.mp4 -vf scale=1280:720 output.mp4" }
    })
-   -> { jobId: "job_x1y2z3", status: "dispatched" }
+   -> { jobId: "job_x1y2z3", status: "dispatched", estimatedCost: "$0.05" }
 
-2. Call get_job({ jobId: "job_x1y2z3" })
-   -> { status: "complete", price: 3000000000 }
-
-3. Call get_job_result({ jobId: "job_x1y2z3" })
-   -> { url: "https://r2...", meta: { durationMs: 127500 } }
+3. Call get_job({ jobId: "job_x1y2z3" })
+   -> { status: "complete", cost: "$0.05", outputUrl: "https://..." }
 ```
 
-The agent can also check credits before submitting, list available job types to discover capabilities, and handle errors from failed jobs.
+## Example: Agent probes media before processing
+
+```
+Agent: Let me check the video metadata first.
+
+1. Call probe_media({ url: "https://example.com/video.mp4" })
+   -> { jobId: "job_p1r2b3", status: "dispatched" }
+
+2. Call get_job({ jobId: "job_p1r2b3" })
+   -> { status: "complete", output: { duration: "2m 15s", resolution: "1920x1080", codec: "h264" } }
+```
+
+## Example: Agent uploads a local file
+
+```
+Agent: I need to upload a file first.
+
+1. Call upload_media({ filename: "video.mp4" })
+   -> { uploadEndpoint: "https://api.rendobar.com/uploads?filename=video.mp4", method: "POST", instructions: "..." }
+
+2. (User or agent uploads file to the endpoint)
+
+3. Call submit_job({
+     type: "raw.ffmpeg",
+     inputs: { "video.mp4": "https://api.rendobar.com/uploads/dl/..." },
+     params: { command: "ffmpeg -i video.mp4 -vf scale=640:480 output.mp4" }
+   })
+```
 
 ## Tool discovery
 
 Agents discover available tools by connecting to the Rendobar MCP server endpoint. The server returns tool definitions with:
 
 - Tool name and description
-- Input schema (Zod-based, auto-generated from the API route schemas)
-- Output schema
+- Input schema (Zod-based, auto-generated)
+- The `submit_job` description dynamically includes all available job types from the job registry
 
 This allows agents to understand what each tool does and what parameters it accepts without any prior knowledge of the Rendobar API.
 
@@ -136,7 +147,7 @@ This allows agents to understand what each tool does and what parameters it acce
 
 Any MCP-compatible agent can use Rendobar, including:
 
-- Claude (Anthropic) with MCP tool use
+- Claude (Anthropic) via Claude Desktop or Claude Code
 - Custom agents built with the MCP SDK
 - Automation platforms with MCP support
 
@@ -146,16 +157,16 @@ MCP tool calls are subject to the same rate limits and credit checks as REST API
 
 <CardGroup cols={2}>
 
+<Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
+  Detailed parameter docs for all 6 tools
+</Card>
+
 <Card title="Authentication" icon="key" href="/authentication">
   API key and session auth details
 </Card>
 
 <Card title="Job Types" icon="list" href="/job-types/overview">
-  All 23 supported operations
-</Card>
-
-<Card title="Webhooks" icon="bell" href="/guides/webhooks">
-  Push-based status updates
+  All supported operations
 </Card>
 
 <Card title="Credits" icon="coins" href="/credits">

@@ -1,11 +1,11 @@
 ---
 title: "MCP Integration Guide"
-description: "Use Rendobar from AI agents via the Model Context Protocol -- 15 tools for video processing, billing, and account management"
+description: "Use Rendobar from AI agents via the Model Context Protocol -- 6 tools for video processing and account management"
 sidebarTitle: "MCP Agents"
 icon: "robot"
 ---
 
-Rendobar is MCP-native -- AI agents can process videos, check job status, and manage billing through the Model Context Protocol without writing HTTP code.
+Rendobar is MCP-native -- AI agents can process videos, check job status, and manage their account through the Model Context Protocol without writing HTTP code.
 
 ## What is MCP?
 
@@ -13,37 +13,28 @@ The Model Context Protocol (MCP) is a standard for AI agents to interact with ex
 
 ## Available MCP tools
 
-Rendobar exposes 15 MCP tools, mirroring the REST API:
+Rendobar exposes 6 MCP tools:
 
 ### Job management
 
 | Tool | Description |
 |------|-------------|
-| `submit_job` | Submit a video processing job |
-| `submit_batch` | Submit multiple jobs at once |
-| `get_job` | Get job status and details |
-| `get_job_result` | Get the output URL for a completed job |
-| `list_jobs` | List jobs with filtering and pagination |
-| `cancel_job` | Cancel a running or queued job |
-| `list_job_types` | List all available job types |
-| `get_job_schema` | Get the Zod schema for a specific job type |
+| `submit_job` | Submit any media processing job (dynamically lists available types) |
+| `get_job` | Get job status, progress, results, and output URL |
+| `list_jobs` | List jobs with optional status and type filters |
 
-### Billing
+### Media
 
 | Tool | Description |
 |------|-------------|
-| `get_balance` | Check current usage balance |
-| `get_usage` | Get usage analytics for a date range |
+| `probe_media` | Inspect media file metadata (duration, resolution, codecs) |
+| `upload_media` | Get upload endpoint for local files (returns URL + instructions) |
 
 ### Account
 
 | Tool | Description |
 |------|-------------|
-| `get_org` | Get organization details and plan info |
-| `list_members` | List organization members |
-| `list_api_keys` | List API keys |
-| `create_api_key` | Create a new API key |
-| `revoke_api_key` | Revoke an existing API key |
+| `get_account` | Check balance, plan limits, and active job count |
 
 ## Connecting an agent
 
@@ -66,7 +57,7 @@ Add to your MCP config:
 
 ### Custom agents
 
-Any MCP-compatible agent can connect to Rendobar's MCP endpoint. The server supports the SSE transport protocol.
+Any MCP-compatible agent can connect to Rendobar's MCP endpoint using the Streamable HTTP transport.
 
 ## Example: Agent workflow
 
@@ -74,31 +65,31 @@ An AI agent can process videos end-to-end:
 
 <Steps>
 
-<Step title="Check credits">
-  Call `get_balance` to verify sufficient balance.
+<Step title="Check balance">
+  Call `get_account` to verify sufficient credits.
+</Step>
+
+<Step title="Upload (if needed)">
+  Call `upload_media` to get an upload endpoint, then upload the file.
 </Step>
 
 <Step title="Submit job">
-  Call `submit_job` with type and parameters.
+  Call `submit_job` with type, inputs, and parameters.
 </Step>
 
 <Step title="Monitor">
   Call `get_job` to poll for completion.
 </Step>
 
-<Step title="Retrieve">
-  Call `get_job_result` to get the output URL.
-</Step>
-
 <Step title="Report">
-  Present the result to the user.
+  Present the result (output URL and metadata) to the user.
 </Step>
 
 </Steps>
 
 ## Authentication
 
-MCP tools authenticate via API key in the `Authorization` header. The same API keys used for REST work with MCP.
+MCP tools authenticate via API key in the `Authorization` header. The same API keys used for the REST API work with MCP. OAuth 2.1 is also supported for MCP clients that handle it natively.
 
 <CardGroup cols={2}>
 
@@ -106,8 +97,8 @@ MCP tools authenticate via API key in the `Authorization` header. The same API k
   API key setup
 </Card>
 
-<Card title="Job Types" icon="list" href="/job-types/overview">
-  All available operations
+<Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
+  Detailed parameter docs for all 6 tools
 </Card>
 
 <Card title="Quickstart" icon="rocket" href="/quickstart">
