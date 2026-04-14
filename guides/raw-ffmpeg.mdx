@@ -5,7 +5,7 @@ sidebarTitle: "Raw FFmpeg"
 icon: "terminal"
 ---
 
-The `raw.ffmpeg` job type lets you execute arbitrary FFmpeg commands through the Rendobar API. This gives you full FFmpeg power while Rendobar handles file transfer, execution isolation, timeout enforcement, and output upload.
+You write the FFmpeg command. Rendobar downloads the inputs, runs the command in an isolated container, and returns a signed download URL. Same FFmpeg you already know, no servers to manage.
 
 ## How it works
 

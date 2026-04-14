@@ -35,6 +35,8 @@ All API errors follow a consistent format:
 
 ## Handling errors
 
+Check the response status and the `error.code` before reading `data`. The example below handles the three codes you will hit most often: `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, and `VALIDATION_ERROR`.
+
 <CodeGroup>
 
 ```javascript JavaScript
