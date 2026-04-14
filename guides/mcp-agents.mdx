@@ -1,45 +1,17 @@
 ---
 title: "MCP Integration Guide"
-description: "Use Rendobar from AI agents via the Model Context Protocol -- 5 tools for video processing and account management"
+description: "Connect an AI agent to Rendobar via the Model Context Protocol — setup snippet, auth, and a complete workflow example."
 sidebarTitle: "MCP Agents"
 icon: "robot"
 ---
 
 Connect any AI agent to `api.rendobar.com/mcp` and it can submit jobs, poll status, upload files, and check the account balance via five typed MCP tools — no HTTP code, no SDK.
 
-## Model Context Protocol
+This page is the task-focused guide: how to connect, how a full workflow runs. For the protocol reference, tool schemas, and supported agents list, see the [MCP overview](/mcp/overview) and [tools reference](/mcp/tools-reference).
 
-The Model Context Protocol (MCP) is a standard for AI agents to interact with external services. Instead of making REST API calls, agents use typed tools with structured inputs and outputs.
+## Connect Claude Desktop or Claude Code
 
-## Available MCP tools
-
-Rendobar exposes 5 MCP tools:
-
-### Job management
-
-| Tool | Description |
-|------|-------------|
-| `submit_job` | Submit a job (today: `raw.ffmpeg`) |
-| `get_job` | Get job status, progress, results, and output URL |
-| `list_jobs` | List jobs with optional status and type filters |
-
-### Media
-
-| Tool | Description |
-|------|-------------|
-| `upload_media` | Get upload endpoint for local files (returns URL + instructions) |
-
-### Account
-
-| Tool | Description |
-|------|-------------|
-| `get_account` | Check balance, plan limits, and active job count |
-
-## Connecting an agent
-
-### Claude Desktop / Claude Code
-
-Add to your MCP config:
+Add Rendobar to your MCP config:
 
 ```json
 {
@@ -54,49 +26,45 @@ Add to your MCP config:
 }
 ```
 
-### Custom agents
+Any MCP-compatible agent can connect the same way over the Streamable HTTP transport.
 
-Any MCP-compatible agent can connect to Rendobar's MCP endpoint using the Streamable HTTP transport.
-
-## Example: Agent workflow
-
-An AI agent can process videos end-to-end:
+## Example: end-to-end video workflow
 
 <Steps>
 
 <Step title="Check balance">
-  Call `get_account` to verify sufficient credits.
+  Call `get_account` to verify there are enough credits before running an expensive job.
 </Step>
 
 <Step title="Upload (if needed)">
-  Call `upload_media` to get an upload endpoint, then upload the file.
+  Call `upload_media` with the local filename to get a temporary upload endpoint, then POST the file there. The response includes a `downloadUrl` to pass into `submit_job`.
 </Step>
 
-<Step title="Submit job">
-  Call `submit_job` with type, inputs, and parameters.
+<Step title="Submit the job">
+  Call `submit_job` with `type: "raw.ffmpeg"`, the inputs map, and the FFmpeg command.
 </Step>
 
-<Step title="Monitor">
-  Call `get_job` to poll for completion.
+<Step title="Poll for completion">
+  Call `get_job` with the returned `jobId` until `status: "complete"`. The response then contains the signed `outputUrl`.
 </Step>
 
-<Step title="Report">
-  Present the result (output URL and metadata) to the user.
+<Step title="Report the result">
+  Hand the output URL and metadata back to the user.
 </Step>
 
 </Steps>
 
 ## Authentication
 
-Pass your API key in the `Authorization` header — the same key you use for the REST API works for MCP. MCP clients that speak OAuth 2.1 natively can use that path instead.
+Pass your API key in the `Authorization` header — the same key you use for the REST API works for MCP. MCP clients that speak OAuth 2.1 natively can use that path instead. See [Authentication](/authentication) for key management and the OAuth flow.
 
 <CardGroup cols={2}>
 
-<Card title="Authentication" icon="key" href="/authentication">
-  API key setup
+<Card title="MCP overview" icon="plug" href="/mcp/overview">
+  What MCP is, which agents are supported, how tool discovery works
 </Card>
 
-<Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
+<Card title="Tools reference" icon="wrench" href="/mcp/tools-reference">
   Detailed parameter docs for all 5 tools
 </Card>
 
@@ -104,8 +72,8 @@ Pass your API key in the `Authorization` header — the same key you use for the
   REST API getting started
 </Card>
 
-<Card title="MCP Overview" icon="plug" href="/mcp/overview">
-  Full MCP reference
+<Card title="Authentication" icon="key" href="/authentication">
+  API keys and OAuth
 </Card>
 
 </CardGroup>
