@@ -5,7 +5,7 @@ sidebarTitle: "Overview"
 icon: "plug"
 ---
 
-Rendobar is MCP-native, meaning AI agents can submit jobs, check status, and manage their account through the Model Context Protocol. The MCP server exposes 6 tools that cover the core job lifecycle.
+Rendobar is MCP-native — AI agents can submit jobs, check status, and manage their account through the Model Context Protocol. The MCP server exposes 5 tools that cover the core job lifecycle.
 
 ## What is MCP?
 
@@ -42,19 +42,18 @@ Any MCP-compatible agent can connect using the Streamable HTTP transport protoco
 
 ## Available tools
 
-Rendobar provides 6 MCP tools:
+Rendobar provides 5 MCP tools:
 
 | Tool | Description |
 |------|-------------|
-| `submit_job` | Submit any media processing job (including raw FFmpeg) |
+| `submit_job` | Submit a job (today: `raw.ffmpeg`) |
 | `get_job` | Get job status, progress, results, and output URL |
 | `list_jobs` | List recent jobs with optional status and type filters |
-| `probe_media` | Inspect a media file's metadata (creates an `extract.metadata` job) |
 | `get_account` | Check credit balance, plan limits, and active job count |
 | `upload_media` | Get upload instructions for a local file (returns endpoint URL and curl command) |
 
 <Tip>
-The `submit_job` tool dynamically lists all available job types in its description, so agents can discover capabilities without a separate discovery tool.
+The `submit_job` tool description dynamically lists the available job types from the registry, so agents discover capabilities without a separate discovery tool.
 </Tip>
 
 ## Authentication
@@ -102,18 +101,6 @@ Agent: I'll scale the video to 720p.
 
 3. Call get_job({ jobId: "job_x1y2z3" })
    -> { status: "complete", cost: "$0.05", outputUrl: "https://..." }
-```
-
-## Example: Agent probes media before processing
-
-```
-Agent: Let me check the video metadata first.
-
-1. Call probe_media({ url: "https://example.com/video.mp4" })
-   -> { jobId: "job_p1r2b3", status: "dispatched" }
-
-2. Call get_job({ jobId: "job_p1r2b3" })
-   -> { status: "complete", output: { duration: "2m 15s", resolution: "1920x1080", codec: "h264" } }
 ```
 
 ## Example: Agent uploads a local file
@@ -165,8 +152,8 @@ MCP tool calls are subject to the same rate limits and credit checks as REST API
   API key and session auth details
 </Card>
 
-<Card title="Job Types" icon="list" href="/job-types/overview">
-  All supported operations
+<Card title="Raw FFmpeg" icon="terminal" href="/job-types/raw-ffmpeg">
+  The live job type reference
 </Card>
 
 <Card title="Credits" icon="coins" href="/credits">

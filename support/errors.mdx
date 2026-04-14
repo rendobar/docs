@@ -38,10 +38,14 @@ All API errors follow a consistent format:
 <CodeGroup>
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/transcode", {
+const response = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: { "Authorization": "Bearer rb_your_key", "Content-Type": "application/json" },
-  body: JSON.stringify({ inputs: { source: url }, params: {} }),
+  body: JSON.stringify({
+    type: "raw.ffmpeg",
+    inputs: {},
+    params: { command: "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 output.mp4" },
+  }),
 });
 
 if (!response.ok) {
@@ -51,10 +55,10 @@ if (!response.ok) {
       // Redirect to billing page or top up
       break;
     case "RATE_LIMITED":
-      // Wait and retry
+      // Wait and retry after Retry-After seconds
       break;
     case "VALIDATION_ERROR":
-      // Fix the request body
+      // Fix the command or body
       break;
     default:
       console.error(`API error: ${error.code} - ${error.message}`);
@@ -64,9 +68,13 @@ if (!response.ok) {
 
 ```python Python
 response = requests.post(
-    "https://api.rendobar.com/transcode",
+    "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_your_key"},
-    json={"inputs": {"source": url}, "params": {}},
+    json={
+        "type": "raw.ffmpeg",
+        "inputs": {},
+        "params": {"command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 output.mp4"},
+    },
 )
 
 if not response.ok:

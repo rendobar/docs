@@ -5,19 +5,23 @@ icon: "circle-question"
 ---
 
 <Accordion title="How much does Rendobar cost?">
-  Rendobar uses credit-based billing. The free tier includes a one-time $5 signup grant with no credit card required. The Pro plan is $9/month and includes $5/month in credits plus a 20% bonus on every credit purchase. Credit packs ($10-$100) are available on both plans. Credits never expire.
+  Rendobar uses credit-based billing. The free tier includes a one-time $5 signup grant with no credit card required. The Pro plan is $9/month and includes $5/month in credits plus a 20% bonus on every credit purchase. Credit packs ($10–$100) are available on both plans. Credits never expire.
+</Accordion>
+
+<Accordion title="What can I do with Rendobar today?">
+  The live API is `raw.ffmpeg` — run any whitelisted FFmpeg command against URLs you provide. That one job type covers transcoding, trimming, filtering, overlays, audio extraction, frame extraction, and anything else FFmpeg can do from the command line. More dedicated job types are on the roadmap.
 </Accordion>
 
 <Accordion title="What video formats are supported?">
-  Rendobar supports all FFmpeg-compatible formats including MP4, WebM, MOV, AVI, and MKV. Output defaults to MP4 (H.264) but can be configured per job.
+  Rendobar supports every FFmpeg-compatible container and codec. Outputs default to the extension in your `-i` target filename (e.g., `output.mp4` → MP4).
 </Accordion>
 
 <Accordion title="Can I use Rendobar from AI agents?">
-  Yes. Rendobar is MCP-native. Connect any MCP-compatible AI agent to `api.rendobar.com/mcp` with your API key. 6 tools are available covering job submission, status polling, media probing, file upload, and account management. MCP is available on all plans, including Free.
+  Yes. Rendobar is MCP-native. Connect any MCP-compatible AI agent to `api.rendobar.com/mcp` with your API key. The MCP tools cover job submission, status polling, file upload, and account management. MCP is available on all plans, including Free.
 </Accordion>
 
 <Accordion title="How long do jobs take?">
-  Most jobs complete in seconds to minutes depending on input size and the operation. Maximum timeout varies by plan: 5 minutes on Free, 15 minutes on Pro.
+  Most jobs complete in seconds to minutes depending on input size and the command. Maximum timeout varies by plan: 5 minutes on Free, 15 minutes on Pro.
 </Accordion>
 
 <Accordion title="Is there a rate limit?">
@@ -29,23 +33,9 @@ icon: "circle-question"
 </Accordion>
 
 <Accordion title="Can I run custom FFmpeg commands?">
-  Yes, via the `raw.ffmpeg` job type. Your command is validated against a flag whitelist and security layers before execution in an isolated container. Raw FFmpeg is available on all plans, including Free.
+  Yes — that is the core `raw.ffmpeg` job type. Your command is validated against a flag whitelist and security layers before execution in an isolated container. Raw FFmpeg is available on all plans, including Free.
 </Accordion>
 
 <Accordion title="How do I get real-time job updates?">
-  The dashboard receives real-time updates via WebSocket (OrgHub). For programmatic use, configure a webhook endpoint on your organization for push-based notifications, or poll the `GET /jobs/:id` endpoint.
-</Accordion>
-
-<Accordion title="What AI models does Rendobar use?">
-  Rendobar uses Deepgram for speech-to-text, MediaPipe for face detection, OpenALPR for license plate recognition, and Meta VideoSeal for invisible watermarking. All detection models run on Rendobar's processing servers -- no data is sent to external AI services.
-</Accordion>
-
-<Accordion title="What job types are available?">
-  **Live today:** `raw.ffmpeg` (custom FFmpeg commands with flag whitelisting).
-
-  **In preview:** all watermarking jobs (`watermark.apply`, `watermark.check`, `watermark.detect`, `watermark.embed`, `watermark.remove`) and `qr.generate`. These work but the API surface may still shift before GA -- email `support@rendobar.com` for access.
-
-  **Coming soon:** transcoding, thumbnails, captions, GDPR compliance, content moderation, and scene/text extraction. Submitting these today returns `INVALID_JOB_TYPE`.
-
-  See the [job types overview](/job-types/overview) for the full list with links to each page.
+  The dashboard receives real-time updates via WebSocket (OrgHub). For programmatic use, configure a webhook endpoint on your organization for push-based notifications, or poll `GET /jobs/{id}`.
 </Accordion>
