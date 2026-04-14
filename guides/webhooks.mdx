@@ -18,10 +18,13 @@ curl -X POST https://api.rendobar.com/webhook-endpoints \
   -H "Authorization: Bearer rb_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
+    "name": "Production webhook",
     "url": "https://your-server.com/webhooks/rendobar",
-    "events": ["job.completed", "job.failed"]
+    "subscribedEvents": ["job.completed", "job.failed"]
   }'
 ```
+
+Required body fields: `name` (1--50 chars), `url` (HTTPS), and `subscribedEvents` (at least one event type).
 
 Rendobar generates a signing secret (`whsec_...`) for you. Store it securely -- it's used to verify that incoming requests actually came from Rendobar.
 

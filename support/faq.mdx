@@ -41,5 +41,11 @@ icon: "circle-question"
 </Accordion>
 
 <Accordion title="What job types are available?">
-  Currently live: `raw.ffmpeg` (arbitrary FFmpeg commands) and `extract.metadata` (media probing). Additional job types including watermarking, transcoding, captions, GDPR compliance, rendering, and QR generation are in development. Check the [job types overview](/job-types/overview) for the latest status.
+  **Live today:** `raw.ffmpeg` (custom FFmpeg commands with flag whitelisting).
+
+  **In preview:** all watermarking jobs (`watermark.apply`, `watermark.check`, `watermark.detect`, `watermark.embed`, `watermark.remove`) and `qr.generate`. These work but the API surface may still shift before GA -- email `support@rendobar.com` for access.
+
+  **Coming soon:** transcoding, thumbnails, captions, GDPR compliance, scene and text extraction, Rendley/Remotion/VEED rendering, and PSD mockup rendering. Submitting these today returns `INVALID_JOB_TYPE`.
+
+  See the [job types overview](/job-types/overview) for the full list with links to each page.
 </Accordion>

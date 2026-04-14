@@ -79,7 +79,7 @@ curl -X POST https://api.rendobar.com/jobs \
       "source": "https://example.com/street-footage.mp4"
     },
     "params": {
-      "targets": ["face", "plate"],
+      "redactTypes": ["faces", "license_plates"],
       "method": "blur"
     }
   }'
@@ -89,9 +89,11 @@ curl -X POST https://api.rendobar.com/jobs \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `targets` | string[] | `["face", "plate"]` | What to redact: `face`, `plate`, or both |
-| `method` | string | `"blur"` | Redaction style: `blur` (gaussian blur) or `fill` (solid black box) |
-| `blurStrength` | number | `20` | Blur radius (only for `method: "blur"`) |
+| `redactTypes` | string[] | `["faces", "license_plates"]` | What to redact. Choose any of `faces`, `license_plates`, `text`. |
+| `method` | string | `"blur"` | Redaction style: `blur` (gaussian), `pixelate`, or `blackbox` (solid fill) |
+| `blurStrength` | integer | `30` | Blur radius, only used when `method: "blur"` (1--100) |
+| `threshold` | number | `0.5` | Detection confidence threshold (0--1) |
+| `padding` | integer | `10` | Padding around detected regions in pixels (0--100) |
 
 ### Output
 
