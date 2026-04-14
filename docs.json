@@ -32,7 +32,6 @@
               "guides/watermarking",
               "guides/captions",
               "guides/gdpr",
-              "guides/rendering",
               "guides/mcp-agents",
               "guides/raw-ffmpeg",
               "guides/webhooks"
@@ -42,8 +41,7 @@
             "group": "Concepts",
             "pages": [
               "concepts/job-lifecycle",
-              "concepts/credits",
-              "concepts/render-engines"
+              "concepts/credits"
             ]
           },
           {
@@ -58,12 +56,8 @@
               "job-types/extract-metadata",
               "job-types/extract-scenes",
               "job-types/extract-text",
-              "job-types/mockup-render",
               "job-types/qr-generate",
               "job-types/raw-ffmpeg",
-              "job-types/render-remotion",
-              "job-types/render-rendley",
-              "job-types/render-veed",
               "job-types/thumbnail",
               "job-types/transcode",
               "job-types/watermark-apply",

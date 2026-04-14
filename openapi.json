@@ -52,10 +52,6 @@
       "description": "FFmpeg-as-a-Service: probe media files and execute FFmpeg commands"
     },
     {
-      "name": "Render",
-      "description": "Render compositions via Remotion, Rendley, or VEED engines"
-    },
-    {
       "name": "QR",
       "description": "Generate styled QR codes with 9 content types (URL, vCard, WiFi, etc.)"
     },
