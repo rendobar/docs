@@ -5,68 +5,70 @@ sidebarTitle: "Watermarking"
 icon: "droplet"
 ---
 
-Rendobar provides four watermarking job types: simple single-image overlay, multi-watermark compositing with mixed image and text, AI-powered removal, and watermark detection.
+Rendobar ships four watermarking job types: visible overlay (`watermark.apply`), AI-based removal (`watermark.remove`), presence check (`watermark.check`), and invisible embed/detect (`watermark.embed` / `watermark.detect`).
 
-## Add a single image watermark
+## Apply a visible watermark
 
-Use `watermark.add` for the simplest case -- one image watermark on a video.
+Use `watermark.apply` for any visible overlay on video or image. The schema takes an array of 1--10 watermarks (image and/or text) so the single-watermark and multi-watermark cases use the exact same shape -- just change the array length.
 
 ```bash
 curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "watermark.add",
+    "type": "watermark.apply",
     "inputs": {
-      "source": "https://example.com/video.mp4",
-      "watermark": "https://cdn.rendobar.com/assets/brand/logo-full.png"
+      "source": "https://example.com/video.mp4"
     },
     "params": {
-      "position": "bottom-right",
-      "scale": 0.15,
-      "opacity": 0.8,
-      "padding": 20,
+      "watermarks": [
+        {
+          "type": "image",
+          "url": "https://cdn.rendobar.com/assets/brand/logo-full.png",
+          "position": "bottom-right",
+          "scale": 0.15,
+          "opacity": 0.8
+        }
+      ],
       "quality": "balanced"
     }
   }'
 ```
 
-### Parameters
+### Top-level params
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `position` | enum | `bottom-right` | One of 9 positions: `top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center`, `bottom-right` |
-| `scale` | number | `0.15` | Watermark size relative to video width (0.01--1) |
-| `opacity` | number | `0.8` | Watermark transparency (0--1) |
-| `padding` | integer | `20` | Distance from edge in pixels (0--500) |
-| `quality` | enum | `balanced` | Output encoding: `fast` (quick, larger file), `balanced`, `high` (slow, best quality) |
-| `timeRange` | object | -- | Optional. Show watermark only during `{ start, end? }` seconds |
+| `watermarks` | array | -- | Required. 1--10 watermark objects (see per-watermark fields below) |
+| `quality` | enum | `balanced` | `fast`, `balanced`, or `high` |
 
 ### Time-ranged watermark
 
-Show the watermark only between 5 and 30 seconds:
+Each watermark has an optional `timeRange` that shows it only between `start` and `end` seconds (video only). Omit `end` to show from `start` through the end.
 
 ```json
 {
-  "params": {
-    "position": "top-right",
-    "timeRange": { "start": 5, "end": 30 }
-  }
+  "watermarks": [
+    {
+      "type": "image",
+      "url": "https://cdn.rendobar.com/assets/brand/logo-full.png",
+      "position": "top-right",
+      "timeRange": { "start": 5, "end": 30 }
+    }
+  ]
 }
 ```
 
-Omit `end` to show the watermark from a timestamp through the end of the video.
+## Stack multiple watermarks
 
-## Composite multiple watermarks
-
-Use `watermark.composite` to apply multiple watermarks (images and text) in a single pass.
+Pass up to 10 watermark objects (image and/or text). They are applied in array order -- the last entry sits on top of the stack.
 
 ```bash
 curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_your_key" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "watermark.composite",
+    "type": "watermark.apply",
     "inputs": {
       "source": "https://example.com/video.mp4"
     },
@@ -103,28 +105,34 @@ curl -X POST https://api.rendobar.com/jobs \
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `type` | `"image"` | -- | Required discriminator |
-| `url` | string | -- | Required. URL to watermark image |
+| `url` | string | -- | Required. HTTPS URL to the watermark image |
 | `position` | enum | `bottom-right` | 9-position grid |
-| `scale` | number | `0.15` | Size relative to video width |
+| `scale` | number | `0.15` | Size relative to source width (0.01--1) |
 | `opacity` | number | `0.8` | Transparency (0--1) |
+| `rotation` | number | `0` | Rotation angle 0--360° |
 | `padding` | integer | `20` | Edge distance in pixels |
-| `timeRange` | object | -- | Optional `{ start, end? }` |
+| `timeRange` | object | -- | Optional `{ start, end? }` (video only) |
+| `fade` | boolean or object | -- | Fade in/out; `true` for defaults, or `{ in, out }` |
 
 ### Text watermark fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `type` | `"text"` | -- | Required discriminator |
-| `content` | string | -- | Required. Text to display (1--500 chars) |
-| `position` | enum | `bottom-left` | 9-position grid |
+| `content` | string | -- | Required. Text to render (1--500 chars). FFmpeg expressions and control characters are rejected. |
+| `position` | enum | `bottom-right` | 9-position grid |
 | `fontSize` | integer | `24` | Font size (8--200) |
-| `font` | enum | `Arial` | One of: `Arial`, `Roboto`, `Courier`, `Georgia` |
+| `font` | enum | `Inter` | Arial, Roboto, Inter, Poppins, Montserrat, Lato, Open Sans, Raleway, Playfair Display, Oswald, Nunito, Source Sans, Ubuntu, Courier, Georgia |
+| `fontUrl` | string | -- | Optional HTTPS URL to a custom font file |
 | `color` | string | `#FFFFFF` | Hex color (`#RRGGBB`) |
-| `boxColor` | string | -- | Optional background box hex color |
-| `boxPadding` | integer | `5` | Background box padding (0--50) |
+| `background` | string | -- | Optional background box hex color |
+| `shadow` | boolean or object | -- | `true` for defaults, or `{ color, offset }` |
+| `outline` | boolean or object | -- | `true` for defaults, or `{ color, width }` |
 | `opacity` | number | `0.8` | Transparency (0--1) |
-| `padding` | integer | `15` | Edge distance in pixels |
-| `timeRange` | object | -- | Optional `{ start, end? }` |
+| `rotation` | number | `0` | Rotation angle 0--360° |
+| `padding` | integer | `20` | Edge distance in pixels |
+| `timeRange` | object | -- | Optional `{ start, end? }` (video only) |
+| `fade` | boolean or object | -- | Fade in/out; `true` for defaults, or `{ in, out }` |
 
 Up to 10 watermarks per job. Source video URL goes in `inputs`, watermark URLs go inside each watermark object in `params.watermarks`.
 
@@ -184,9 +192,10 @@ Returns detection results with per-frame confidence, bounding boxes, watermark t
 | Job Type | Cost Model |
 |----------|-----------|
 | `watermark.apply` | ~$0.50/min of output |
-| `watermark.composite` | ~$0.50/min of output |
 | `watermark.remove` | ~$0.50/min of output |
 | `watermark.check` | $0.10 flat |
+| `watermark.embed` | $0.03 flat per image |
+| `watermark.detect` | $0.03 flat per image |
 
 ## Invisible watermarking
 

@@ -13,7 +13,7 @@ Rendobar uses different rendering engines depending on the job type. Understandi
 
 Most job types use FFmpeg under the hood. FFmpeg excels at operations on individual files: watermarking, transcoding, trimming, format conversion, caption burning, face redaction.
 
-**FFmpeg-based job types:** watermark.add, watermark.remove, transcode, thumbnail, caption.burn, compliance.gdpr.redact, raw.ffmpeg
+**FFmpeg-based job types:** watermark.apply, watermark.remove, transcode, thumbnail, caption.burn, compliance.gdpr.redact, raw.ffmpeg
 
 ### Rendley -- Multi-clip compositions
 
@@ -25,7 +25,7 @@ For composing new videos from multiple inputs (clips, text, audio, images), Rend
 
 | Use case | Engine | Job type |
 |----------|--------|----------|
-| Add a logo to a video | FFmpeg | `watermark.add` |
+| Add a logo to a video | FFmpeg | `watermark.apply` |
 | Convert MP4 to WebM | FFmpeg | `transcode` |
 | Burn subtitles | FFmpeg | `caption.burn` |
 | Blur faces for privacy | FFmpeg | `compliance.gdpr.redact` |
