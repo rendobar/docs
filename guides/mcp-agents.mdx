@@ -1,6 +1,6 @@
 ---
 title: "MCP Integration Guide"
-description: "Use Rendobar from AI agents via the Model Context Protocol -- 6 tools for video processing and account management"
+description: "Use Rendobar from AI agents via the Model Context Protocol -- 5 tools for video processing and account management"
 sidebarTitle: "MCP Agents"
 icon: "robot"
 ---
@@ -13,13 +13,13 @@ The Model Context Protocol (MCP) is a standard for AI agents to interact with ex
 
 ## Available MCP tools
 
-Rendobar exposes 6 MCP tools:
+Rendobar exposes 5 MCP tools:
 
 ### Job management
 
 | Tool | Description |
 |------|-------------|
-| `submit_job` | Submit any media processing job (dynamically lists available types) |
+| `submit_job` | Submit a job (today: `raw.ffmpeg`) |
 | `get_job` | Get job status, progress, results, and output URL |
 | `list_jobs` | List jobs with optional status and type filters |
 
@@ -27,7 +27,6 @@ Rendobar exposes 6 MCP tools:
 
 | Tool | Description |
 |------|-------------|
-| `probe_media` | Inspect media file metadata (duration, resolution, codecs) |
 | `upload_media` | Get upload endpoint for local files (returns URL + instructions) |
 
 ### Account
@@ -98,7 +97,7 @@ MCP tools authenticate via API key in the `Authorization` header. The same API k
 </Card>
 
 <Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
-  Detailed parameter docs for all 6 tools
+  Detailed parameter docs for all 5 tools
 </Card>
 
 <Card title="Quickstart" icon="rocket" href="/quickstart">

@@ -46,7 +46,7 @@ Rendobar uses a credit-based billing system. Every job costs credits based on ei
 | **Output retention** | 7 days | 30 days |
 | **Priority queue** | No | Yes |
 
-Both plans have access to all job types, MCP, webhooks, and raw FFmpeg.
+Both plans have access to raw FFmpeg, MCP, and webhooks.
 
 ## Credit packs
 
@@ -62,11 +62,10 @@ Before submitting a job, Rendobar checks whether your balance covers the estimat
 
 | Job Type | Cost Model | Typical Cost |
 |----------|-----------|-------------|
-| raw.ffmpeg | Per compute time | ~$0.05/min |
-| extract.metadata | Flat rate | $0.02 |
+| `raw.ffmpeg` | Per compute time | ~$0.05/min |
 
 <Info>
-More job types are being added. Check the [job types overview](/job-types/overview) for the latest availability and pricing.
+`raw.ffmpeg` is the only live job type today. More dedicated types are on the roadmap.
 </Info>
 
 If your balance is too low, the API returns:
@@ -99,8 +98,8 @@ Usage is tracked daily by job type, including job count, amount charged, and com
   Full plan comparison
 </Card>
 
-<Card title="Job Types" icon="list" href="/job-types/overview">
-  Detailed cost breakdowns
+<Card title="Raw FFmpeg" icon="terminal" href="/job-types/raw-ffmpeg">
+  The live job type reference
 </Card>
 
 </CardGroup>

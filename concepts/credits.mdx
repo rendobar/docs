@@ -29,16 +29,9 @@ Credits are the universal billing unit for all Rendobar jobs. Every operation co
 
 </Steps>
 
-## Cost models
+## Cost model
 
-Different job types use different cost models:
-
-| Cost Model | How it works | Example job types |
-|-----------|-------------|-------------------|
-| Per minute (output) | Credits scale with output video duration | watermark.apply, transcode, caption.burn |
-| Per minute (input) | Credits scale with input video duration | caption.extract, compliance.gdpr.redact |
-| Flat rate | Fixed credit cost regardless of duration | extract.metadata, qr.generate, compliance.moderate (image) |
-| Per compute time | Credits based on actual processing time | raw.ffmpeg |
+Today, `raw.ffmpeg` bills per compute time — credits scale with the actual processing time FFmpeg spent on your job. Additional cost models (per input duration, per output duration, flat rate) will land as more job types ship.
 
 ## Checking your balance
 
@@ -66,8 +59,8 @@ The `balance` field is in nanodollars (1,000,000,000 = $1.00). The dashboard dis
   Plan details and pricing table
 </Card>
 
-<Card title="Job Types" icon="list" href="/job-types/overview">
-  Per-type cost estimates
+<Card title="Raw FFmpeg" icon="terminal" href="/job-types/raw-ffmpeg">
+  The live job type reference
 </Card>
 
 </CardGroup>

@@ -4,7 +4,7 @@ description: "All 6 MCP tools available in the Rendobar MCP server with paramete
 icon: "wrench"
 ---
 
-Rendobar exposes 6 tools through its MCP server at `api.rendobar.com/mcp`. All tools require authentication via API key or OAuth token.
+Rendobar exposes 5 tools through its MCP server at `api.rendobar.com/mcp`. All tools require authentication via API key or OAuth token.
 
 ## Job submission
 
@@ -46,17 +46,6 @@ Rendobar exposes 6 tools through its MCP server at `api.rendobar.com/mcp`. All t
   - `limit` (number, 1-50, default 10) -- Number of jobs to return
 
   **Response:** `{ jobs: [{ id, type, status, createdAt, cost }], total }`
-</ParamField>
-
-## Media inspection
-
-<ParamField body="probe_media" type="tool">
-  Inspect a media file's metadata (duration, resolution, codecs, bitrate, file size). Creates an async `extract.metadata` job -- poll with `get_job` for results.
-
-  **Parameters:**
-  - `url` (string, required) -- Direct download URL of the media file
-
-  **Response:** Same as `submit_job` (returns a job ID to poll). Cost: $0.02 flat.
 </ParamField>
 
 ## Account

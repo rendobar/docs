@@ -29,12 +29,9 @@
           {
             "group": "Guides",
             "pages": [
-              "guides/watermarking",
-              "guides/captions",
-              "guides/gdpr",
-              "guides/mcp-agents",
               "guides/raw-ffmpeg",
-              "guides/webhooks"
+              "guides/webhooks",
+              "guides/mcp-agents"
             ]
           },
           {
@@ -45,26 +42,9 @@
             ]
           },
           {
-            "group": "Job Types",
+            "group": "Reference",
             "pages": [
-              "job-types/overview",
-              "job-types/caption-burn",
-              "job-types/caption-extract",
-              "job-types/compliance-gdpr-detect",
-              "job-types/compliance-gdpr-redact",
-              "job-types/compliance-moderate",
-              "job-types/extract-metadata",
-              "job-types/extract-scenes",
-              "job-types/extract-text",
-              "job-types/qr-generate",
-              "job-types/raw-ffmpeg",
-              "job-types/thumbnail",
-              "job-types/transcode",
-              "job-types/watermark-apply",
-              "job-types/watermark-check",
-              "job-types/watermark-detect",
-              "job-types/watermark-embed",
-              "job-types/watermark-remove"
+              "job-types/raw-ffmpeg"
             ]
           },
           {
@@ -83,10 +63,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "API Reference",
-        "openapi": "openapi.json"
       },
       {
         "tab": "Changelog",
@@ -170,22 +146,6 @@
         ]
       }
     ]
-  },
-  "api": {
-    "openapi": [
-      "openapi.json"
-    ],
-    "playground": {
-      "display": "interactive",
-      "proxy": true
-    },
-    "mdx": {
-      "auth": {
-        "method": "bearer",
-        "name": "Authorization"
-      },
-      "server": "https://api.rendobar.com"
-    }
   },
   "contextual": {
     "options": [
