@@ -5,7 +5,7 @@ sidebarTitle: "MCP Agents"
 icon: "robot"
 ---
 
-Rendobar is MCP-native -- AI agents can process videos, check job status, and manage their account through the Model Context Protocol without writing HTTP code.
+Connect any AI agent to `api.rendobar.com/mcp` and it can submit jobs, poll status, upload files, and check the account balance via five typed MCP tools — no HTTP code, no SDK.
 
 ## Model Context Protocol
 
@@ -88,7 +88,7 @@ An AI agent can process videos end-to-end:
 
 ## Authentication
 
-MCP tools authenticate via API key in the `Authorization` header. The same API keys used for the REST API work with MCP. OAuth 2.1 is also supported for MCP clients that handle it natively.
+Pass your API key in the `Authorization` header — the same key you use for the REST API works for MCP. MCP clients that speak OAuth 2.1 natively can use that path instead.
 
 <CardGroup cols={2}>
 

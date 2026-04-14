@@ -54,4 +54,4 @@ Rendobar supports all FFmpeg-compatible formats for input. Default output format
 | Audio | MP3 |
 | Image | PNG |
 
-Output format can be configured per job type via the `outputFormat` parameter where applicable.
+For `raw.ffmpeg`, Rendobar infers the output format from the trailing filename in your command (e.g., `output.mp4` → MP4). Override it with the `outputFormat` param if needed.

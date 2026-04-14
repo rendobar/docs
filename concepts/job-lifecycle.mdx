@@ -5,7 +5,7 @@ sidebarTitle: "Job Lifecycle"
 icon: "rotate"
 ---
 
-Every job in Rendobar follows a defined lifecycle with clear status transitions. Understanding this lifecycle helps you build reliable integrations.
+Every job moves through six statuses: `waiting → dispatched → running → complete | failed | cancelled`. This page documents each transition, what triggers it, and what to do when things go wrong.
 
 ## Status flow
 
@@ -78,9 +78,7 @@ Configure a webhook URL on your organization to receive real-time notifications 
 
 ## Real-time updates (WebSocket)
 
-The dashboard connects to a per-organization WebSocket hub (OrgHub) for real-time job status updates. Events include job creation, status changes, progress, and balance updates. The connection uses Cloudflare Durable Objects with hibernation for zero-cost idle connections.
-
-For programmatic use, configure [webhooks](/guides/webhooks) to receive push-based HTTP notifications when jobs complete or fail.
+The dashboard streams live updates over a WebSocket — job creation, status changes, progress, and balance updates — via a per-org hub. For programmatic use, configure a [webhook](/guides/webhooks) to receive push-based notifications instead of polling.
 
 <CardGroup cols={2}>
 

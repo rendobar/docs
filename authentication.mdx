@@ -5,13 +5,11 @@ sidebarTitle: "Authentication"
 icon: "key"
 ---
 
-Rendobar uses Better Auth for authentication. There are two authentication methods depending on your use case.
+Authenticate with a session cookie (dashboard) or an API key (programmatic). Keys carry the `rb_` prefix and go in the `Authorization` header as a Bearer token.
 
 ## Session-based auth (Dashboard)
 
-When you sign in through the dashboard at [app.rendobar.com](https://app.rendobar.com), a session cookie (`rb_session`) is set automatically. The dashboard uses this cookie for all API requests. Sessions last 30 days by default.
-
-No additional setup is needed for dashboard users.
+Sign in at [app.rendobar.com](https://app.rendobar.com) and the dashboard sets an `rb_session` cookie automatically. It lasts 30 days and covers every API call from the dashboard — no extra setup.
 
 ## API key auth (Programmatic)
 

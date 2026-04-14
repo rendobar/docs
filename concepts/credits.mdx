@@ -5,7 +5,7 @@ sidebarTitle: "Credits"
 icon: "coins"
 ---
 
-Credits are the universal billing unit for all Rendobar jobs. Every operation costs credits based on the job type and input/output duration.
+Credits are the universal billing unit for all Rendobar jobs. Today `raw.ffmpeg` bills per compute second — the wall-clock time FFmpeg spent running your command, excluding file transfer. Typical cost: ~$0.05 per minute of compute.
 
 ## Credit lifecycle
 
@@ -31,7 +31,7 @@ Credits are the universal billing unit for all Rendobar jobs. Every operation co
 
 ## Cost model
 
-Today, `raw.ffmpeg` bills per compute time — credits scale with the actual processing time FFmpeg spent on your job. Additional cost models (per input duration, per output duration, flat rate) will land as more job types ship.
+Right now only one cost model is live: per-compute-time for `raw.ffmpeg`. As dedicated job types ship, they will introduce per-input-duration, per-output-duration, and flat-rate models — each documented on the job type's page.
 
 ## Checking your balance
 
