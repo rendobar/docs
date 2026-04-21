@@ -18,7 +18,7 @@
     "light": "https://cdn.rendobar.com/assets/brand/logo-mark-black.svg",
     "href": "https://rendobar.com"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://cdn.rendobar.com/assets/brand/favicon.svg",
   "navigation": {
     "tabs": [
       {
