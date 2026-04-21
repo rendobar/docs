@@ -1,11 +1,17 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Rendobar",
-  "theme": "maple",
+  "theme": "mint",
   "colors": {
-    "primary": "#155dfc",
-    "light": "#3B82F6",
-    "dark": "#1249C8"
+    "primary": "#34d399",
+    "light": "#6ee7b7",
+    "dark": "#10b981"
+  },
+  "background": {
+    "color": {
+      "dark": "#08090a",
+      "light": "#ffffff"
+    }
   },
   "logo": {
     "dark": "https://cdn.rendobar.com/assets/brand/logo-mark.svg",
