@@ -1,11 +1,11 @@
 ---
 title: "Install the Rendobar CLI"
-description: "Install the rb binary on macOS, Linux, or Windows with one command. Pin a version, change the install path, run inside Docker, or uninstall cleanly."
+description: "Install the rb binary on macOS, Linux, or Windows. Pin a version, change the install path, run inside Docker, or uninstall."
 icon: "download"
-keywords: ["install rendobar cli", "rb install", "rendobar windows install", "rendobar docker install"]
+keywords: ["install rendobar cli", "rb install", "rendobar windows install", "rendobar docker"]
 ---
 
-The Rendobar CLI ships as a single standalone binary called `rb`. No Node, no Python, no package manager. Pick your platform.
+Install the `rb` binary in one command, on any of the three supported platforms.
 
 <Tabs>
   <Tab title="macOS / Linux">
@@ -13,34 +13,46 @@ The Rendobar CLI ships as a single standalone binary called `rb`. No Node, no Py
     curl -fsSL https://rendobar.com/install.sh | sh
     ```
   </Tab>
-  <Tab title="Windows (PowerShell)">
+  <Tab title="Windows">
     ```powershell
     irm https://rendobar.com/install.ps1 | iex
     ```
   </Tab>
 </Tabs>
 
-The installer detects your OS and architecture, downloads the matching release from [github.com/rendobar/cli/releases](https://github.com/rendobar/cli/releases), verifies a SHA-256 checksum, places `rb` at `~/.rendobar/bin/rb` (or `%USERPROFILE%\.rendobar\bin\rb.exe` on Windows), and adds that directory to your PATH.
+The installer fetches the matching release from [github.com/rendobar/cli/releases](https://github.com/rendobar/cli/releases), verifies a SHA-256 checksum, places `rb` at `~/.rendobar/bin/rb` (or `%USERPROFILE%\.rendobar\bin\rb.exe`), and adds that directory to your PATH.
 
-## Verify
-
-Open a new shell so the PATH change takes effect, then:
+Open a new shell, then:
 
 ```bash
 rb --version
 rb doctor
 ```
 
-`rb doctor` runs eight checks — version vs latest release, install method, OS/arch, update cache, API reachability, auth state, macOS quarantine bit, and GitHub rate limit. Use it any time something feels off.
+`rb doctor` runs eight checks: version vs latest, install method, OS/arch, update cache, API reachability, auth, macOS quarantine, GitHub rate limit.
 
-## Inspect the script before running
+## Pin a version
 
-Piping a remote script into `sh` is a footgun if you don't trust the source. Both installers are small and source-visible:
+Reproducible installs (CI, Dockerfile, provisioning) require a pinned tag:
 
-- [install.sh](https://github.com/rendobar/cli/blob/main/install.sh) — POSIX `sh`, no `bash`-isms
-- [install.ps1](https://github.com/rendobar/cli/blob/main/install.ps1) — PowerShell 5+ compatible
+```bash
+RENDOBAR_VERSION=v1.0.0 curl -fsSL https://rendobar.com/install.sh | sh
+```
 
-Download first, read, then run if you prefer:
+```powershell
+$env:RENDOBAR_VERSION = 'v1.0.0'; irm https://rendobar.com/install.ps1 | iex
+```
+
+Tag format: `vMAJOR.MINOR.PATCH`. See [releases](https://github.com/rendobar/cli/releases) for every published tag.
+
+## Inspect before piping to a shell
+
+Both installers are POSIX `sh` / PowerShell 5+, source-visible, no `bash`-isms:
+
+- [install.sh](https://github.com/rendobar/cli/blob/main/install.sh)
+- [install.ps1](https://github.com/rendobar/cli/blob/main/install.ps1)
+
+To read first:
 
 ```bash
 curl -fsSL https://rendobar.com/install.sh -o install.sh
@@ -48,71 +60,19 @@ less install.sh
 sh install.sh
 ```
 
-## Pin a version
-
-Pin to a specific tag for reproducible installs (CI, Dockerfile, provisioning scripts):
-
-<Tabs>
-  <Tab title="macOS / Linux">
-    ```bash
-    RENDOBAR_VERSION=v1.0.0 curl -fsSL https://rendobar.com/install.sh | sh
-    ```
-  </Tab>
-  <Tab title="Windows (PowerShell)">
-    ```powershell
-    $env:RENDOBAR_VERSION = 'v1.0.0'
-    irm https://rendobar.com/install.ps1 | iex
-    ```
-  </Tab>
-</Tabs>
-
-Tag format is `vMAJOR.MINOR.PATCH`. Find every published tag at [releases](https://github.com/rendobar/cli/releases).
-
-## Change the install directory
-
-Default is `~/.rendobar/bin` (or `%USERPROFILE%\.rendobar\bin`). Override with `RENDOBAR_INSTALL_DIR`:
-
-```bash
-RENDOBAR_INSTALL_DIR=/usr/local/bin curl -fsSL https://rendobar.com/install.sh | sh
-```
-
-If the directory isn't writable by your user, the installer fails fast — it does not call `sudo` for you.
-
-## Skip PATH modification
-
-Useful inside Docker, in CI runners that manage PATH externally, or when your shell rc files are template-managed:
-
-```bash
-RENDOBAR_NO_MODIFY_PATH=1 curl -fsSL https://rendobar.com/install.sh | sh
-```
-
-The binary is still installed; you call it by absolute path or add the directory to PATH yourself.
-
-## Bypass the GitHub rate limit
-
-The installer hits the GitHub Releases API. Unauthenticated requests are limited to 60/hour per IP. Shared CI runners can hit that limit. Pass a token to lift it:
-
-```bash
-RENDOBAR_GITHUB_TOKEN=ghp_xxx curl -fsSL https://rendobar.com/install.sh | sh
-```
-
-The installer also picks up `GITHUB_TOKEN` automatically — in GitHub Actions you don't need to set anything; the default token is enough to lift the limit.
-
 ## Update
-
-The CLI checks GitHub for new releases on the next run after each check, and prints a one-line notice. Update in place:
 
 ```bash
 rb update
 ```
 
-The update command downloads the new release, verifies the SHA-256 against the published `checksums.txt`, atomically replaces the running binary, and rolls back if the new binary fails to start. The update log lives at `~/.rendobar/update.log`.
+Downloads the new release, verifies the SHA-256, atomically replaces the running binary, rolls back if the new binary fails to start. Log at `~/.rendobar/update.log`.
 
-If you installed to a path you can't write to (e.g. `/usr/local/bin` without sudo), `rb update` will fail; re-run the installer with the same `RENDOBAR_INSTALL_DIR` instead.
+In dev mode (`bun run`), `rb update` prints the install command instead of self-replacing.
 
 ## Verify build provenance
 
-Every release ships with a [build provenance attestation](https://docs.github.com/en/actions/security-guides/using-artifact-attestations) signed by GitHub's OIDC issuer. Download a release asset and verify it was built by the `rendobar/cli` workflow on a specific commit:
+Every release ships with a [build provenance attestation](https://docs.github.com/en/actions/security-guides/using-artifact-attestations) signed by GitHub's OIDC issuer:
 
 ```bash
 curl -fsSL -o rb.tar.gz \
@@ -120,7 +80,7 @@ curl -fsSL -o rb.tar.gz \
 gh attestation verify rb.tar.gz --repo rendobar/cli
 ```
 
-Required for security audits; optional for everyday use.
+Use this when your supply-chain policy requires it.
 
 ## Uninstall
 
@@ -130,38 +90,34 @@ Required for security audits; optional for everyday use.
     curl -fsSL https://rendobar.com/uninstall.sh | sh
     ```
   </Tab>
-  <Tab title="Windows (PowerShell)">
+  <Tab title="Windows">
     ```powershell
     irm https://rendobar.com/uninstall.ps1 | iex
     ```
   </Tab>
 </Tabs>
 
-The uninstaller removes the binary, removes the PATH entry from your shell rc files, and (with `RENDOBAR_PURGE=1`) wipes the cache directory at `~/.rendobar/` (update log, update cache).
-
-```bash
-RENDOBAR_PURGE=1 curl -fsSL https://rendobar.com/uninstall.sh | sh
-```
+The uninstaller removes the binary and the PATH entry. Add `RENDOBAR_PURGE=1` to also wipe `~/.rendobar/` (update cache + log).
 
 <Warning>
-`RENDOBAR_PURGE` does **not** delete saved credentials. Those live at `~/.config/rendobar/credentials.json` (Linux/macOS) or `%APPDATA%\rendobar\credentials.json` (Windows) so re-installing keeps you signed in. To revoke and remove credentials, run `rb logout` *before* uninstalling, or delete the file manually after.
+`RENDOBAR_PURGE` does not delete saved credentials at `~/.config/rendobar/credentials.json` (or `%APPDATA%\rendobar\credentials.json`). Run `rb logout` first, or delete the file manually.
 </Warning>
 
-## Environment variables (full list)
+## Environment variables
 
-| Variable | Used by | Purpose |
-|---|---|---|
-| `RENDOBAR_VERSION` | install | Pin to a release tag (e.g. `v1.0.0`). Default: latest stable |
-| `RENDOBAR_INSTALL_DIR` | install + uninstall | Binary directory. Default: `$HOME/.rendobar/bin` or `%USERPROFILE%\.rendobar\bin` |
-| `RENDOBAR_CONFIG_DIR` | uninstall | Cache directory to clean with `RENDOBAR_PURGE=1`. Default: `$HOME/.rendobar` (does not include credentials — see warning above) |
-| `RENDOBAR_NO_MODIFY_PATH` | install + uninstall | If `1`, skip touching shell rc / user PATH |
-| `RENDOBAR_GITHUB_TOKEN` | install | Lift GitHub's 60/hr unauth rate limit. Falls back to `GITHUB_TOKEN` |
-| `RENDOBAR_PURGE` | uninstall | If `1`, also delete the credentials file |
-| `RENDOBAR_API_KEY` | runtime (`rb`) | Auth for non-interactive use. See [Authentication](/cli/authentication) |
-| `RENDOBAR_API_URL` | runtime (`rb`) | Override API host. Default: `https://api.rendobar.com` |
+| Variable | Used by | Default | Purpose |
+|---|---|---|---|
+| `RENDOBAR_VERSION` | install | latest stable | Pin to a release tag (e.g. `v1.0.0`) |
+| `RENDOBAR_INSTALL_DIR` | install + uninstall | `$HOME/.rendobar/bin` | Binary directory |
+| `RENDOBAR_CONFIG_DIR` | uninstall | `$HOME/.rendobar` | Cache directory cleaned by `RENDOBAR_PURGE=1` |
+| `RENDOBAR_NO_MODIFY_PATH` | install + uninstall | unset | If `1`, skip touching shell rc / user PATH |
+| `RENDOBAR_GITHUB_TOKEN` | install | unset | Lift GitHub's 60/hr unauth rate limit. Falls back to `GITHUB_TOKEN` |
+| `RENDOBAR_PURGE` | uninstall | unset | If `1`, also delete the cache directory |
+| `RENDOBAR_API_KEY` | runtime | unset | Auth for non-interactive use. See [Authentication](/cli/authentication) |
+| `RENDOBAR_API_URL` | runtime | `https://api.rendobar.com` | Override the API host |
 
 ## See also
 
-- [Authentication](/cli/authentication) — sign in once, or set `RENDOBAR_API_KEY`
-- [CI/CD](/cli/ci-cd) — installing inside GitHub Actions, GitLab, Docker
-- [Troubleshooting](/cli/troubleshooting) — install errors and what to do
+- [Authentication](/cli/authentication)
+- [CI/CD](/cli/ci-cd)
+- [Troubleshooting](/cli/troubleshooting)
