@@ -41,6 +41,17 @@
             ]
           },
           {
+            "group": "CLI",
+            "pages": [
+              "cli/overview",
+              "cli/installation",
+              "cli/authentication",
+              "cli/commands",
+              "cli/ci-cd",
+              "cli/troubleshooting"
+            ]
+          },
+          {
             "group": "Concepts",
             "pages": [
               "concepts/job-lifecycle",

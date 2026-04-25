@@ -1,0 +1,95 @@
+---
+title: "Rendobar CLI"
+description: "Run FFmpeg in the cloud from your terminal. Pass real ffmpeg flags; the CLI uploads local files, submits the job, waits, and downloads the result."
+icon: "terminal"
+keywords: ["rb cli", "rendobar command line", "ffmpeg cli serverless", "cloud ffmpeg cli"]
+---
+
+The Rendobar CLI runs FFmpeg in the cloud from your terminal. You write the same `ffmpeg` command you'd run locally; the CLI uploads any local inputs, submits a [`raw.ffmpeg`](/job-types/raw-ffmpeg) job, waits for completion, and downloads the result.
+
+```bash
+curl -fsSL https://rendobar.com/install.sh | sh
+rb login
+rb ffmpeg -i input.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 output.mp4
+```
+
+That's the whole thing.
+
+## What the CLI does
+
+The CLI is a single standalone binary called `rb`. It bundles three jobs:
+
+- **Authenticates** you against the Rendobar API (browser OAuth, or an API key for CI).
+- **Translates a local `ffmpeg` invocation into a [`raw.ffmpeg`](/job-types/raw-ffmpeg) job**, including uploading any `-i ./local-file.mp4` inputs to short-lived storage so the cloud executor can fetch them.
+- **Streams the job through to completion** with a server-timed progress display, then downloads the output to the path your `ffmpeg` command names.
+
+It does not transcode locally. It does not run an embedded FFmpeg. The CLI is a thin client over [`POST /jobs`](/job-types/raw-ffmpeg).
+
+## When to use the CLI vs the SDK
+
+We built both. They overlap, on purpose.
+
+- **Use the CLI when you're in a shell.** Local experimentation, one-off renders, CI pipelines that already shell out, scripts that already use `curl`. The CLI's killer move is that you copy-paste an existing `ffmpeg` command and prefix it with `rb` — no API knowledge required.
+- **Use the [SDK](https://www.npmjs.com/package/@rendobar/sdk) when you're in a program.** Webhooks, batch orchestration, structured retries, multi-step pipelines, real-time progress in a UI. The SDK exposes every endpoint with typed responses; the CLI exposes one (`raw.ffmpeg`) with terminal ergonomics.
+
+If you're writing a Node.js service that submits a watermarking job and waits on a webhook, that's the SDK. If you're transcoding a folder of clips before lunch, that's the CLI.
+
+## Install
+
+Two one-liners. Full options in [Installation](/cli/installation).
+
+<Tabs>
+  <Tab title="macOS / Linux">
+    ```bash
+    curl -fsSL https://rendobar.com/install.sh | sh
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    irm https://rendobar.com/install.ps1 | iex
+    ```
+  </Tab>
+</Tabs>
+
+Verify:
+
+```bash
+rb --version
+rb doctor
+```
+
+## First render
+
+Sign in once. The CLI opens your browser, you approve, the credentials land in `~/.config/rendobar/credentials.json` (or `%APPDATA%\rendobar\` on Windows).
+
+```bash
+rb login
+```
+
+Then run any FFmpeg command. Local files are uploaded automatically; remote URLs are passed through as-is.
+
+```bash
+rb ffmpeg -i ./clip.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast out.mp4
+```
+
+You'll see five phases on stderr: `Uploading`, `Submitting`, `Queued`, `Executing`, `Saving`. The first two and the last use wall-clock timing; `Queued` and `Executing` use server timing from the job — the same numbers the dashboard shows.
+
+When the job completes, the output file lands at the path you named (`out.mp4` here) and the dashboard URL prints below.
+
+## What's not in the CLI
+
+By design:
+
+- **No filter chaining UI.** You write FFmpeg syntax. The CLI does not abstract it.
+- **No batch primitive.** A batch is a shell loop or a `for` in your CI YAML — keep the CLI honest about what it does.
+- **No watermark / caption / transcode subcommands.** Those run server-side as separate job types; submit them via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/job-types/raw-ffmpeg) directly. The CLI's scope is `raw.ffmpeg` and the auth + diagnostics around it.
+
+We will widen the CLI's scope when there's a clear shell-shaped use case the SDK can't cover. Today, there isn't one.
+
+## See also
+
+- [Installation](/cli/installation) — every install option, every env var
+- [Authentication](/cli/authentication) — `rb login`, API keys, refresh
+- [Commands reference](/cli/commands) — flags, exit codes, output modes
+- [CI/CD](/cli/ci-cd) — non-interactive use in GitHub Actions, GitLab, Docker
+- [Troubleshooting](/cli/troubleshooting) — what to try when something breaks

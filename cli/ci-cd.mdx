@@ -1,0 +1,183 @@
+---
+title: "Use the Rendobar CLI in CI/CD"
+description: "Install rb in GitHub Actions, GitLab CI, or Docker. Authenticate from a secret, pin a version, parse JSON output, and verify build provenance."
+sidebarTitle: "CI/CD"
+icon: "infinity"
+keywords: ["rendobar github actions", "rendobar cli ci", "rendobar gitlab", "rendobar docker"]
+---
+
+Run the Rendobar CLI in any CI runner. Three things matter: install with a pinned version, authenticate from a secret, and pick an output mode you can parse.
+
+## GitHub Actions
+
+```yaml title=".github/workflows/render.yml"
+name: render
+on: [push]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rendobar CLI
+        run: |
+          curl -fsSL https://rendobar.com/install.sh | sh
+          echo "$HOME/.rendobar/bin" >> "$GITHUB_PATH"
+        env:
+          RENDOBAR_VERSION: v1.0.0
+
+      - name: Render
+        run: rb ffmpeg -i ./input.mp4 -c:v libx264 -crf 23 out.mp4
+        env:
+          RENDOBAR_API_KEY: ${{ secrets.RENDOBAR_API_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rendered
+          path: out.mp4
+```
+
+The installer writes the PATH entry to your shell rc files, which Actions steps don't read. The `echo … >> "$GITHUB_PATH"` line propagates the install dir to every following step. `GITHUB_TOKEN` is picked up automatically — you do not need to set `RENDOBAR_GITHUB_TOKEN` separately.
+
+## GitLab CI
+
+```yaml title=".gitlab-ci.yml"
+render:
+  image: ubuntu:24.04
+  variables:
+    RENDOBAR_VERSION: v1.0.0
+  before_script:
+    - apt-get update && apt-get install -y curl ca-certificates
+    - curl -fsSL https://rendobar.com/install.sh | sh
+    - export PATH="$HOME/.rendobar/bin:$PATH"
+  script:
+    - rb ffmpeg -i ./input.mp4 -c:v libx264 -crf 23 out.mp4
+  artifacts:
+    paths:
+      - out.mp4
+```
+
+Set `RENDOBAR_API_KEY` as a masked, protected CI/CD variable in your project settings.
+
+## Docker
+
+Multi-stage build to keep the final image small:
+
+```dockerfile title="Dockerfile"
+FROM ubuntu:24.04 AS cli
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+ENV RENDOBAR_VERSION=v1.0.0
+ENV RENDOBAR_INSTALL_DIR=/usr/local/bin
+ENV RENDOBAR_NO_MODIFY_PATH=1
+RUN curl -fsSL https://rendobar.com/install.sh | sh
+
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=cli /usr/local/bin/rb /usr/local/bin/rb
+ENTRYPOINT ["rb"]
+```
+
+`RENDOBAR_NO_MODIFY_PATH=1` keeps the installer from touching shell rc files — pointless in a Docker layer.
+
+Run with the API key as an env var:
+
+```bash
+docker run --rm -v $(pwd):/work -w /work \
+  -e RENDOBAR_API_KEY=$RENDOBAR_API_KEY \
+  rb-image ffmpeg -i input.mp4 -c:v libx264 -crf 23 out.mp4
+```
+
+## Authenticate from a secret
+
+`RENDOBAR_API_KEY` takes precedence over any saved credential and is never written to disk. This is the only authentication path you should use in CI:
+
+```bash
+export RENDOBAR_API_KEY=rb_live_xxx
+rb whoami      # confirm auth before running anything else
+```
+
+Do not run `rb login` in CI. The browser flow will hang waiting for a callback that never comes.
+
+## Pin a version
+
+Always pin in CI:
+
+```bash
+RENDOBAR_VERSION=v1.0.0 curl -fsSL https://rendobar.com/install.sh | sh
+```
+
+Floating to "latest" breaks reproducibility. When you want to upgrade, bump the pin in one commit so the diff is reviewable.
+
+## Output modes for parsing
+
+The default progress display goes to **stderr**. stdout stays clean for piping.
+
+| Goal | Flag | What you get on stdout |
+|---|---|---|
+| Get the result URL only | `--url-only` | One line, the signed download URL |
+| Get the full job result | `--json` | A JSON object: `id`, `status`, `outputUrl`, `cost`, timing |
+| Exit code only | `--quiet` | Nothing |
+| Submit and exit | `--no-wait` | One line, the job ID |
+
+Examples:
+
+```bash
+# Pipe the URL straight to wget
+URL=$(rb ffmpeg --url-only -i in.mp4 -c:v libx264 out.mp4)
+wget "$URL" -O out.mp4
+
+# Parse the full result with jq
+rb ffmpeg --json -i in.mp4 -c:v libx264 out.mp4 \
+  | jq -r '"job=\(.id) cost=\(.cost.formatted)"'
+
+# Fire-and-forget: submit, log the job ID, exit
+JOB_ID=$(rb ffmpeg --no-wait -i in.mp4 -c:v libx264 out.mp4)
+echo "submitted $JOB_ID"
+
+# Boolean assertion
+if rb ffmpeg --quiet -i in.mp4 -c:v libx264 out.mp4; then
+  echo "render passed"
+fi
+```
+
+## Bypass the GitHub rate limit
+
+Shared CI runners often hit GitHub's 60-requests-per-hour-per-IP unauthenticated limit during install. Pass a token:
+
+```bash
+# GitHub Actions: GITHUB_TOKEN is auto-set, the installer picks it up
+# Other CI: set RENDOBAR_GITHUB_TOKEN explicitly
+RENDOBAR_GITHUB_TOKEN=ghp_xxx curl -fsSL https://rendobar.com/install.sh | sh
+```
+
+`rb update` and `rb doctor` also hit the GitHub API — they fall back gracefully when rate-limited but won't be able to check for new releases.
+
+## Verify build provenance
+
+For supply-chain-conscious pipelines, verify the binary was built by the official `rendobar/cli` workflow:
+
+```bash
+curl -fsSL -o rb.tar.gz \
+  https://github.com/rendobar/cli/releases/download/v1.0.0/rb-linux-x64.tar.gz
+gh attestation verify rb.tar.gz --repo rendobar/cli
+tar -xzf rb.tar.gz
+sudo mv rb /usr/local/bin/rb
+```
+
+Slower than the one-liner installer, but every download is cryptographically tied to a specific commit and workflow run.
+
+## Idempotency
+
+The CLI does not currently expose `--idempotency-key`. If you need it (retried CI step shouldn't double-charge), submit via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/job-types/raw-ffmpeg) directly with an `idempotencyKey` field.
+
+## See also
+
+- [Installation](/cli/installation) — every install env var
+- [Authentication](/cli/authentication) — the env var path in detail
+- [Commands reference](/cli/commands) — exit codes and flag semantics
+- [Troubleshooting](/cli/troubleshooting) — what to do when CI breaks
