@@ -7,6 +7,10 @@ icon: "terminal"
 
 You write the FFmpeg command. Rendobar downloads the inputs, runs the command in an isolated container, and returns a signed download URL. Same FFmpeg you already know, no servers to manage.
 
+<Tip>
+Skip the HTTP plumbing and run the same command via [the Rendobar CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=1280:720 out.mp4`. Local files are uploaded automatically.
+</Tip>
+
 ## How it works
 
 <Steps>

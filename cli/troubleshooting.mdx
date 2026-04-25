@@ -1,0 +1,280 @@
+---
+title: "Rendobar CLI troubleshooting"
+description: "Fix common rb CLI errors: install failures, PATH issues, port conflicts, macOS Gatekeeper, expired tokens, GitHub rate limits, and update rollback."
+sidebarTitle: "Troubleshooting"
+icon: "stethoscope"
+keywords: ["rb cli error", "rendobar cli not found", "rendobar login failed", "rb doctor"]
+---
+
+When something breaks, run this first:
+
+```bash
+rb doctor
+```
+
+It runs eight checks (version, install method, OS/arch, update cache, API reachability, auth, macOS quarantine, GitHub rate limit) and prints a `fix:` line under any check that fails. Most of the entries below appear there directly.
+
+If a fix involves the macOS quarantine bit, `rb doctor --fix` removes it for you.
+
+## Install and PATH
+
+<AccordionGroup>
+
+<Accordion title="rb: command not found after install">
+Three causes, in likelihood order:
+
+1. **Your shell hasn't reloaded.** The installer added `~/.rendobar/bin` to your shell rc, but the current shell already started. Open a new terminal, or `source ~/.zshrc` (or `~/.bashrc`).
+2. **You set `RENDOBAR_NO_MODIFY_PATH=1`.** The binary is installed but PATH wasn't touched. Add the directory yourself:
+   ```bash
+   export PATH="$HOME/.rendobar/bin:$PATH"
+   ```
+3. **Custom `RENDOBAR_INSTALL_DIR` not on PATH.** If you redirected the install dir, you have to add it to PATH yourself.
+
+Verify the binary exists:
+```bash
+ls -l ~/.rendobar/bin/rb
+```
+</Accordion>
+
+<Accordion title="curl: (22) The requested URL returned error: 403 / 429 during install">
+GitHub Releases API rate limit (60 unauthenticated requests per hour per IP). Pass a token:
+
+```bash
+RENDOBAR_GITHUB_TOKEN=ghp_xxx curl -fsSL https://rendobar.com/install.sh | sh
+```
+
+In GitHub Actions, set the env var to `${{ secrets.GITHUB_TOKEN }}` (or rely on `GITHUB_TOKEN` — the installer picks it up automatically).
+</Accordion>
+
+<Accordion title="install.sh fails with 'Error: need curl or wget'">
+Minimal Docker images and some hardened distros ship without either. Install one:
+
+```bash
+# Debian/Ubuntu
+apt-get update && apt-get install -y curl ca-certificates
+
+# Alpine
+apk add curl ca-certificates
+```
+
+Then re-run the installer.
+</Accordion>
+
+<Accordion title="checksum verification failed">
+The binary downloaded but its SHA-256 didn't match the published `checksums.txt`. This is rare and usually means a transient network corruption. Re-run the installer; if it persists, file an issue with the version and platform at [rendobar/cli/issues](https://github.com/rendobar/cli/issues).
+</Accordion>
+
+</AccordionGroup>
+
+## macOS Gatekeeper
+
+<AccordionGroup>
+
+<Accordion title='"rb" cannot be opened because the developer cannot be verified'>
+The binary picked up the `com.apple.quarantine` extended attribute when downloaded via a browser or some download managers. The installer-via-curl path does not trigger this — but if you grabbed a release asset manually, it will.
+
+Fix automatically:
+
+```bash
+rb doctor --fix
+```
+
+Or manually:
+
+```bash
+xattr -d com.apple.quarantine $(which rb)
+```
+</Accordion>
+
+</AccordionGroup>
+
+## Login
+
+<AccordionGroup>
+
+<Accordion title="Port 14832 in use">
+Another process holds the OAuth callback port. Two options:
+
+1. Free the port, then re-run `rb login`.
+   ```bash
+   lsof -i :14832
+   ```
+2. Skip the browser flow entirely:
+   ```bash
+   rb login --key rb_live_xxx
+   ```
+   Get a key from [app.rendobar.com](https://app.rendobar.com) → Settings → API keys.
+</Accordion>
+
+<Accordion title="Login timed out">
+The browser flow waits 120 seconds for a callback. If you closed the tab, denied consent, or were on a network that blocked the callback to `127.0.0.1`, it times out.
+
+Re-run `rb login`. If the network blocks loopback HTTP (some restrictive corporate firewalls do), use `rb login --key` instead.
+</Accordion>
+
+<Accordion title="Browser didn't open">
+The CLI prints the URL to stderr — copy it into any browser:
+
+```
+  Opening browser...
+  If it didn't open, visit:
+  https://api.rendobar.com/auth/oauth2/authorize?client_id=rendobar-cli&...
+```
+
+The flow still completes the same way: you sign in in the browser, the browser POSTs back to `127.0.0.1:14832/callback`, the CLI saves the tokens.
+</Accordion>
+
+<Accordion title="Refresh failed: invalid_grant">
+Your refresh token was revoked (manual revoke, password change, or expired after long inactivity). Sign in again:
+
+```bash
+rb logout
+rb login
+```
+</Accordion>
+
+</AccordionGroup>
+
+## Running jobs
+
+<AccordionGroup>
+
+<Accordion title="Not authenticated. Run `rb login` or set RENDOBAR_API_KEY">
+Either no credentials are saved, or the credentials file is corrupt. Pick one path:
+
+- Interactive: `rb login`
+- Non-interactive (CI): `export RENDOBAR_API_KEY=rb_live_xxx`
+- Inspect what the CLI sees: `rb whoami`
+</Accordion>
+
+<Accordion title="Insufficient credits">
+The CLI exits `2` with a top-up link. Credits are organization-scoped; check your balance and top up at [app.rendobar.com/billing](https://app.rendobar.com/billing).
+
+Run `rb whoami` to see your current balance.
+</Accordion>
+
+<Accordion title="Job failed with no useful message">
+Re-run with `--json` to capture the full error envelope:
+
+```bash
+rb ffmpeg --json -i in.mp4 -c:v libx264 out.mp4 | jq .
+```
+
+The `error.code` and `error.message` fields are the canonical failure reason. Most FFmpeg-side failures (bad codec, unreadable input) surface here.
+</Accordion>
+
+<Accordion title="Local input file isn't being uploaded">
+The CLI only treats arguments after `-i` as inputs. If your command has unusual structure (custom filter graph reading files via `movie=`, for example), wrap it differently or upload the file manually and pass a URL.
+
+Local inputs are detected when:
+
+- The path is **after** `-i`
+- The path **does not** look like a URL (`http://`, `https://`)
+- The path exists on disk
+
+If any of those is false, the CLI passes the argument through unchanged.
+</Accordion>
+
+</AccordionGroup>
+
+## Update
+
+<AccordionGroup>
+
+<Accordion title="rb update keeps offering the same version">
+The update notifier caches the latest-version check in `~/.rendobar/update-check.json`. If that file went stale or corrupt, force a fresh check:
+
+```bash
+rm ~/.rendobar/update-check.json
+rb update
+```
+</Accordion>
+
+<Accordion title="Update failed: write permission denied">
+You installed the binary to a directory your user can't write to (typically `/usr/local/bin` without sudo, or a system-managed path). Neither the installer nor `rb update` calls `sudo` for you.
+
+Re-run the installer under sudo, or move the install dir to a user-writable path:
+
+```bash
+# Option A: install with sudo to the original system path
+RENDOBAR_INSTALL_DIR=/usr/local/bin \
+  curl -fsSL https://rendobar.com/install.sh | sudo -E sh
+
+# Option B: relocate to a user-writable dir (default)
+RENDOBAR_INSTALL_DIR=$HOME/.rendobar/bin \
+  curl -fsSL https://rendobar.com/install.sh | sh
+```
+
+Or move the binary to a writable directory and re-add to PATH.
+</Accordion>
+
+<Accordion title="Update succeeded but rb still reports the old version">
+You may have multiple `rb` binaries on PATH. Check:
+
+```bash
+# macOS / Linux
+which -a rb
+rb --version
+```
+
+```powershell
+# Windows
+Get-Command rb -All
+rb --version
+```
+
+The first match wins. Remove the stale copy or reorder PATH so the updated binary comes first.
+</Accordion>
+
+</AccordionGroup>
+
+## Network and proxies
+
+<AccordionGroup>
+
+<Accordion title="Behind a corporate proxy">
+The CLI uses Bun's native `fetch`, which respects `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY`. Set them before running:
+
+```bash
+export HTTPS_PROXY=http://proxy.corp.local:8080
+export NO_PROXY=127.0.0.1,localhost
+rb login
+```
+
+`NO_PROXY=127.0.0.1` is required for the OAuth callback — the CLI must reach itself on loopback without going through the proxy.
+</Accordion>
+
+<Accordion title="Custom CA bundle (corporate MITM)">
+Set `NODE_EXTRA_CA_CERTS` to the path of your CA bundle so the CLI trusts your corporate root:
+
+```bash
+export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/corp-ca-bundle.pem
+rb whoami
+```
+
+A TLS error like `unable to verify the first certificate` or `self signed certificate in certificate chain` is the usual symptom of a missing intermediate.
+</Accordion>
+
+<Accordion title="api.rendobar.com is unreachable">
+Run:
+
+```bash
+rb doctor
+```
+
+The API reachability check hits `https://api.rendobar.com/health` with a 5-second timeout. If that returns a network error and `curl https://api.rendobar.com/health` from the same machine works, the difference is usually a proxy or CA bundle (see the two entries above).
+</Accordion>
+
+</AccordionGroup>
+
+## Still stuck
+
+- File a bug at [github.com/rendobar/cli/issues](https://github.com/rendobar/cli/issues) — include `rb doctor --json` output.
+- Email `hello@rendobar.com` for account or billing issues.
+
+## See also
+
+- [Installation](/cli/installation) — re-install from scratch
+- [Authentication](/cli/authentication) — credential storage details
+- [Commands reference](/cli/commands) — exit codes by command
+- [API errors](/support/errors) — what each error code means server-side
