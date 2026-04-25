@@ -1,12 +1,12 @@
 ---
 title: "Use the Rendobar CLI in CI/CD"
-description: "Install rb in GitHub Actions, GitLab CI, or Docker. Authenticate from a secret, pin a version, parse JSON output, and verify build provenance."
+description: "Install rb in GitHub Actions, GitLab CI, or Docker. Authenticate from a secret, pin a version, parse JSON output, verify provenance."
 sidebarTitle: "CI/CD"
 icon: "infinity"
 keywords: ["rendobar github actions", "rendobar cli ci", "rendobar gitlab", "rendobar docker"]
 ---
 
-Run the Rendobar CLI in any CI runner. Three things matter: install with a pinned version, authenticate from a secret, and pick an output mode you can parse.
+Three rules for any CI: pin the CLI version, authenticate from a secret, pick an output mode you can parse.
 
 ## GitHub Actions
 
@@ -38,7 +38,7 @@ jobs:
           path: out.mp4
 ```
 
-The installer writes the PATH entry to your shell rc files, which Actions steps don't read. The `echo … >> "$GITHUB_PATH"` line propagates the install dir to every following step. `GITHUB_TOKEN` is picked up automatically — you do not need to set `RENDOBAR_GITHUB_TOKEN` separately.
+`install.sh` writes the PATH update to shell rc files, which Actions steps don't read. The `echo … >> "$GITHUB_PATH"` line propagates the install dir to following steps. The default `GITHUB_TOKEN` is auto-picked-up by the installer to lift the GitHub Releases rate limit.
 
 ## GitLab CI
 
@@ -58,17 +58,16 @@ render:
       - out.mp4
 ```
 
-Set `RENDOBAR_API_KEY` as a masked, protected CI/CD variable in your project settings.
+Set `RENDOBAR_API_KEY` as a masked, protected CI/CD variable in project settings.
 
 ## Docker
 
-Multi-stage build to keep the final image small:
+Multi-stage to keep the final image small:
 
 ```dockerfile title="Dockerfile"
 FROM ubuntu:24.04 AS cli
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+      curl ca-certificates && rm -rf /var/lib/apt/lists/*
 ENV RENDOBAR_VERSION=v1.0.0
 ENV RENDOBAR_INSTALL_DIR=/usr/local/bin
 ENV RENDOBAR_NO_MODIFY_PATH=1
@@ -76,15 +75,12 @@ RUN curl -fsSL https://rendobar.com/install.sh | sh
 
 FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+      ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=cli /usr/local/bin/rb /usr/local/bin/rb
 ENTRYPOINT ["rb"]
 ```
 
-`RENDOBAR_NO_MODIFY_PATH=1` keeps the installer from touching shell rc files — pointless in a Docker layer.
-
-Run with the API key as an env var:
+`RENDOBAR_NO_MODIFY_PATH=1` skips the rc-file writes; pointless inside a Docker layer.
 
 ```bash
 docker run --rm -v $(pwd):/work -w /work \
@@ -94,48 +90,34 @@ docker run --rm -v $(pwd):/work -w /work \
 
 ## Authenticate from a secret
 
-`RENDOBAR_API_KEY` takes precedence over any saved credential and is never written to disk. This is the only authentication path you should use in CI:
+`RENDOBAR_API_KEY` is the only auth path for CI. It beats any saved credential and writes nothing to disk. Don't run `rb login` in CI — the browser flow will hang.
 
 ```bash
 export RENDOBAR_API_KEY=rb_live_xxx
-rb whoami      # confirm auth before running anything else
+rb whoami      # confirm before running anything else
 ```
-
-Do not run `rb login` in CI. The browser flow will hang waiting for a callback that never comes.
-
-## Pin a version
-
-Always pin in CI:
-
-```bash
-RENDOBAR_VERSION=v1.0.0 curl -fsSL https://rendobar.com/install.sh | sh
-```
-
-Floating to "latest" breaks reproducibility. When you want to upgrade, bump the pin in one commit so the diff is reviewable.
 
 ## Output modes for parsing
 
-The default progress display goes to **stderr**. stdout stays clean for piping.
+Progress display goes to stderr. stdout stays empty unless you ask for it.
 
-| Goal | Flag | What you get on stdout |
+| Goal | Flag | stdout |
 |---|---|---|
-| Get the result URL only | `--url-only` | One line, the signed download URL |
-| Get the full job result | `--json` | A JSON object: `id`, `status`, `outputUrl`, `cost`, timing |
-| Exit code only | `--quiet` | Nothing |
+| Result URL only | `--url-only` | One line, the signed download URL |
+| Full result | `--json` | JSON: `id`, `status`, `outputUrl`, `cost`, timing |
+| Exit code only | `--quiet` | (nothing) |
 | Submit and exit | `--no-wait` | One line, the job ID |
 
-Examples:
-
 ```bash
-# Pipe the URL straight to wget
+# Pipe URL to wget
 URL=$(rb ffmpeg --url-only -i in.mp4 -c:v libx264 out.mp4)
 wget "$URL" -O out.mp4
 
-# Parse the full result with jq
+# Parse with jq
 rb ffmpeg --json -i in.mp4 -c:v libx264 out.mp4 \
   | jq -r '"job=\(.id) cost=\(.cost.formatted)"'
 
-# Fire-and-forget: submit, log the job ID, exit
+# Fire-and-forget
 JOB_ID=$(rb ffmpeg --no-wait -i in.mp4 -c:v libx264 out.mp4)
 echo "submitted $JOB_ID"
 
@@ -145,21 +127,9 @@ if rb ffmpeg --quiet -i in.mp4 -c:v libx264 out.mp4; then
 fi
 ```
 
-## Bypass the GitHub rate limit
-
-Shared CI runners often hit GitHub's 60-requests-per-hour-per-IP unauthenticated limit during install. Pass a token:
-
-```bash
-# GitHub Actions: GITHUB_TOKEN is auto-set, the installer picks it up
-# Other CI: set RENDOBAR_GITHUB_TOKEN explicitly
-RENDOBAR_GITHUB_TOKEN=ghp_xxx curl -fsSL https://rendobar.com/install.sh | sh
-```
-
-`rb update` and `rb doctor` also hit the GitHub API — they fall back gracefully when rate-limited but won't be able to check for new releases.
-
 ## Verify build provenance
 
-For supply-chain-conscious pipelines, verify the binary was built by the official `rendobar/cli` workflow:
+For supply-chain-strict pipelines, verify the binary was built by the official `rendobar/cli` workflow:
 
 ```bash
 curl -fsSL -o rb.tar.gz \
@@ -169,15 +139,13 @@ tar -xzf rb.tar.gz
 sudo mv rb /usr/local/bin/rb
 ```
 
-Slower than the one-liner installer, but every download is cryptographically tied to a specific commit and workflow run.
-
 ## Idempotency
 
-The CLI does not currently expose `--idempotency-key`. If you need it (retried CI step shouldn't double-charge), submit via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/job-types/raw-ffmpeg) directly with an `idempotencyKey` field.
+The CLI does not expose `--idempotency-key`. If a retried CI step shouldn't double-charge, submit via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/job-types/raw-ffmpeg) directly with an `idempotencyKey` field.
 
 ## See also
 
-- [Installation](/cli/installation) — every install env var
-- [Authentication](/cli/authentication) — the env var path in detail
-- [Commands reference](/cli/commands) — exit codes and flag semantics
-- [Troubleshooting](/cli/troubleshooting) — what to do when CI breaks
+- [Installation](/cli/installation)
+- [Authentication](/cli/authentication)
+- [Commands](/cli/commands)
+- [Troubleshooting](/cli/troubleshooting)

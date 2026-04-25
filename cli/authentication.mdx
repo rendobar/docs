@@ -1,11 +1,15 @@
 ---
 title: "Authenticate the Rendobar CLI"
-description: "Sign in via browser OAuth, paste an API key for non-interactive use, or set RENDOBAR_API_KEY for CI. Tokens auto-refresh; logout revokes them."
+description: "Sign in via browser OAuth, paste an API key for non-interactive use, or set RENDOBAR_API_KEY for CI. Tokens auto-refresh."
 icon: "key"
-keywords: ["rb login", "rendobar cli auth", "rendobar api key cli", "rendobar oauth"]
+keywords: ["rb login", "rendobar cli auth", "rendobar api key", "rendobar oauth"]
 ---
 
-The CLI accepts three credential sources, in priority order: the `RENDOBAR_API_KEY` env var, a saved API key, or a saved OAuth token from `rb login`. Pick one.
+The CLI reads credentials from three sources, in priority order:
+
+1. `RENDOBAR_API_KEY` environment variable
+2. Saved API key (from `rb login --key`)
+3. Saved OAuth token (from `rb login`)
 
 ## Sign in (interactive)
 
@@ -13,37 +17,35 @@ The CLI accepts three credential sources, in priority order: the `RENDOBAR_API_K
 rb login
 ```
 
-This opens your browser to the Rendobar consent screen, runs an OAuth 2.1 PKCE flow, catches the callback on `http://127.0.0.1:14832/callback`, and saves an access + refresh token pair to your config directory.
-
-The browser tab closes itself after three seconds. Your terminal prints the org name and plan you signed in as:
+Opens your browser, runs an OAuth 2.1 PKCE flow, catches the callback on `http://127.0.0.1:14832/callback`, and saves the tokens. Browser tab closes itself; the terminal prints your org and plan:
 
 ```
   ✓ Signed in | Acme Corp | Pro plan
   Saved to /Users/you/.config/rendobar/credentials.json
 ```
 
-If port `14832` is already in use, login fails fast — fall back to `--key` (below) or kill the process holding the port.
+If port `14832` is in use, login fails fast. Use `--key` instead.
 
-## Sign in with an API key (non-interactive)
+## Sign in with an API key
 
-For SSH sessions, headless containers, or any environment where you can't open a browser:
+For SSH sessions, headless containers, or any environment without a browser:
 
 ```bash
 rb login --key rb_live_xxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-The CLI verifies the key against the API, then writes it to the same credentials file. Keys must start with `rb_`. Get one from [app.rendobar.com](https://app.rendobar.com) → Settings → API keys.
+The CLI verifies the key against the API, then saves it. Keys must start with `rb_`. Get one from [app.rendobar.com](https://app.rendobar.com) → Settings → API keys.
 
-## Use an env var (recommended for CI)
+## Use an environment variable (CI)
 
-`RENDOBAR_API_KEY` takes precedence over any saved credentials. Nothing is written to disk. This is the right path for GitHub Actions, GitLab CI, Docker images, and ephemeral runners:
+`RENDOBAR_API_KEY` beats any saved credential and writes nothing to disk:
 
 ```bash
-export RENDOBAR_API_KEY=rb_live_xxxxxxxxxxxxxxxxxxxxxxxx
+export RENDOBAR_API_KEY=rb_live_xxx
 rb ffmpeg -i input.mp4 -c:v libx264 -crf 23 out.mp4
 ```
 
-See [CI/CD](/cli/ci-cd) for the full GitHub Actions snippet.
+This is the only auth path for CI. See [CI/CD](/cli/ci-cd) for the full GitHub Actions snippet.
 
 ## Where credentials live
 
@@ -53,7 +55,7 @@ See [CI/CD](/cli/ci-cd) for the full GitHub Actions snippet.
 | macOS | `~/.config/rendobar/credentials.json` |
 | Windows | `%APPDATA%\rendobar\credentials.json` |
 
-The file is JSON. After OAuth login it looks like:
+After OAuth login the file looks like:
 
 ```json
 {
@@ -64,36 +66,34 @@ The file is JSON. After OAuth login it looks like:
 }
 ```
 
-After `rb login --key`:
+After `--key`:
 
 ```json
 { "type": "apikey", "apiKey": "rb_live_..." }
 ```
 
-File permissions are not currently locked down by the CLI — treat the file as you would any other secret. Don't commit it; don't sync it to public storage.
+Treat the file as a secret. The CLI does not chmod it for you.
 
 ## Token refresh
 
-OAuth access tokens expire after 1 hour. The CLI auto-refreshes 60 seconds before expiry on every command that hits the API, using the saved refresh token. You'll never see a re-login prompt unless the refresh token itself is revoked.
+OAuth access tokens expire after 1 hour. The CLI refreshes 60 seconds before expiry on every API call, using the saved refresh token. You won't see a re-login prompt unless the refresh token itself is revoked.
 
-If a refresh fails (revoked, network error, server returns `invalid_grant`), the CLI exits with code `2` and writes the underlying error to stderr. Run `rb login` again.
+If refresh fails (revoked, network, `invalid_grant`), the CLI exits `2` with the underlying error. Run `rb login` again.
 
-## Switch accounts or environments
+## Switch accounts
 
-Sign out, then sign back in:
+Sign out, sign back in:
 
 ```bash
 rb logout
 rb login
 ```
 
-There's no profile system today — one credentials file, one account. To run a one-off command against a different account or against test mode, set `RENDOBAR_API_KEY` for that single invocation:
+There's no profile system. To run a single command against a different account or test mode, set the env var inline:
 
 ```bash
 RENDOBAR_API_KEY=rb_test_xxx rb ffmpeg -i clip.mp4 -c:v libx264 out.mp4
 ```
-
-The env var beats the saved credential without touching the file.
 
 ## Sign out
 
@@ -101,33 +101,25 @@ The env var beats the saved credential without touching the file.
 rb logout
 ```
 
-This revokes the OAuth refresh token (best-effort, 5-second timeout) and deletes the credentials file. If you weren't signed in, it's a no-op.
+Revokes the OAuth refresh token (best-effort, 5 s timeout) and deletes the credentials file. No-op when not signed in.
 
-To wipe credentials without revoking on the server (e.g. the server is unreachable), delete the file directly:
+To wipe credentials without a server round-trip:
 
 ```bash
 rm ~/.config/rendobar/credentials.json
 ```
 
-## Verify your identity
+## Verify
 
 ```bash
 rb whoami
 ```
 
-Hits `/orgs/current` with your saved credential and prints the org, plan, and balance:
-
-```
-  Org       Acme Corp
-  Plan      Pro
-  Balance   $42.85
-```
-
-Useful as a CI sanity check before submitting jobs.
+Hits `/orgs/current` and prints org, plan, balance. Useful as a CI sanity check before submitting jobs.
 
 ## See also
 
-- [Installation](/cli/installation) — get the binary first
-- [Commands reference](/cli/commands) — full flag list for `login`, `logout`, `whoami`
-- [CI/CD](/cli/ci-cd) — non-interactive auth in pipelines
-- [Authentication (API)](/authentication) — how API keys are issued and scoped
+- [Installation](/cli/installation)
+- [Commands](/cli/commands)
+- [CI/CD](/cli/ci-cd)
+- [Authentication (API)](/authentication)

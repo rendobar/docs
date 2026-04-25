@@ -1,61 +1,50 @@
 ---
 title: "Rendobar CLI commands reference"
-description: "Every rb command, every flag, every exit code. Covers ffmpeg, login, logout, whoami, doctor, and update. Built as a lookup, not as a tutorial."
+description: "Every rb command, every flag, every exit code. Covers ffmpeg, login, logout, whoami, doctor, and update."
 sidebarTitle: "Commands"
 icon: "list"
 keywords: ["rb commands", "rendobar cli reference", "rb ffmpeg flags", "rb exit codes"]
 mode: "wide"
 ---
 
-Every `rb` command, every flag, every exit code. Look things up here. Use the [overview](/cli/overview) or the [how-tos](/cli/ci-cd) if you want narrative.
+Reference for every `rb` command. Use the [overview](/cli/overview) for narrative.
 
 ## Global flags
 
-These are accepted by `rb ffmpeg`. Other commands ignore them.
+Accepted by `rb ffmpeg`. Other commands ignore them.
 
-| Flag | Type | Default | Effect |
-|---|---|---|---|
-| `--json` | bool | `false` | Print the full job result as JSON to stdout. Suppresses progress display |
-| `--url-only` | bool | `false` | Print only the result URL to stdout. Suppresses progress display |
-| `--quiet` | bool | `false` | Print nothing. Use the exit code |
-| `--no-wait` | bool | `false` | Submit the job and exit. Prints the job ID to stdout |
-| `--timeout N` | int | `120` | Max execution time in seconds. Range 1–900 |
+| Flag | Default | Effect |
+|---|---|---|
+| `--json` | off | Print the full job result as JSON to stdout |
+| `--url-only` | off | Print only the result URL to stdout |
+| `--quiet` | off | Print nothing. Use the exit code |
+| `--no-wait` | off | Submit the job and exit. Prints the job ID to stdout |
+| `--timeout N` | `120` | Server-side execution timeout in seconds. Range 1–900 |
 
-`--json` and `--url-only` are mutually exclusive in practice — the first one parsed wins. `--quiet` overrides both.
+`--json` and `--url-only` conflict; the first one parsed wins. `--quiet` overrides both.
 
 ## Exit codes
 
 | Code | Meaning |
 |---|---|
 | `0` | Success |
-| `1` | Job ran but failed, or a generic runtime error |
+| `1` | Job ran but failed, or generic runtime error |
 | `2` | User error: not authenticated, invalid arguments, port in use, insufficient credits |
-| `130` | Cancelled via `Ctrl+C` (SIGINT). The CLI attempts to cancel the in-flight job before exiting |
-
-Use `--quiet` plus the exit code in shell scripts that only care about success/failure.
+| `130` | Cancelled via `Ctrl+C`. The CLI tries to cancel the in-flight job before exiting |
 
 ---
 
 ## `rb doctor`
 
-Run diagnostic checks against the install, the API, and the local auth state.
-
 ```
 rb doctor [--json] [--fix]
 ```
 
-Eight checks run in order: CLI version vs latest release, install method, OS/arch, update cache, `api.rendobar.com` reachability, auth state, macOS quarantine bit, GitHub API rate limit.
+Runs eight diagnostic checks: CLI version vs latest release, install method, OS/arch, update cache, `api.rendobar.com` reachability, auth state, macOS quarantine bit, GitHub API rate limit.
 
-| Flag | Effect |
-|---|---|
-| `--json` | Print results as JSON instead of the human-readable table |
-| `--fix` | Attempt to fix what can be fixed. Today: removes the macOS quarantine bit from the `rb` binary |
+`--json` prints results as JSON. `--fix` removes the macOS quarantine bit from the `rb` binary (the only fix currently supported).
 
-Exits `0` when all checks pass, `1` if any failed (look at the `fix:` lines). Warnings do not change the exit code.
-
-```bash
-rb doctor
-```
+Exits `0` when all checks pass, `1` if any failed. Warnings do not change the exit code.
 
 ```
 rb 1.0.0 doctor
@@ -76,59 +65,52 @@ All checks passed.
 
 ## `rb ffmpeg`
 
-Run FFmpeg in the cloud. Pass real FFmpeg arguments after the subcommand name.
-
 ```
 rb ffmpeg [--json | --url-only | --quiet] [--no-wait] [--timeout N] <ffmpeg args>
 ```
 
-Global flags (`--json`, `--url-only`, `--quiet`, `--no-wait`, `--timeout N`) are stripped by name before the rest is passed to the cloud FFmpeg invocation.
+Runs FFmpeg in the cloud. Pass real FFmpeg arguments after the subcommand. Global flags above are stripped by name; everything else is passed through.
 
-Local input files (`-i ./clip.mp4`) are uploaded automatically before submission and rewritten to short-lived URLs. Remote inputs (`-i https://...`) are passed through as-is.
+Local input files (`-i ./clip.mp4`) upload automatically before submission and are rewritten to short-lived URLs. Remote inputs (`-i https://...`) pass through as-is.
 
-The output filename in your command (the trailing positional argument) is the local path the result is downloaded to. With `--no-wait` no download happens — only the job ID is printed.
+The trailing positional argument (the FFmpeg output filename) is the local path the result downloads to. With `--no-wait` no download happens — only the job ID prints.
 
-`--timeout N` sets the server-side execution timeout in seconds (default `120`, range 1–900). The other global flags above all apply.
+Job-failure exits `1` and writes the API error to stderr. Insufficient credits exits `2` with a top-up link.
 
 ```bash
-# Remote input → local output (default)
+# Remote input → local output
 rb ffmpeg -i https://cdn.example.com/clip.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 out.mp4
 
-# Local input (uploaded automatically)
+# Local input (auto-uploaded)
 rb ffmpeg -i ./local.mp4 -c:v libx265 -preset medium -crf 28 out.mp4
 
 # Submit only, get the job ID, exit
 rb ffmpeg --no-wait -i ./local.mp4 -c:v libx264 out.mp4
 
-# CI assertion: render must succeed, no output otherwise
+# CI assertion
 rb ffmpeg --quiet -i in.mp4 -c:v libx264 out.mp4 || exit 1
 
-# Pipe the result URL to wget
+# Pipe the URL to wget
 URL=$(rb ffmpeg --url-only -i in.mp4 -c:v libx264 out.mp4)
 wget "$URL" -O out.mp4
 ```
-
-Job-failure exits with `1` and writes the API error message to stderr. Insufficient credits exits with `2` and prints a top-up link.
 
 ---
 
 ## `rb login`
 
-Authenticate the CLI. Default flow opens a browser; `--key` is the non-interactive fallback.
-
 ```
 rb login [--key <api-key>]
 ```
 
-`--key <api-key>` skips the browser flow and saves the given key after verifying it against the API. Without `--key`, the browser flow listens on `http://127.0.0.1:14832/callback` and times out after 120 seconds.
+Default flow opens a browser, listens on `http://127.0.0.1:14832/callback`, times out after 120 seconds.
 
-See [Authentication](/cli/authentication) for credential storage paths and the env var override.
+`--key <api-key>` skips the browser flow and saves the given key after verifying it.
+
+Credential paths and storage details: [Authentication](/cli/authentication).
 
 ```bash
-# Browser flow
 rb login
-
-# CI / SSH
 rb login --key rb_live_xxx
 ```
 
@@ -136,47 +118,37 @@ rb login --key rb_live_xxx
 
 ## `rb logout`
 
-Sign out. Revokes the OAuth refresh token (best-effort) and deletes the credentials file.
-
 ```
 rb logout
 ```
 
-No flags. No-op when not signed in.
+Revokes the OAuth refresh token (best-effort) and deletes the credentials file. No-op when not signed in.
 
 ---
 
 ## `rb update`
 
-Check for and install the latest release.
-
 ```
 rb update
 ```
 
-No flags. Behaviour:
+Checks `github.com/rendobar/cli/releases` for the latest non-prerelease tag. If you're behind, downloads the platform archive, verifies SHA-256 against `checksums.txt`, atomically replaces the running binary, rolls back on failure. Logs to `~/.rendobar/update.log`.
 
-1. Fetches the latest non-prerelease tag from `github.com/rendobar/cli/releases`.
-2. If you're already on the latest, exits with `Already on the latest version (X.Y.Z).`
-3. Downloads the release archive for your platform, verifies the SHA-256 against `checksums.txt`.
-4. Atomically replaces the running binary; rolls back if the new binary fails to start.
-5. Writes a log entry to `~/.rendobar/update.log`.
+Already on latest: exits with `Already on the latest version (X.Y.Z).`
 
-In dev mode (running from source via `bun run`), `rb update` prints the install command instead of self-replacing.
+In dev mode (`bun run`), prints the install command instead of self-replacing.
 
-Exits `1` on any failure (network, checksum, write permission). The old binary is preserved on rollback.
+Exits `1` on any failure (network, checksum, write permission). Old binary is preserved on rollback.
 
 ---
 
 ## `rb whoami`
 
-Print the current authenticated identity.
-
 ```
 rb whoami
 ```
 
-No flags. Hits `/orgs/current` with the saved credential and prints org, plan, and balance:
+Hits `/orgs/current` with the saved credential and prints org, plan, balance:
 
 ```
   Org       Acme Corp
@@ -188,7 +160,7 @@ Exits `2` if not authenticated, `1` if the API call fails.
 
 ## See also
 
-- [Overview](/cli/overview) — what the CLI is and when to use it
-- [Authentication](/cli/authentication) — credential sources and refresh
-- [CI/CD](/cli/ci-cd) — non-interactive use, output modes for parsing
-- [Troubleshooting](/cli/troubleshooting) — what each error means
+- [Overview](/cli/overview)
+- [Authentication](/cli/authentication)
+- [CI/CD](/cli/ci-cd)
+- [Troubleshooting](/cli/troubleshooting)
