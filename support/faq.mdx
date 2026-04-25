@@ -1,41 +1,45 @@
 ---
 title: "FAQ"
-description: "Frequently asked questions about Rendobar"
+description: "Quick answers about Rendobar pricing, supported formats, AI agent access, rate limits, and what counts as a failed job."
 icon: "circle-question"
 ---
 
+<AccordionGroup>
+
 <Accordion title="How much does Rendobar cost?">
-  Rendobar uses credit-based billing. The free tier includes a one-time $5 signup grant with no credit card required. The Pro plan is $9/month and includes $5/month in credits plus a 20% bonus on every credit purchase. Credit packs ($10–$100) are available on both plans. Credits never expire.
+  Free plan ships with a one-time $5 credit grant — no card required. Pro is $9/mo, includes $5/mo in credits, plus 20% bonus on every credit purchase. Credit packs $10–$100 on both plans. Credits never expire. Full breakdown: [Credits & billing](/credits).
 </Accordion>
 
 <Accordion title="What can I do with Rendobar today?">
-  The live API is `raw.ffmpeg` — run any whitelisted FFmpeg command against URLs you provide. That one job type covers transcoding, trimming, filtering, overlays, audio extraction, frame extraction, and anything else FFmpeg can do from the command line. More dedicated job types are on the roadmap.
+  The live API is `raw.ffmpeg` — any whitelisted FFmpeg command against URLs you provide. That covers transcoding, trimming, filtering, overlays, audio extraction, frame extraction, and anything else FFmpeg does from the command line. More dedicated job types are on the roadmap.
 </Accordion>
 
 <Accordion title="What video formats are supported?">
-  Rendobar supports every FFmpeg-compatible container and codec. Outputs default to the extension in your `-i` target filename (e.g., `output.mp4` → MP4).
+  Every FFmpeg-compatible container and codec for input. Output defaults to the extension in your trailing filename (`output.mp4` → MP4). Override with `params.outputFormat`.
 </Accordion>
 
-<Accordion title="Can I use Rendobar from AI agents?">
-  Yes. Rendobar is MCP-native. Connect any MCP-compatible AI agent to `api.rendobar.com/mcp` with your API key. The MCP tools cover job submission, status polling, file upload, and account management. MCP is available on all plans, including Free.
+<Accordion title="Can I drive Rendobar from an AI agent?">
+  Yes. Connect any MCP-compatible agent to `https://api.rendobar.com/mcp` with your API key. Five typed tools cover submit, status, list, account, upload. Available on all plans. See [MCP overview](/mcp/overview).
 </Accordion>
 
 <Accordion title="How long do jobs take?">
-  Most jobs complete in seconds to minutes depending on input size and the command. Maximum timeout varies by plan: 5 minutes on Free, 15 minutes on Pro.
+  Seconds to minutes, depending on input size and command. Hard caps: 5 min (Free), 15 min (Pro). [Limits](/support/limits).
 </Accordion>
 
 <Accordion title="Is there a rate limit?">
-  Yes. The Free plan allows 30 API requests per minute. The Pro plan allows 300 requests per minute. Rate limits apply to both REST API and MCP tool calls.
+  Yes. 30 req/min (Free), 300 req/min (Pro). Applies to REST and MCP. Limit hit → `429 RATE_LIMITED` with a `Retry-After` header.
 </Accordion>
 
 <Accordion title="What happens if a job fails?">
-  No credits are charged for failed jobs. You can retry failed jobs via the API or MCP.
+  No credits charged. Inspect `error.code` and `error.message` on the job. Retry via `POST /jobs/{id}/retry` if appropriate. [Error codes](/support/errors).
 </Accordion>
 
 <Accordion title="Can I run custom FFmpeg commands?">
-  Yes — that is the core `raw.ffmpeg` job type. Your command is validated against a flag whitelist and security layers before execution in an isolated container. Raw FFmpeg is available on all plans, including Free.
+  Yes — that's the entire `raw.ffmpeg` job. Commands run through 8 security layers (flag whitelist, format/filter blocklists, sandbox isolation) before execution. [Raw FFmpeg](/guides/raw-ffmpeg).
 </Accordion>
 
-<Accordion title="How do I get real-time job updates?">
-  The dashboard receives real-time updates via WebSocket (OrgHub). For programmatic use, configure a webhook endpoint on your organization for push-based notifications, or poll `GET /jobs/{id}`.
+<Accordion title="How do I get push updates instead of polling?">
+  Configure a [webhook](/guides/webhooks) endpoint on your organization. Rendobar POSTs signed JSON when jobs change status. The dashboard uses a WebSocket internally; programmatic push is webhook-only.
 </Accordion>
+
+</AccordionGroup>

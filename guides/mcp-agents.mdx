@@ -1,17 +1,15 @@
 ---
-title: "MCP Integration Guide"
-description: "Connect an AI agent to Rendobar via the Model Context Protocol — setup snippet, auth, and a complete workflow example."
+title: "Connect an AI agent via MCP"
+description: "Wire any MCP-compatible agent to api.rendobar.com/mcp. Five typed tools cover submit, status, upload, account. End-to-end example included."
 sidebarTitle: "MCP Agents"
 icon: "robot"
 ---
 
-Connect any AI agent to `api.rendobar.com/mcp` and it can submit jobs, poll status, upload files, and check the account balance via five typed MCP tools — no HTTP code, no SDK.
+Point any MCP-compatible agent at `https://api.rendobar.com/mcp`. It can submit jobs, poll, upload files, and check the balance through five typed tools — no HTTP code, no SDK.
 
-This page is the task-focused guide: how to connect, how a full workflow runs. For the protocol reference, tool schemas, and supported agents list, see the [MCP overview](/mcp/overview) and [tools reference](/mcp/tools-reference).
+For the protocol reference and tool schemas: [MCP overview](/mcp/overview), [tools reference](/mcp/tools-reference).
 
 ## Connect Claude Desktop or Claude Code
-
-Add Rendobar to your MCP config:
 
 ```json
 {
@@ -26,54 +24,24 @@ Add Rendobar to your MCP config:
 }
 ```
 
-Any MCP-compatible agent can connect the same way over the Streamable HTTP transport.
+Any MCP-compatible agent connects the same way over the Streamable HTTP transport.
 
-## Example: end-to-end video workflow
+## End-to-end workflow
 
-<Steps>
+The agent runs five tool calls to upload a file, render it, and report back:
 
-<Step title="Check balance">
-  Call `get_account` to verify there are enough credits before running an expensive job.
-</Step>
-
-<Step title="Upload (if needed)">
-  Call `upload_media` with the local filename to get a temporary upload endpoint, then POST the file there. The response includes a `downloadUrl` to pass into `submit_job`.
-</Step>
-
-<Step title="Submit the job">
-  Call `submit_job` with `type: "raw.ffmpeg"`, the inputs map, and the FFmpeg command.
-</Step>
-
-<Step title="Poll for completion">
-  Call `get_job` with the returned `jobId` until `status: "complete"`. The response then contains the signed `outputUrl`.
-</Step>
-
-<Step title="Report the result">
-  Hand the output URL and metadata back to the user.
-</Step>
-
-</Steps>
+1. **`get_account`** — confirm credit balance covers the estimated cost
+2. **`upload_media`** — get a signed upload endpoint for the local file, then `POST` it there. The response includes a `downloadUrl` for the next step
+3. **`submit_job`** — `type: "raw.ffmpeg"`, `inputs` map, `params.command`
+4. **`get_job`** — poll until `status: "complete"`. The response has `outputUrl`
+5. Hand the result back to the user
 
 ## Authentication
 
-Pass your API key in the `Authorization` header — the same key you use for the REST API works for MCP. MCP clients that speak OAuth 2.1 natively can use that path instead. See [Authentication](/authentication) for key management and the OAuth flow.
+API key in the `Authorization` header. Same keys you use for REST. MCP clients with native OAuth 2.1 can run a PKCE flow against Rendobar's authorization server instead — see [Authentication](/authentication).
 
-<CardGroup cols={2}>
+## See also
 
-<Card title="MCP overview" icon="plug" href="/mcp/overview">
-  What MCP is, which agents are supported, how tool discovery works
-</Card>
-
-<Card title="Tools reference" icon="wrench" href="/mcp/tools-reference">
-  Detailed parameter docs for all 5 tools
-</Card>
-
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  REST API getting started
-</Card>
-
-<Card title="Authentication" icon="key" href="/authentication">
-  API keys and OAuth
-</Card>
-
-</CardGroup>
+- [MCP overview](/mcp/overview) — protocol details, tool list, supported agents
+- [MCP tools reference](/mcp/tools-reference) — every tool's parameters and response shape
+- [Quickstart](/quickstart) — equivalent flow over plain REST

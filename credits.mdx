@@ -1,105 +1,72 @@
 ---
-title: "Credits & Billing"
-description: "How Rendobar credits work, plan allocations, cost estimates, and usage tracking"
+title: "Credits & billing"
+description: "Rendobar bills per job in nanodollars from a prepaid balance. Free plan + Pro $9/mo. Credits never expire. Failed jobs cost nothing."
 sidebarTitle: "Credits"
 icon: "coins"
 ---
 
-Rendobar uses a credit-based billing system. Every job costs credits based on either a flat rate or the duration of the input/output media. Your balance is denominated in dollars.
+Rendobar bills per job from a prepaid credit balance. New accounts get $5 free. Failed jobs are never charged.
 
-## How credits work
-
-### Credit flow
-
-<Steps>
-
-<Step title="Pre-check">
-  Before a job is dispatched, Rendobar checks that your organization can afford the estimated cost. This does not deduct credits.
-</Step>
-
-<Step title="Execution">
-  The job runs on the execution provider.
-</Step>
-
-<Step title="Debit">
-  On completion, the actual cost is calculated and credits are atomically deducted from your balance.
-</Step>
-
-<Step title="Refund">
-  If a job fails or is cancelled, no credits are deducted. Failed jobs never cost anything.
-</Step>
-
-</Steps>
+For the conceptual model (why nanodollars, not minute quotas), see [How credits work](/concepts/credits).
 
 ## Plans
 
 | | Free | Pro |
-|---|------|-----|
-| **Price** | $0/mo | $9/mo |
-| **Signup credits** | $5 (one-time) | -- |
-| **Monthly credits** | -- | $5/mo included |
-| **Credit bonus** | -- | +20% on every purchase |
-| **Concurrent jobs** | 1 | 25 |
-| **API requests/min** | 30 | 300 |
-| **Max file size** | 100 MB | 2 GB |
-| **Job timeout** | 5 min | 15 min |
-| **Output retention** | 7 days | 30 days |
-| **Priority queue** | No | Yes |
+|---|---|---|
+| Price | $0/mo | $9/mo |
+| Signup credits | $5 (one-time) | — |
+| Monthly credits included | — | $5 |
+| Credit-purchase bonus | — | +20% |
+| Concurrent jobs | 1 | 25 |
+| API requests/min | 30 | 300 |
+| Max input file | 100 MB | 2 GB |
+| Job timeout | 5 min | 15 min |
+| Output retention | 7 days | 30 days |
+| Priority queue | No | Yes |
 
-Both plans have access to raw FFmpeg, MCP, and webhooks.
+`raw.ffmpeg`, MCP, and webhooks are on both plans. Full limits table: [Limits](/support/limits).
 
 ## Credit packs
 
-Purchase additional credits at any time: $10 / $25 / $50 / $100 or custom (minimum $10).
+$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds **+20%** to every purchase — buy $25, get $30. Credits never expire.
 
-Pro subscribers receive a **20% bonus** on every purchase. Buy $25, get $30 in credits. Buy $100, get $120.
+## Cost model
 
-Credits never expire.
+`raw.ffmpeg` bills per compute second — wall-clock time FFmpeg ran your command, excluding upload/download. Typical cost: ~$0.05/min.
 
-## Cost estimates
-
-Before submitting a job, Rendobar checks whether your balance covers the estimated cost:
-
-| Job Type | Cost Model | Typical Cost |
-|----------|-----------|-------------|
-| `raw.ffmpeg` | Per compute time | ~$0.05/min |
-
-<Info>
-`raw.ffmpeg` is the only live job type today. More dedicated types are on the roadmap.
-</Info>
-
-If your balance is too low, the API returns:
+Before submitting, the API checks your balance covers the estimated cost. If not:
 
 ```json
-{
-  "error": {
-    "code": "INSUFFICIENT_CREDITS",
-    "message": "Not enough credits for this job"
-  }
-}
+{ "error": { "code": "INSUFFICIENT_CREDITS", "message": "Not enough credits for this job" } }
 ```
 
-HTTP status: `402`
+HTTP `402`. Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing).
+
+## Check your balance
+
+```bash
+curl https://api.rendobar.com/billing/balance \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
+
+```json
+{ "data": { "balance": 5000000000, "rollover": 0 } }
+```
+
+`balance` is in nanodollars (1 USD = 1,000,000,000). The dashboard shows it in dollars.
 
 ## Usage tracking
-
-The API provides usage data per organization:
 
 ```bash
 curl "https://api.rendobar.com/billing/usage?start=2026-02-01&end=2026-02-09" \
   -H "Authorization: Bearer rb_live_YOUR_KEY"
 ```
 
-Usage is tracked daily by job type, including job count, amount charged, and compute seconds.
+Returns daily usage by job type: count, amount charged, compute seconds.
 
-<CardGroup cols={2}>
+## See also
 
-<Card title="Pricing" icon="tag" href="https://rendobar.com/pricing">
-  Full plan comparison
-</Card>
-
-<Card title="Raw FFmpeg" icon="terminal" href="/job-types/raw-ffmpeg">
-  The live job type reference
-</Card>
-
-</CardGroup>
+- [How credits work](/concepts/credits) — the why behind nanodollars
+- [Pricing](https://rendobar.com/pricing)
+- [Limits](/support/limits)
+- [Raw FFmpeg](/job-types/raw-ffmpeg)

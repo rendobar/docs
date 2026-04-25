@@ -1,123 +1,97 @@
 ---
 title: "Authentication"
-description: "How to authenticate with the Rendobar API using session cookies or API keys"
+description: "Authenticate Rendobar API requests with a Bearer API key. Same keys cover REST, MCP, and the CLI. OAuth available for MCP clients."
 sidebarTitle: "Authentication"
 icon: "key"
 ---
 
-Authenticate with a session cookie (dashboard) or an API key (programmatic). Keys carry the `rb_` prefix and go in the `Authorization` header as a Bearer token.
+Every Rendobar API request needs an API key in the `Authorization` header:
 
-## Session-based auth (Dashboard)
+```bash
+curl https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
 
-Sign in at [app.rendobar.com](https://app.rendobar.com) and the dashboard sets an `rb_session` cookie automatically. It lasts 30 days and covers every API call from the dashboard — no extra setup.
+Keys start with `rb_live_` (production) or `rb_test_` (test mode). Get one from [app.rendobar.com](https://app.rendobar.com) → **Settings → API keys**. Test-mode jobs run end to end but don't consume credits.
 
-## API key auth (Programmatic)
+## Three credential types
 
-For programmatic access, create an API key in the dashboard under **Settings > API Keys**. API keys start with the `rb_` prefix.
+| Type | Where to use it |
+|---|---|
+| **API key** (`rb_live_*` / `rb_test_*`) | REST API, MCP, CLI in CI |
+| **Session cookie** (`rb_session`) | Dashboard browser sessions only — set automatically when you sign in |
+| **OAuth 2.1 token** | MCP clients with native OAuth support, or the CLI's `rb login` browser flow |
 
-Include the key in the `Authorization` header:
+## Use a key
 
 <CodeGroup>
 
 ```bash cURL
 curl https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_API_KEY"
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
 ```
 
 ```javascript JavaScript
-const response = await fetch("https://api.rendobar.com/jobs", {
-  headers: {
-    "Authorization": "Bearer rb_live_YOUR_API_KEY",
-  },
+const res = await fetch("https://api.rendobar.com/jobs", {
+  headers: { "Authorization": "Bearer rb_live_YOUR_KEY" },
 });
 ```
 
 ```python Python
 import requests
-
-response = requests.get(
+res = requests.get(
     "https://api.rendobar.com/jobs",
-    headers={"Authorization": "Bearer rb_live_YOUR_API_KEY"},
+    headers={"Authorization": "Bearer rb_live_YOUR_KEY"},
 )
 ```
 
 </CodeGroup>
 
-### API key properties
+## Manage keys
 
-- Keys are scoped to an organization, not a user
-- Each key has a name for identification
-- Keys can be revoked at any time from the dashboard
-- Revoked keys return `401 Unauthorized` immediately
-- There is no limit on the number of keys per organization
-
-### Creating a key
+Keys are scoped to an organization, not a user. Each key has a name. There's no per-org limit on the number of keys.
 
 ```bash
+# Create
 curl -X POST https://api.rendobar.com/api-keys \
   -H "Authorization: Bearer rb_live_EXISTING_KEY" \
   -H "Content-Type: application/json" \
   -d '{ "name": "CI Pipeline" }'
-```
 
-### Revoking a key
-
-```bash
+# Revoke
 curl -X DELETE https://api.rendobar.com/api-keys/KEY_ID \
   -H "Authorization: Bearer rb_live_YOUR_KEY"
 ```
 
+Revoked keys return `401 UNAUTHORIZED` immediately.
+
 ## Auth context
 
-Every authenticated request resolves to a context containing:
+Every authenticated request resolves to:
 
-- **userId** -- the authenticated user
-- **orgId** -- the active organization
-- **plan** -- the organization's current plan (determines rate limits, allowed job types, and credit balance)
+- `userId` — the authenticated user (when via session or OAuth)
+- `orgId` — the active organization
+- `plan` — current plan; controls rate limits, allowed job types, balance
 
-This context is used for rate limiting, plan enforcement, and credit checks on every request.
+Used for rate limiting, plan enforcement, and credit checks on every request.
 
-## MCP agent auth
+## OAuth for MCP
 
-AI agents can authenticate with Rendobar via the Model Context Protocol (MCP). The primary method is API key authentication -- the same keys used for the REST API work with MCP by passing them in the `Authorization` header.
+MCP clients that speak OAuth 2.1 natively can register dynamically and run a PKCE flow against Rendobar's authorization server. Tokens are scoped to the user's organization. See [MCP overview](/mcp/overview) for setup.
 
-For MCP clients that support it, Rendobar also offers OAuth 2.1 via the Better Auth OAuth Provider plugin with dynamic client registration, PKCE, and org-scoped tokens. See the [MCP overview](/mcp/overview) for setup details.
+API keys are simpler and recommended for non-interactive integrations.
 
-## Error responses
-
-Authentication failures return:
+## Errors
 
 ```json
-{
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Invalid or expired authentication"
-  }
-}
+{ "error": { "code": "UNAUTHORIZED", "message": "Invalid or expired authentication" } }
 ```
 
-HTTP status: `401`
+HTTP `401`. Other auth-adjacent errors live in [Error codes](/support/errors).
 
-<CardGroup cols={2}>
+## See also
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  Make your first API call
-</Card>
-
-<Card title="Credits" icon="coins" href="/credits">
-  Billing and usage
-</Card>
-
-<Card title="Raw FFmpeg" icon="terminal" href="/job-types/raw-ffmpeg">
-  All available operations
-</Card>
-
-<Card title="CLI" icon="terminal" href="/cli/authentication">
-  Sign in from the terminal
-</Card>
-
-<Card title="MCP" icon="robot" href="/mcp/overview">
-  AI agent integration
-</Card>
-
-</CardGroup>
+- [Quickstart](/quickstart)
+- [CLI authentication](/cli/authentication)
+- [MCP overview](/mcp/overview)
+- [Error codes](/support/errors)

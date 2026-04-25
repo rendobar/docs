@@ -1,67 +1,63 @@
 ---
 title: "Limits"
-description: "Plan limits, rate limits, and quotas"
+description: "Plan limits, rate limits, file size caps, output retention, and storage quotas. Free vs Pro at a glance."
 icon: "gauge"
 ---
 
+Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API.
+
 ## Plan limits
 
-Values pulled directly from `PLAN_LIMITS` in the Rendobar API. `-1` means unlimited.
-
-| Limit | Free | Pro ($9/mo) |
-|-------|------|-------------|
+| | Free | Pro ($9/mo) |
+|---|---|---|
 | Signup credits | $5 (one-time) | — |
 | Monthly credits | — | $5/mo included |
-| Credit bonus on purchases | — | +20% |
+| Credit-purchase bonus | — | +20% |
 | Concurrent jobs | 1 | 25 |
 | API requests / min | 30 | 300 |
 | Max input file | 100 MB | 2 GB |
 | Max batch size | 10 | 100 |
 | Max job timeout | 5 min | 15 min |
 | Output retention | 7 days | 30 days |
-| Storage quota (total R2) | 1 GB | 50 GB |
-
-## Output URLs and retention
-
-- **Signed download URL** (`outputUrl` on completed jobs) is valid for **1 hour**. Re-fetch the job via `GET /jobs/{id}` to get a fresh URL after it expires.
-- **Output retention** is 7 days on Free and 30 days on Pro. After that, Rendobar auto-deletes the file from R2 — the job record remains but `outputUrl` stops resolving.
-- **Storage quota** is the total bytes you can hold in R2 across all your outputs. Delete old outputs or upgrade if you hit the cap.
-- **Output file size** is bounded by the input file size cap and the storage quota — there's no separate per-output limit.
-
-## Feature availability
-
-| Feature | Free | Pro |
-|---------|------|-----|
-| Raw FFmpeg | Yes | Yes |
-| MCP | Yes | Yes |
-| Webhooks | Yes | Yes |
+| Total R2 storage | 1 GB | 50 GB |
 | Priority queue | No | Yes |
 | Custom providers | No | Yes |
 
+`raw.ffmpeg`, MCP, and webhooks are on both plans.
+
+## Output URLs
+
+- **Signed download URL** (`outputUrl`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
+- **Output retention**: 7 days (Free) or 30 days (Pro). After that, R2 deletes the file; the job record stays but `outputUrl` returns 404.
+- **Storage quota** caps total bytes across all your outputs. Delete old outputs or upgrade if you hit it.
+- **No separate per-output size limit** — bounded by input cap and storage quota.
+
 ## Credit packs
 
-Credit packs are available for both plans: $10 / $25 / $50 / $100 (or custom, minimum $10).
-
-Pro subscribers receive a 20% bonus on every purchase (e.g., buy $25 of credits, get $30).
-
-Credits never expire. Failed jobs are always refunded.
+$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds +20% to every purchase. Credits never expire. Failed jobs are always refunded.
 
 ## API response limits
 
 | Limit | Value |
-|-------|-------|
-| Default page size | 50 items |
-| Maximum page size | 100 items |
-| Maximum request body | 100 MB |
+|---|---|
+| Default page size | 50 |
+| Max page size | 100 |
+| Max request body | 100 MB |
 
-## File format support
+## File formats
 
-Rendobar supports all FFmpeg-compatible formats for input. Default output formats:
+Rendobar accepts every FFmpeg-compatible input format. Default outputs by media type:
 
-| Input type | Default output |
-|-----------|---------------|
+| Input | Default output |
+|---|---|
 | Video | MP4 (H.264) |
 | Audio | MP3 |
 | Image | PNG |
 
-For `raw.ffmpeg`, Rendobar infers the output format from the trailing filename in your command (e.g., `output.mp4` → MP4). Override it with the `outputFormat` param if needed.
+For `raw.ffmpeg`, the output format is inferred from the trailing filename (`output.mp4` → MP4). Override with `params.outputFormat`.
+
+## See also
+
+- [Credits & billing](/credits)
+- [Error codes](/support/errors)
+- [Raw FFmpeg](/job-types/raw-ffmpeg)
