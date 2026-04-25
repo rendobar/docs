@@ -1,84 +1,108 @@
 ---
-title: "MCP Tools Reference"
-description: "All 5 MCP tools available in the Rendobar MCP server with parameters and response formats"
+title: "MCP tools reference"
+description: "Every MCP tool exposed at api.rendobar.com/mcp: parameters, response shape, defaults. Auth via API key or OAuth token."
+sidebarTitle: "Tools reference"
 icon: "wrench"
 ---
 
-Rendobar exposes 5 tools through its MCP server at `api.rendobar.com/mcp`. All tools require authentication via API key or OAuth token.
+Reference for the five tools exposed by the Rendobar MCP server at `https://api.rendobar.com/mcp`. All tools require an API key or OAuth token. For setup, see [MCP overview](/mcp/overview).
 
-## Job submission
+## `submit_job`
 
-<ParamField body="submit_job" type="tool">
-  Submit any media processing job. The tool description dynamically lists all available job types from the registry.
+Submit any job type. The tool description dynamically lists available types from the registry.
 
-  **Parameters:**
-  - `type` (string, required) -- Job type from the registry (e.g., `raw.ffmpeg`) or use the dynamic list in the tool description
-  - `inputs` (Record\<string, string\>, required) -- Map of input name to URL. For FFmpeg jobs, keys should match filenames referenced in your command
-  - `params` (Record\<string, unknown\>, optional) -- Type-specific parameters. For `raw.ffmpeg`: `{ command: "..." }`
-  - `idempotencyKey` (string, optional) -- Prevents duplicate jobs on retry
-
-  **Response:** `{ jobId, status, estimatedCost, timeoutSeconds }`
+<ParamField body="type" type="string" required>
+  Job type from the registry (e.g. `raw.ffmpeg`).
 </ParamField>
 
-## Job monitoring
-
-<ParamField body="get_job" type="tool">
-  Get job status, progress, results, and output URL by job ID.
-
-  **Parameters:**
-  - `jobId` (string, required) -- Job ID returned by `submit_job`
-
-  **Response includes:**
-  - `status` -- waiting, dispatched, running, complete, failed, cancelled
-  - `progress` -- fraction complete (e.g., "3/7 steps") when running
-  - `cost` -- formatted cost (e.g., "$0.05") when complete
-  - `outputUrl` -- download URL when complete
-  - `output` -- metadata (format, resolution, duration, file size) when complete
-  - `error` -- error details when failed
+<ParamField body="inputs" type="Record<string, string>" required>
+  Map of input name to URL. For FFmpeg jobs, keys should match filenames referenced in your command.
 </ParamField>
 
-<ParamField body="list_jobs" type="tool">
-  List recent jobs with optional filters.
-
-  **Parameters:**
-  - `status` (enum, optional) -- Filter: waiting, dispatched, running, complete, failed, cancelled
-  - `type` (string, optional) -- Filter by job type
-  - `limit` (number, 1-50, default 10) -- Number of jobs to return
-
-  **Response:** `{ jobs: [{ id, type, status, createdAt, cost }], total }`
+<ParamField body="params" type="Record<string, unknown>">
+  Type-specific parameters. For `raw.ffmpeg`: `{ command: "ffmpeg -i ..." }`.
 </ParamField>
 
-## Account
-
-<ParamField body="get_account" type="tool">
-  Check credit balance, plan limits, active jobs, and rate limit usage. Call before submitting expensive jobs to verify affordability.
-
-  **Parameters:** None
-
-  **Response:**
-  - `balance` -- formatted balance (e.g., "$10.50")
-  - `balanceNanodollars` -- raw balance in nanodollars
-  - `plan` -- current plan name (free or pro)
-  - `limits` -- active jobs count vs max, max file size, job timeout
-  - `costGuidance` -- brief pricing guide for common job types
+<ParamField body="idempotencyKey" type="string">
+  Replay-safe key. Resubmitting the same key returns the original job.
 </ParamField>
 
-## File upload
+**Response:** `{ jobId, status, estimatedCost, timeoutSeconds }`
 
-<ParamField body="upload_media" type="tool">
-  Get upload instructions for a local file. Returns the upload endpoint URL and a curl command. After uploading, the response contains a `downloadUrl` to use as input in `submit_job`.
+## `get_job`
 
-  **Parameters:**
-  - `filename` (string, required) -- Filename with extension (e.g., `video.mp4`)
-  - `contentType` (string, optional) -- MIME type. Auto-detected from extension if omitted.
+Status, progress, result, output URL by job ID.
 
-  **Response:**
-  - `uploadEndpoint` -- URL to POST the file to (with same API key auth)
-  - `method` -- POST
-  - `contentType` -- detected MIME type
-  - `maxFileSize` -- plan-based size limit
-  - `expiresIn` -- 24 hours
-  - `instructions` -- step-by-step upload guide
-
-  Files are stored in ephemeral R2 storage and auto-deleted after 24 hours.
+<ParamField body="jobId" type="string" required>
+  Job ID returned by `submit_job`.
 </ParamField>
+
+**Response includes:**
+
+- `status` — `waiting | dispatched | running | complete | failed | cancelled`
+- `progress` — fraction complete while `running` (e.g. `"3/7 steps"`)
+- `cost` — formatted cost (e.g. `"$0.05"`) when `complete`
+- `outputUrl` — signed download URL when `complete`
+- `output` — metadata (format, resolution, duration, file size) when `complete`
+- `error` — `{ code, message }` when `failed`
+
+## `list_jobs`
+
+Recent jobs with optional filters.
+
+<ParamField body="status" type="enum">
+  Filter by status: `waiting | dispatched | running | complete | failed | cancelled`.
+</ParamField>
+
+<ParamField body="type" type="string">
+  Filter by job type.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="10">
+  Number of jobs to return. Range 1–50.
+</ParamField>
+
+**Response:** `{ jobs: [{ id, type, status, createdAt, cost }], total }`
+
+## `get_account`
+
+Balance, plan, active job count, rate-limit usage. Call before expensive jobs.
+
+**Parameters:** none.
+
+**Response:**
+
+- `balance` — formatted (e.g. `"$10.50"`)
+- `balanceNanodollars` — raw integer
+- `plan` — `free | pro`
+- `limits` — active jobs vs max, max file size, job timeout
+- `costGuidance` — short pricing guide for common job types
+
+## `upload_media`
+
+Get a temporary upload endpoint for a local file. After upload, the response gives a `downloadUrl` to use as input.
+
+<ParamField body="filename" type="string" required>
+  Filename with extension (e.g. `video.mp4`).
+</ParamField>
+
+<ParamField body="contentType" type="string">
+  MIME type. Auto-detected from the extension if omitted.
+</ParamField>
+
+**Response:**
+
+- `uploadEndpoint` — URL to `POST` the file to (auth with the same API key)
+- `method` — `POST`
+- `contentType` — detected MIME type
+- `maxFileSize` — plan-based size cap
+- `expiresIn` — 24 hours
+- `instructions` — step-by-step upload guide
+
+Files live in ephemeral R2 storage and auto-delete after 24 hours.
+
+## See also
+
+- [MCP overview](/mcp/overview)
+- [MCP guide](/guides/mcp-agents)
+- [Authentication](/authentication)

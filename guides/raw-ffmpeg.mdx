@@ -1,49 +1,11 @@
 ---
 title: "Raw FFmpeg"
-description: "Run arbitrary FFmpeg commands with Rendobar's safety guardrails -- allowed flags, input handling, timeout limits, and examples"
+description: "Run any FFmpeg command in the cloud. Whitelisted flags, sandboxed execution, signed download URL. Same FFmpeg syntax you already know."
 sidebarTitle: "Raw FFmpeg"
 icon: "terminal"
 ---
 
-You write the FFmpeg command. Rendobar downloads the inputs, runs the command in an isolated container, and returns a signed download URL. Same FFmpeg you already know, no servers to manage.
-
-<Tip>
-Skip the HTTP plumbing and run the same command via [the Rendobar CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=1280:720 out.mp4`. Local files are uploaded automatically.
-</Tip>
-
-## How it works
-
-<Steps>
-
-<Step title="Validate">
-  Your command is validated against 8 security layers including a flag whitelist, format blocklist, and filter blocklist.
-</Step>
-
-<Step title="Download">
-  Input URLs in your command are downloaded to a sandboxed execution environment.
-</Step>
-
-<Step title="Substitute">
-  URLs are replaced with local file paths before execution.
-</Step>
-
-<Step title="Execute">
-  The FFmpeg command runs inside an isolated container with network access disabled.
-</Step>
-
-<Step title="Upload">
-  The output is uploaded to R2 storage.
-</Step>
-
-<Step title="Return">
-  A presigned download URL is available via `GET /jobs/:id`.
-</Step>
-
-</Steps>
-
-## Submitting a raw FFmpeg job
-
-Submit via `POST /jobs` with a real FFmpeg command. Put input URLs directly in `-i` flags:
+You write the FFmpeg command. Rendobar downloads inputs, runs the command in an isolated container, returns a signed download URL. Same syntax you'd run locally.
 
 ```bash
 curl -X POST https://api.rendobar.com/jobs \
@@ -53,28 +15,37 @@ curl -X POST https://api.rendobar.com/jobs \
     "type": "raw.ffmpeg",
     "inputs": {},
     "params": {
-      "command": "ffmpeg -i https://example.com/video.mp4 -i https://example.com/audio.mp3 -c:v libx264 -c:a aac -map 0:v -map 1:a output.mp4"
+      "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 output.mp4"
     }
   }'
 ```
 
-### Request fields
+<Tip>
+From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=1280:720 out.mp4` — local files upload automatically.
+</Tip>
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | string | Yes | Must be `"raw.ffmpeg"` |
-| `inputs` | Record\<string, string\> | Yes | Additional named inputs (use `{}` when URLs are in the command) |
-| `params.command` | string | Yes | Real FFmpeg command with input URLs in `-i` positions |
-| `params.outputFormat` | string | No | Override output format (default: inferred from trailing filename, or `"mp4"`) |
-| `params.timeout` | number | No | Max execution time in seconds (1-900, default 120) |
+## How it runs
 
-### Output format
+1. **Validate** — command parsed against 8 security layers (flag whitelist, format/filter blocklists)
+2. **Download** — input URLs pulled to a sandboxed worker
+3. **Substitute** — URLs replaced with local paths in the FFmpeg command
+4. **Execute** — FFmpeg runs in an isolated container with network disabled
+5. **Upload** — output goes to R2
+6. **Return** — signed `outputUrl` available via `GET /jobs/{id}`
 
-The output format is inferred from the trailing filename in your command (e.g., `output.mp4` → MP4, `output.webm` → WebM). You can override it with `params.outputFormat`.
+## Parameters
 
-## Validation endpoint
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `type` | string | yes | — | `"raw.ffmpeg"` |
+| `inputs` | object | yes | — | `{}` when URLs are inline in the command. Otherwise a name→URL map matching filenames in the command |
+| `params.command` | string | yes | — | Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions |
+| `params.outputFormat` | string | no | inferred | Override container format. Inferred from trailing filename if omitted |
+| `params.timeout` | int | no | `120` | Server-side max execution in seconds. Range 1–900 |
 
-You can validate a command without executing it (free, no auth required):
+## Validate without executing
+
+Free, no auth:
 
 ```bash
 curl -X POST https://api.rendobar.com/ffmpeg/validate \
@@ -86,149 +57,114 @@ Returns `{ data: { valid: true, args: [...], inferredOutputFormat: "mp4" } }` or
 
 ## Allowed flags
 
-Only whitelisted FFmpeg flags are permitted (~120 flags). Common ones include:
+~120 whitelisted flags. Common ones:
 
 | Flag | Purpose |
-|------|---------|
+|---|---|
 | `-i` | Input file |
 | `-f` | Force format |
-| `-c:v`, `-c:a` | Video/audio codec (stream specifiers like `-c:v:0` supported) |
-| `-vf` | Video filter |
-| `-af` | Audio filter |
+| `-c:v`, `-c:a` | Video / audio codec (stream specifiers like `-c:v:0` work) |
+| `-vf`, `-af` | Video / audio filter |
 | `-filter_complex` | Complex filter graph |
 | `-map` | Stream mapping |
-| `-ss` | Seek position |
-| `-t` | Duration |
-| `-r` | Frame rate |
-| `-s` | Resolution |
-| `-b:v`, `-b:a` | Video/audio bitrate |
-| `-crf` | Constant rate factor |
-| `-preset` | Encoding preset |
-| `-an`, `-vn` | Disable audio/video |
+| `-ss`, `-t` | Seek position, duration |
+| `-r`, `-s` | Frame rate, resolution |
+| `-b:v`, `-b:a` | Video / audio bitrate |
+| `-crf`, `-preset` | Quality + preset |
+| `-an`, `-vn` | Disable audio / video |
 | `-y` | Overwrite output |
-| `-movflags` | MOV/MP4 flags |
-| `-strict` | Strict standards compliance |
+| `-movflags`, `-strict` | Container flags, strict standards |
 
-Any unrecognized flag causes the job to be rejected with a validation error.
+Unrecognised flags are rejected before dispatch with `VALIDATION_ERROR`.
 
 ## Security model
 
-Rendobar applies 8 security layers to raw FFmpeg jobs:
+Eight layers, in order:
 
-1. **Clean environment.** All inherited env vars are stripped. Only `PATH`, `HOME`, `TMPDIR` remain.
-2. **Flag whitelist.** ~120 known-safe flags permitted, including stream specifiers.
-3. **Format blocklist.** Dangerous `-f` values blocked: `lavfi`, `concat`, `hls`, `tee`, `segment`, `dash`, `null`.
-4. **Filter function blocklist.** File-reading filters blocked: `movie`, `amovie`, `sendcmd`, `zmq`, `ladspa`, `frei0r`.
-5. **Filter parameter blocklist.** `textfile=`, `filename=` in subtitles, absolute paths in subtitle filters.
-6. **Pattern blocklist + URL extraction.** Protocols, path traversal (`../`), `/proc/`, `/sys/`, `subfile:` blocked.
+1. **Clean environment.** Inherited env vars stripped. Only `PATH`, `HOME`, `TMPDIR` remain.
+2. **Flag whitelist.** ~120 known-safe flags, including stream specifiers.
+3. **Format blocklist.** `-f lavfi`, `concat`, `hls`, `tee`, `segment`, `dash`, `null` blocked.
+4. **Filter function blocklist.** File-reading filters (`movie`, `amovie`, `sendcmd`, `zmq`, `ladspa`, `frei0r`) blocked.
+5. **Filter parameter blocklist.** `textfile=`, `filename=` in subtitles, absolute paths in subtitle filters blocked.
+6. **Pattern blocklist.** Path traversal (`../`), `/proc/`, `/sys/`, `subfile:` blocked.
 7. **Per-input protocol restriction.** `-protocol_whitelist file` injected before each `-i` server-side.
-8. **Container isolation.** Trigger.dev container sandboxing with restricted stdio.
+8. **Container isolation.** Trigger.dev container sandboxing, restricted stdio.
 
-## Cost
+## Cost & timeout
 
-Raw FFmpeg jobs are priced based on compute time. Compute time is measured from when FFmpeg starts to when it finishes, not including file transfer.
+Priced per compute second — wall-clock time FFmpeg ran, excluding file transfer. Typical cost ~$0.05/min.
 
-## Timeout limits
-
-| Plan | Max timeout |
-|------|-------------|
-| Free | 5 minutes |
-| Pro | 15 minutes |
-
-If your FFmpeg command exceeds the timeout, the job fails with a `PROVIDER_TIMEOUT` error and no credits are deducted.
+Plan timeouts: 5 min (Free), 15 min (Pro). Exceeding the timeout returns `PROVIDER_TIMEOUT`; no credits charged.
 
 ## Examples
 
-All examples use `POST /jobs` with `type: "raw.ffmpeg"`.
-
-### Scale a video to 720p
+### Scale to 720p
 
 ```json
 {
   "type": "raw.ffmpeg",
   "inputs": {},
   "params": {
-    "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4",
-}
+    "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4"
+  }
 }
 ```
 
-### Extract audio from video
+### Extract audio
 
 ```json
 {
   "type": "raw.ffmpeg",
   "inputs": {},
   "params": {
-    "command": "ffmpeg -i https://example.com/video.mp4 -vn -c:a aac -b:a 128k output.m4a",
-}
+    "command": "ffmpeg -i https://example.com/video.mp4 -vn -c:a aac -b:a 128k output.m4a"
+  }
 }
 ```
 
-### Trim a video (30 seconds starting at 1 minute)
+### Trim 30s starting at 1:00
 
 ```json
 {
   "type": "raw.ffmpeg",
   "inputs": {},
   "params": {
-    "command": "ffmpeg -i https://example.com/video.mp4 -ss 00:01:00 -t 00:00:30 -c:v libx264 -c:a aac output.mp4",
-}
+    "command": "ffmpeg -i https://example.com/video.mp4 -ss 00:01:00 -t 00:00:30 -c:v libx264 -c:a aac output.mp4"
+  }
 }
 ```
 
-### Merge video and audio tracks
+### Merge video + audio tracks
 
 ```json
 {
   "type": "raw.ffmpeg",
   "inputs": {},
   "params": {
-    "command": "ffmpeg -i https://example.com/video.mp4 -i https://example.com/narration.mp3 -c:v libx264 -c:a aac -map 0:v -map 1:a output.mp4",
-}
+    "command": "ffmpeg -i https://example.com/video.mp4 -i https://example.com/narration.mp3 -c:v libx264 -c:a aac -map 0:v -map 1:a output.mp4"
+  }
 }
 ```
 
 ## Error handling
 
-If FFmpeg exits with a non-zero status code, the job fails with a `PROVIDER_ERROR`:
+FFmpeg exits non-zero → job fails with `PROVIDER_ERROR`:
 
 ```json
-{
-  "error": {
-    "code": "PROVIDER_ERROR",
-    "message": "FFmpeg process exited with code 1"
-  }
-}
+{ "error": { "code": "PROVIDER_ERROR", "message": "FFmpeg process exited with code 1" } }
 ```
 
-If the command contains disallowed flags, it is rejected before dispatch:
+Disallowed flag → rejected before dispatch with `VALIDATION_ERROR`:
 
 ```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Flag '-protocol_whitelist' is not allowed in raw FFmpeg commands"
-  }
-}
+{ "error": { "code": "VALIDATION_ERROR", "message": "Flag '-protocol_whitelist' is not allowed in raw FFmpeg commands" } }
 ```
 
-<CardGroup cols={2}>
+Full error catalogue: [Error codes](/support/errors).
 
-<Card title="Raw FFmpeg reference" icon="terminal" href="/job-types/raw-ffmpeg">
-  Parameter reference and examples
-</Card>
+## See also
 
-<Card title="Credits" icon="coins" href="/credits">
-  Billing and cost details
-</Card>
-
-<Card title="Webhooks" icon="bell" href="/guides/webhooks">
-  Push-based job status updates
-</Card>
-
-<Card title="Authentication" icon="key" href="/authentication">
-  API key setup
-</Card>
-
-</CardGroup>
+- [Raw FFmpeg API reference](/job-types/raw-ffmpeg)
+- [CLI](/cli/overview)
+- [Webhooks](/guides/webhooks) — push instead of poll
+- [Credits](/credits)

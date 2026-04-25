@@ -1,66 +1,50 @@
 ---
-title: "How Credits Work"
-description: "Understanding Rendobar's credit-based billing -- balance pre-checks, debit flow, and refunds"
+title: "How credits work"
+description: "Why Rendobar bills in nanodollars from a prepaid balance instead of tier-based minute quotas. The lifecycle, the tradeoff, the cost model."
 sidebarTitle: "Credits"
 icon: "coins"
 ---
 
-Credits are the universal billing unit for all Rendobar jobs. Today `raw.ffmpeg` bills per compute second — the wall-clock time FFmpeg spent running your command, excluding file transfer. Typical cost: ~$0.05 per minute of compute.
+Rendobar bills every job in nanodollars (one-billionth of a US dollar) drawn from your organization's prepaid balance. This page is the why; for the how-to (plans, balance, top-up), see [Credits & billing](/credits).
+
+## The two billing models
+
+Usage-metered APIs pick one:
+
+1. **Tier-based quotas** — you buy a plan, get a bucket of minutes or operations, overage bills flat. Easy to understand, hard to price varying workloads.
+2. **Credit-based nanodollars** — every job has a cost formula, the balance is prepaid, charges are per-job with sub-cent precision. Precise, composable, takes a sentence to explain.
+
+We picked nanodollars.
+
+## Why
+
+- **Cost matches resources used.** A 30-second watermark on 1080p shouldn't cost the same as a 10-minute H.265 transcode of a 4K master. Nine decimal places of precision means the bill matches the work.
+- **Prepaid means predictable budgets.** You top up when you want, jobs run only if affordable, no end-of-month surprise bill. The dashboard shows formatted dollars; the nanodollar abstraction stays internal.
+
+## What you give up
+
+- **You think in dollars, not operations.** "Can I run this?" becomes "Do I have enough credits?" — not "Do I have enough quota?". Every job response shows both `cost.nanodollars` and `cost.formatted`.
+- **Pricing can change.** Per-job formulas mean we can adjust pricing when underlying infra changes. When that happens, it's announced in the changelog 30 days ahead.
 
 ## Credit lifecycle
 
-<Steps>
+1. **Pre-check.** Submit triggers a balance check against the estimated cost. No deduction. Insufficient balance returns `402 INSUFFICIENT_CREDITS`.
+2. **Execution.** Job runs. Balance untouched.
+3. **Debit.** On success, actual cost is computed (real compute time or output duration) and atomically deducted.
+4. **Refund.** Failure or cancellation never deducts. Failed jobs cost zero.
 
-<Step title="Pre-check">
-  When you submit a job, Rendobar checks that your balance covers the estimated cost. No credits are deducted at this stage. If your balance is too low, the API returns `402 INSUFFICIENT_CREDITS`.
-</Step>
+## Cost models in flight
 
-<Step title="Execution">
-  The job runs. Your balance is not touched during processing.
-</Step>
+Today only one model is live: per-compute-time for `raw.ffmpeg` (~$0.05/min). As dedicated job types ship, they'll add per-input-duration, per-output-duration, and flat-rate models — each documented on the job type's reference page.
 
-<Step title="Debit">
-  On successful completion, the actual cost is calculated (based on real output duration or compute time) and atomically deducted from your balance.
-</Step>
+## Practical advice
 
-<Step title="Refund">
-  If a job fails or is cancelled, no credits are charged. Failed jobs never cost anything.
-</Step>
+- **Start on Free.** $5 signup grant is enough for many hundreds of small jobs.
+- **Use `rb_test_*` keys while building.** Test-mode runs the full pipeline, returns real output, doesn't deduct credits.
+- **Store `cost.nanodollars` from every response.** Reconcile against your monthly invoice.
 
-</Steps>
+## See also
 
-## Cost model
-
-Right now only one cost model is live: per-compute-time for `raw.ffmpeg`. As dedicated job types ship, they will introduce per-input-duration, per-output-duration, and flat-rate models — each documented on the job type's page.
-
-## Checking your balance
-
-```bash
-curl https://api.rendobar.com/billing/balance \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
-```
-
-```json
-{
-  "data": {
-    "balance": 5000000000,
-    "rollover": 0
-  }
-}
-```
-
-<Info>
-The `balance` field is in nanodollars (1,000,000,000 = $1.00). The dashboard displays this as a formatted dollar amount.
-</Info>
-
-<CardGroup cols={2}>
-
-<Card title="Credits & Billing" icon="credit-card" href="/credits">
-  Plan details and pricing table
-</Card>
-
-<Card title="Raw FFmpeg" icon="terminal" href="/job-types/raw-ffmpeg">
-  The live job type reference
-</Card>
-
-</CardGroup>
+- [Credits & billing](/credits) — plans, packs, top-up, dashboard
+- [Job lifecycle](/concepts/job-lifecycle) — where the debit happens
+- [Raw FFmpeg](/job-types/raw-ffmpeg) — the live cost model

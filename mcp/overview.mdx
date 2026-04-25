@@ -1,29 +1,17 @@
 ---
-title: "MCP Integration"
-description: "How to use Rendobar from AI agents via the Model Context Protocol -- available tools, authentication, and example workflows"
+title: "MCP integration"
+description: "Connect any MCP-compatible AI agent to api.rendobar.com/mcp. Five typed tools cover submit, status, list, account, upload."
 sidebarTitle: "Overview"
 icon: "plug"
 ---
 
-Point any MCP-compatible AI agent at `api.rendobar.com/mcp` and it can submit jobs, check status, upload files, and read account balance — without writing HTTP code. Rendobar ships five MCP tools covering the full job lifecycle.
+Point any MCP-compatible agent at `https://api.rendobar.com/mcp` and it can submit jobs, poll status, upload files, and check the balance through five typed tools — without writing HTTP code.
 
-## Model Context Protocol
+## Connect
 
-The Model Context Protocol (MCP) is a standard for AI agents to interact with external tools and services. Instead of writing custom API client code, an agent discovers available tools and calls them directly using structured inputs and outputs.
+<CodeGroup>
 
-## Connecting to Rendobar
-
-Point your MCP client to the Rendobar MCP endpoint:
-
-```
-https://api.rendobar.com/mcp
-```
-
-### Claude Desktop / Claude Code
-
-Add to your MCP configuration:
-
-```json
+```json Claude Desktop / Code
 {
   "mcpServers": {
     "rendobar": {
@@ -36,128 +24,82 @@ Add to your MCP configuration:
 }
 ```
 
-### Custom agents
+```text Custom agent
+Transport: Streamable HTTP
+URL:       https://api.rendobar.com/mcp
+Header:    Authorization: Bearer rb_live_YOUR_KEY
+```
 
-Any MCP-compatible agent can connect using the Streamable HTTP transport protocol with an API key in the `Authorization` header.
+</CodeGroup>
 
-## Available tools
+## Tools
 
-Rendobar provides 5 MCP tools:
+| Tool | What it does |
+|---|---|
+| `submit_job` | Submit a job. Description dynamically lists available job types from the registry |
+| `get_job` | Status, progress, result, output URL |
+| `list_jobs` | Recent jobs with optional status / type filter |
+| `get_account` | Balance, plan, active job count, rate-limit usage |
+| `upload_media` | Get a temporary upload endpoint for a local file |
 
-| Tool | Description |
-|------|-------------|
-| `submit_job` | Submit a job (today: `raw.ffmpeg`) |
-| `get_job` | Get job status, progress, results, and output URL |
-| `list_jobs` | List recent jobs with optional status and type filters |
-| `get_account` | Check credit balance, plan limits, and active job count |
-| `upload_media` | Get upload instructions for a local file (returns endpoint URL and curl command) |
+Detailed parameters: [Tools reference](/mcp/tools-reference).
 
 <Tip>
-The `submit_job` tool description dynamically lists the available job types from the registry, so agents discover capabilities without a separate discovery tool.
+The `submit_job` description enumerates available job types at runtime, so agents discover capabilities without a separate discovery tool.
 </Tip>
 
 ## Authentication
 
-MCP tools authenticate using an API key in the `Authorization` header -- the same keys used for the REST API.
+API key in the `Authorization` header — same key as REST. MCP clients with native OAuth 2.1 can use Rendobar's authorization server instead:
 
-For interactive MCP clients (like Claude Desktop), Rendobar also supports OAuth 2.1 via the Better Auth OAuth Provider plugin:
+1. **Register** — client dynamically registers with the authorization server
+2. **Authorize** — user grants consent in their browser (one-time)
+3. **Token** — client receives an access token scoped to the user's organization
+4. **Operate** — subsequent tool calls use the token automatically
 
-<Steps>
+API keys are simpler and recommended for non-interactive integrations.
 
-<Step title="Register">
-  The MCP client dynamically registers itself with the Rendobar authorization server.
-</Step>
-
-<Step title="Authorize">
-  The user authorizes the agent in their browser (one-time consent).
-</Step>
-
-<Step title="Token">
-  The agent receives an access token scoped to the user's organization.
-</Step>
-
-<Step title="Operate">
-  All subsequent MCP tool calls use this token automatically.
-</Step>
-
-</Steps>
-
-API key authentication is simpler and recommended for most integrations. OAuth is available for MCP clients that support it natively.
-
-## Example: Agent submits a raw FFmpeg job
+## Example: agent submits a render
 
 ```
-Agent: I'll scale the video to 720p.
+1. get_account()
+   → { balance: "$10.50", plan: "pro", limits: { activeJobs: "0/25" } }
 
-1. Call get_account()
-   -> { balance: "$10.50", plan: "pro", limits: { activeJobs: "0/25" } }
-
-2. Call submit_job({
+2. submit_job({
      type: "raw.ffmpeg",
      inputs: { "video.mp4": "https://example.com/video.mp4" },
      params: { command: "ffmpeg -i video.mp4 -vf scale=1280:720 output.mp4" }
    })
-   -> { jobId: "job_x1y2z3", status: "dispatched", estimatedCost: "$0.05" }
+   → { jobId: "job_x1y2z3", status: "dispatched", estimatedCost: "$0.05" }
 
-3. Call get_job({ jobId: "job_x1y2z3" })
-   -> { status: "complete", cost: "$0.05", outputUrl: "https://..." }
+3. get_job({ jobId: "job_x1y2z3" })
+   → { status: "complete", cost: "$0.05", outputUrl: "https://..." }
 ```
 
-## Example: Agent uploads a local file
+## Example: agent uploads a local file
 
 ```
-Agent: I need to upload a file first.
+1. upload_media({ filename: "video.mp4" })
+   → { uploadEndpoint: "https://api.rendobar.com/uploads?filename=video.mp4",
+       method: "POST",
+       instructions: "..." }
 
-1. Call upload_media({ filename: "video.mp4" })
-   -> { uploadEndpoint: "https://api.rendobar.com/uploads?filename=video.mp4", method: "POST", instructions: "..." }
+2. (Agent or user POSTs the file to uploadEndpoint)
 
-2. (User or agent uploads file to the endpoint)
-
-3. Call submit_job({
+3. submit_job({
      type: "raw.ffmpeg",
      inputs: { "video.mp4": "https://api.rendobar.com/uploads/dl/..." },
      params: { command: "ffmpeg -i video.mp4 -vf scale=640:480 output.mp4" }
    })
 ```
 
-## Tool discovery
+## Rate limits + billing
 
-Agents discover available tools by connecting to the Rendobar MCP server endpoint. The server returns tool definitions with:
+MCP tool calls share the same rate limits and credit model as REST. Each `submit_job` deducts on completion. Limits are per-organization.
 
-- Tool name and description
-- Input schema (Zod-based, auto-generated)
-- The `submit_job` description dynamically includes all available job types from the job registry
+## See also
 
-This allows agents to understand what each tool does and what parameters it accepts without any prior knowledge of the Rendobar API.
-
-## Supported agents
-
-Any MCP-compatible agent can use Rendobar, including:
-
-- Claude (Anthropic) via Claude Desktop or Claude Code
-- Custom agents built with the MCP SDK
-- Automation platforms with MCP support
-
-## Rate limits and billing
-
-MCP tool calls are subject to the same rate limits and credit checks as REST API calls. Each `submit_job` tool call deducts credits from the organization's balance, and rate limits are enforced per organization.
-
-<CardGroup cols={2}>
-
-<Card title="Tools Reference" icon="wrench" href="/mcp/tools-reference">
-  Detailed parameter docs for all 6 tools
-</Card>
-
-<Card title="Authentication" icon="key" href="/authentication">
-  API key and session auth details
-</Card>
-
-<Card title="Raw FFmpeg" icon="terminal" href="/job-types/raw-ffmpeg">
-  The live job type reference
-</Card>
-
-<Card title="Credits" icon="coins" href="/credits">
-  Billing and usage tracking
-</Card>
-
-</CardGroup>
+- [MCP guide](/guides/mcp-agents) — task-focused walkthrough
+- [Tools reference](/mcp/tools-reference)
+- [Authentication](/authentication)
+- [Raw FFmpeg](/job-types/raw-ffmpeg)
