@@ -33,7 +33,7 @@ file wins** — open a PR there to update it, then mirror the change here.
 | CDN URL | `https://cdn.rendobar.com` |
 | Twitter handle | `@rendobar` |
 | Locale | `en_US` |
-| OG default image | `https://rendobar.com/brand/og-default.png` (1200×675 PNG) |
+| OG default image | `https://rendobar.com/brand/og-default.png` (1200×630 PNG) |
 | Theme color (light) | `#FFFFFF` |
 | Theme color (dark) | `#0A0A0A` |
 
@@ -79,7 +79,7 @@ Lives in `seo.metatags`. Required keys (must match apex):
   "og:locale": "en_US",
   "og:image": "https://rendobar.com/brand/og-default.png",
   "og:image:width": "1200",
-  "og:image:height": "675",
+  "og:image:height": "630",
   "og:image:alt": "Rendobar — Serverless media processing API",
   "og:image:type": "image/png",
   "twitter:card": "summary_large_image",
