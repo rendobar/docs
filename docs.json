@@ -116,11 +116,11 @@
       },
       {
         "label": "Blog",
-        "href": "https://rendobar.com/blog"
+        "href": "https://rendobar.com/blog/"
       },
       {
         "label": "Pricing",
-        "href": "https://rendobar.com/pricing"
+        "href": "https://rendobar.com/pricing/"
       }
     ],
     "primary": {
@@ -141,7 +141,7 @@
         "items": [
           {
             "label": "Pricing",
-            "href": "https://rendobar.com/pricing"
+            "href": "https://rendobar.com/pricing/"
           },
           {
             "label": "Dashboard",
@@ -153,12 +153,12 @@
         "title": "Legal",
         "items": [
           {
-            "label": "Terms of Service",
-            "href": "https://rendobar.com/terms"
+            "label": "Terms of service",
+            "href": "https://rendobar.com/terms/"
           },
           {
-            "label": "Privacy Policy",
-            "href": "https://rendobar.com/privacy"
+            "label": "Privacy policy",
+            "href": "https://rendobar.com/privacy/"
           }
         ]
       }
@@ -177,7 +177,20 @@
     ]
   },
   "seo": {
-    "indexing": "all"
+    "indexing": "all",
+    "metatags": {
+      "og:type": "website",
+      "og:site_name": "Rendobar",
+      "og:locale": "en_US",
+      "og:image": "https://rendobar.com/brand/og-default.png",
+      "og:image:width": "1200",
+      "og:image:height": "675",
+      "og:image:alt": "Rendobar — Serverless media processing API",
+      "og:image:type": "image/png",
+      "twitter:card": "summary_large_image",
+      "twitter:site": "@rendobar",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    }
   },
   "search": {
     "prompt": "Search docs..."
