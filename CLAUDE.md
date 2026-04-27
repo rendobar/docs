@@ -33,7 +33,7 @@ file wins** — open a PR there to update it, then mirror the change here.
 | CDN URL | `https://cdn.rendobar.com` |
 | Twitter handle | `@rendobar` |
 | Locale | `en_US` |
-| OG default image | `https://rendobar.com/brand/og-default.png` (1200×630 PNG) |
+| OG image (universal) | `https://rendobar.com/brand/og-default.jpg` (1200×630 JPG) |
 | Theme color (light) | `#FFFFFF` |
 | Theme color (dark) | `#0A0A0A` |
 
@@ -77,11 +77,11 @@ Lives in `seo.metatags`. Required keys (must match apex):
   "og:type": "website",
   "og:site_name": "Rendobar",
   "og:locale": "en_US",
-  "og:image": "https://rendobar.com/brand/og-default.png",
+  "og:image": "https://rendobar.com/brand/og-default.jpg",
   "og:image:width": "1200",
   "og:image:height": "630",
   "og:image:alt": "Rendobar — Serverless media processing API",
-  "og:image:type": "image/png",
+  "og:image:type": "image/jpeg",
   "twitter:card": "summary_large_image",
   "twitter:site": "@rendobar",
   "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
@@ -135,7 +135,7 @@ A clean run shows no flags. Run before committing changes that touch frontmatter
 - Prefix `title:` frontmatter with `Rendobar` (Mintlify will double-brand)
 - Use `&` in titles or descriptions (use `and`)
 - Skip the trailing slash on a `https://rendobar.com/<path>` link
-- Set `og:image` site-wide to anything other than `https://rendobar.com/brand/og-default.png`
+- Set `og:image` site-wide to anything other than `https://rendobar.com/brand/og-default.jpg`
 - Block GPTBot, ClaudeBot, PerplexityBot anywhere
 - Set `noindex` on a docs page (the entire site is intentionally indexable)
 - Hand-edit `_redirects` or routing without coordinating with apex `apps/web/public/_redirects`
