@@ -36,8 +36,7 @@
             "group": "Guides",
             "pages": [
               "guides/raw-ffmpeg",
-              "guides/webhooks",
-              "guides/mcp-agents"
+              "guides/webhooks"
             ]
           },
           {
@@ -68,7 +67,11 @@
             "group": "MCP",
             "pages": [
               "mcp/overview",
-              "mcp/tools-reference"
+              "mcp/installation",
+              "mcp/examples",
+              "mcp/tools",
+              "mcp/web-and-mobile",
+              "mcp/troubleshooting"
             ]
           },
           {
