@@ -1,30 +1,41 @@
 ---
-title: "How credits work"
-description: "Why Rendobar bills in nanodollars from a prepaid balance instead of tier-based minute quotas. The lifecycle, the tradeoff, the cost model."
+title: "Credits and billing"
 sidebarTitle: "Credits"
+description: "Get per-job nanodollar billing from a prepaid balance. Free plan ships with $5, Pro is $9/mo. Credits never expire and failed jobs cost nothing."
 icon: "coins"
 ---
 
-Rendobar bills every job in nanodollars (one-billionth of a US dollar) drawn from your organization's prepaid balance. This page is the why; for the how-to (plans, balance, top-up), see [Credits & billing](/credits).
+Per-job billing from a prepaid credit balance. New accounts get $5 free. Failed jobs are never charged.
 
-## The two billing models
+## Plans
 
-Usage-metered APIs pick one:
+| | Free | Pro |
+|---|---|---|
+| Price | $0/mo | $9/mo |
+| Signup credits | $5 (one-time) | — |
+| Monthly credits included | — | $5 |
+| Credit-purchase bonus | — | +20% |
+| Concurrent jobs | 1 | 25 |
+| API requests/min | 30 | 300 |
+| Max input file | 100 MB | 2 GB |
+| Job timeout | 5 min | 15 min |
+| Output retention | 7 days | 30 days |
+| Priority queue | No | Yes |
 
-1. **Tier-based quotas** — you buy a plan, get a bucket of minutes or operations, overage bills flat. Easy to understand, hard to price varying workloads.
-2. **Credit-based nanodollars** — every job has a cost formula, the balance is prepaid, charges are per-job with sub-cent precision. Precise, composable, takes a sentence to explain.
+`raw.ffmpeg`, MCP, and webhooks are on both plans. Full limits table: [Limits](/support/limits).
 
-We picked nanodollars.
+For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](https://rendobar.com/pricing/).
 
-## Why
+## Credit packs
 
-- **Cost matches resources used.** A 30-second watermark on 1080p shouldn't cost the same as a 10-minute H.265 transcode of a 4K master. Nine decimal places of precision means the bill matches the work.
-- **Prepaid means predictable budgets.** You top up when you want, jobs run only if affordable, no end-of-month surprise bill. The dashboard shows formatted dollars; the nanodollar abstraction stays internal.
+$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds **+20%** to every purchase — buy $25, get $30. Credits never expire.
 
-## What you give up
+## How it works: nanodollar billing
 
-- **You think in dollars, not operations.** "Can I run this?" becomes "Do I have enough credits?" — not "Do I have enough quota?". Every job response shows both `cost.nanodollars` and `cost.formatted`.
-- **Pricing can change.** Per-job formulas mean we can adjust pricing when underlying infra changes. When that happens, it's announced in the changelog 30 days ahead.
+Every job is billed in nanodollars (one-billionth of a US dollar) drawn from your prepaid balance. This differs from tier-based quotas where you buy a plan with a bucket of minutes:
+
+- **Cost matches resources used.** A 30-second watermark on 1080p shouldn't cost the same as a 10-minute H.265 transcode of a 4K master.
+- **Prepaid means predictable budgets.** You top up when you want; jobs run only if affordable. No end-of-month surprise bill.
 
 ## Credit lifecycle
 
@@ -33,18 +44,48 @@ We picked nanodollars.
 3. **Debit.** On success, actual cost is computed (real compute time or output duration) and atomically deducted.
 4. **Refund.** Failure or cancellation never deducts. Failed jobs cost zero.
 
-## Cost models in flight
+## Cost model
 
-Today only one model is live: per-compute-time for `raw.ffmpeg` (~$0.05/min). As dedicated job types ship, they'll add per-input-duration, per-output-duration, and flat-rate models — each documented on the job type's reference page.
+`raw.ffmpeg` bills per compute second — wall-clock time FFmpeg ran your command, excluding upload/download. Typical cost: ~$0.05/min.
+
+Before submitting, the API checks your balance covers the estimated cost. If not:
+
+```json
+{ "error": { "code": "INSUFFICIENT_CREDITS", "message": "Not enough credits for this job" } }
+```
+
+HTTP `402`. Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing).
+
+## Check your balance
+
+```bash
+curl https://api.rendobar.com/billing/balance \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
+
+```json
+{ "data": { "balance": 5000000000, "rollover": 0 } }
+```
+
+`balance` is in nanodollars (1 USD = 1,000,000,000). The dashboard shows it in dollars.
+
+## Usage tracking
+
+```bash
+curl "https://api.rendobar.com/billing/usage?start=2026-02-01&end=2026-02-09" \
+  -H "Authorization: Bearer rb_live_YOUR_KEY"
+```
+
+Returns daily usage by job type: count, amount charged, and compute seconds.
 
 ## Practical advice
 
-- **Start on Free.** $5 signup grant is enough for many hundreds of small jobs.
-- **Use `rb_test_*` keys while building.** Test-mode runs the full pipeline, returns real output, doesn't deduct credits.
+- **Start on Free.** $5 signup grant covers many hundreds of small jobs.
+- **Use `rb_test_*` keys while building.** Test-mode runs the full pipeline, returns real output, and doesn't deduct credits.
 - **Store `cost.nanodollars` from every response.** Reconcile against your monthly invoice.
 
 ## See also
 
-- [Credits & billing](/credits) — plans, packs, top-up, dashboard
 - [Job lifecycle](/concepts/job-lifecycle) — where the debit happens
-- [Raw FFmpeg](/job-types/raw-ffmpeg) — the live cost model
+- [Limits](/support/limits) — full quota table
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg) — the live cost model
