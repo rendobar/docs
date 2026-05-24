@@ -1,0 +1,26 @@
+name: Validate frontmatter
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.mdx"
+      - "scripts/validate-frontmatter.mjs"
+      - "package.json"
+  pull_request:
+    paths:
+      - "**/*.mdx"
+      - "scripts/validate-frontmatter.mjs"
+      - "package.json"
+
+jobs:
+  validate:
+    name: Frontmatter SEO check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run frontmatter validator
+        run: node scripts/validate-frontmatter.mjs
