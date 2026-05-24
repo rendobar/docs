@@ -1,17 +1,36 @@
 ---
-title: "Webhooks: deliver job events"
-description: "Receive job status events via signed HMAC POST. Setup, payload format, signature verification, retry policy. Available on all plans."
+title: "Webhooks for job events"
+description: "Receive job status events via signed HMAC POST. Setup, payload format, signature verification, 3-attempt retry policy. Available on all plans."
 sidebarTitle: "Webhooks"
 icon: "bell"
+keywords: ["webhooks", "hmac signature", "job status webhook", "rendobar webhook setup", "signed webhook"]
 ---
 
-Rendobar POSTs JSON to your endpoint when a job changes status. Available on all plans, including Free.
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/guides/webhooks/#article",
+      "headline": "Webhooks for job events",
+      "description": "Receive job status events via signed HMAC POST. Setup, payload format, signature verification, retry policy.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Rendobar POSTs JSON to your endpoint when a [job](/concepts/job-lifecycle) changes status. Available on all plans, including Free.
 
 ## Set up a webhook
 
 ```bash
 curl -X POST https://api.rendobar.com/webhook-endpoints \
-  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Production webhook",
@@ -20,7 +39,7 @@ curl -X POST https://api.rendobar.com/webhook-endpoints \
   }'
 ```
 
-Required: `name` (1–50 chars), `url` (must be HTTPS), `subscribedEvents` (≥ 1). The response includes a signing secret (`whsec_...`) — store it; you'll verify every payload against it.
+Required: `name` (1–50 chars), `url` (must be HTTPS), `subscribedEvents` (≥ 1). The response includes a signing secret (`whsec_...`). Store it. You'll verify every payload against it.
 
 Manage endpoints (create, update, delete, test) via the API or the dashboard.
 
@@ -143,7 +162,7 @@ After three failures the delivery is marked failed. Inspect history:
 
 ```bash
 curl https://api.rendobar.com/webhook-endpoints/YOUR_ENDPOINT_ID/deliveries \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
 ## Best practices
@@ -157,4 +176,12 @@ curl https://api.rendobar.com/webhook-endpoints/YOUR_ENDPOINT_ID/deliveries \
 - [Job lifecycle](/concepts/job-lifecycle)
 - [Raw FFmpeg](/guides/raw-ffmpeg)
 - [Error codes](/support/errors)
-- [MCP](/mcp/overview) — alternative push channel for AI agents
+- [MCP](/mcp/overview): alternative push channel for AI agents
+
+## Related
+
+- [Job lifecycle](/concepts/job-lifecycle): what each status means before `job.completed` fires
+- [Error codes](/support/errors): codes you'll see inside `job.failed` payloads
+- [Raw FFmpeg](/guides/raw-ffmpeg): the job type that drives most webhook traffic
+- [MCP overview](/mcp/overview): alternative push channel for AI agent clients
+- [Changelog](https://rendobar.com/changelog/): webhook payload changes and new events

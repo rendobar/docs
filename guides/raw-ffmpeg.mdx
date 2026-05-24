@@ -1,8 +1,9 @@
 ---
 title: "Raw FFmpeg guide"
 sidebarTitle: "Raw FFmpeg"
-description: "Run any FFmpeg command in the cloud. Whitelisted flags, sandboxed execution, signed download URL. Same FFmpeg syntax you already know."
+description: "Run any FFmpeg command in the cloud. ~120 whitelisted flags, 8-layer sandboxed execution, signed download URL. Same FFmpeg syntax you know."
 icon: "terminal"
+keywords: ["ffmpeg guide", "ffmpeg in cloud", "ffmpeg sandboxed execution", "ffmpeg flags whitelist", "raw ffmpeg api"]
 ---
 
 <script
@@ -27,7 +28,7 @@ You write the FFmpeg command. Rendobar downloads inputs, runs the command in an 
 
 ```bash
 curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "raw.ffmpeg",
@@ -39,25 +40,25 @@ curl -X POST https://api.rendobar.com/jobs \
 ```
 
 <Tip>
-From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=1280:720 out.mp4` — local files upload automatically.
+From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=1280:720 out.mp4`. Local files upload automatically.
 </Tip>
 
 ## How it runs
 
-1. **Validate** — command parsed against 8 security layers (flag whitelist, format/filter blocklists)
-2. **Download** — input URLs pulled to a sandboxed worker
-3. **Substitute** — URLs replaced with local paths in the FFmpeg command
-4. **Execute** — FFmpeg runs in an isolated container with network disabled
-5. **Upload** — output goes to R2
-6. **Return** — signed `outputUrl` available via `GET /jobs/{id}`
+1. **Validate**: command parsed against 8 security layers (flag whitelist, format/filter blocklists)
+2. **Download**: input URLs pulled to a sandboxed worker
+3. **Substitute**: URLs replaced with local paths in the FFmpeg command
+4. **Execute**: FFmpeg runs in an isolated container with network disabled
+5. **Upload**: output goes to R2
+6. **Return**: signed `outputUrl` available via `GET /jobs/{id}`
 
 ## Parameters
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `type` | string | yes | — | `"raw.ffmpeg"` |
-| `inputs` | object | yes | — | `{}` when URLs are inline in the command. Otherwise a name→URL map matching filenames in the command |
-| `params.command` | string | yes | — | Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions |
+| `type` | string | yes | - | `"raw.ffmpeg"` |
+| `inputs` | object | yes | - | `{}` when URLs are inline in the command. Otherwise a name→URL map matching filenames in the command |
+| `params.command` | string | yes | - | Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions |
 | `params.outputFormat` | string | no | inferred | Override container format. Inferred from trailing filename if omitted |
 | `params.timeout` | int | no | `120` | Server-side max execution in seconds. Range 1–900 |
 
@@ -110,9 +111,9 @@ Eight layers, in order:
 
 ## Cost & timeout
 
-Priced per compute second — wall-clock time FFmpeg ran, excluding file transfer. Typical cost ~$0.05/min.
+Priced per compute second from your [credit balance](/concepts/credits), the wall-clock time FFmpeg ran, excluding file transfer. Typical cost ~$0.05/min.
 
-Plan timeouts: 5 min (Free), 15 min (Pro). Exceeding the timeout returns `PROVIDER_TIMEOUT`; no credits charged.
+Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `PROVIDER_TIMEOUT`; no credits charged.
 
 ## Examples
 
@@ -184,9 +185,15 @@ Full error catalogue: [Error codes](/support/errors).
 
 - [raw.ffmpeg reference](/job-types/raw-ffmpeg)
 - [CLI](/cli/overview)
-- [Webhooks](/guides/webhooks) — push instead of poll
+- [Webhooks](/guides/webhooks): push instead of poll
 - [Credits and billing](/concepts/credits)
 
----
-
 For a full list of FFmpeg-based operations supported by the API, see [rendobar.com/ffmpeg/](https://rendobar.com/ffmpeg/).
+
+## Related
+
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg): typed parameters, response shape, plan caps
+- [CLI overview](/cli/overview): run the same job from your terminal with `rb ffmpeg`
+- [Error codes](/support/errors): `VALIDATION_ERROR`, `PROVIDER_ERROR`, `PROVIDER_TIMEOUT`
+- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
+- [FFmpeg operations index](https://rendobar.com/ffmpeg/): every supported operation on the marketing site

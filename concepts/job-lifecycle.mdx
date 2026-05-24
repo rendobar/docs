@@ -1,9 +1,28 @@
 ---
 title: "Job lifecycle"
-description: "Explore job status transitions from waiting to complete, what triggers each state, timeout behavior, retries, and real-time update consumption."
+description: "View job status transitions across 6 states from waiting to complete, what triggers each, timeout behavior, retries, and real-time updates."
 sidebarTitle: "Job lifecycle"
 icon: "rotate"
+keywords: ["job lifecycle", "job status", "waiting complete failed", "video processing job states", "rendobar status"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/concepts/job-lifecycle/#article",
+      "headline": "Job lifecycle",
+      "description": "Job status transitions across 6 states from waiting to complete, what triggers each, timeout behavior, retries, and real-time updates.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Every job moves through six statuses:
 
@@ -18,13 +37,13 @@ waiting → dispatched → running → complete
 | `waiting` | Saved, queued for dispatch |
 | `dispatched` | Sent to the execution provider (Trigger.dev) |
 | `running` | Provider has started processing |
-| `complete` | Finished successfully — output available |
-| `failed` | Errored — see `error.code` and `error.message` |
+| `complete` | Finished successfully. Output available |
+| `failed` | Errored. See `error.code` and `error.message` |
 | `cancelled` | Cancelled before completion |
 
 ## Each transition
 
-**Submission → `waiting`.** Auth, rate limit, plan, credit pre-check, schema validation. If all pass, job is saved.
+**Submission → `waiting`.** Auth, [rate limit](/support/limits), plan, [credit pre-check](/concepts/credits), schema validation. If all pass, job is saved.
 
 **Dispatch → `dispatched`.** Routed to an available provider. The provider receives presigned URLs for input download and output upload.
 
@@ -55,15 +74,15 @@ To manually retry a failed job:
 
 ```bash
 curl -X POST https://api.rendobar.com/jobs/job_abc/retry \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
 ## Real-time updates
 
 Two ways to stop polling:
 
-- **[Webhooks](/guides/webhooks)** — push events to your server. Recommended for production.
-- **WebSocket (dashboard)** — the dashboard streams creation, status, progress, and balance over a per-org hub. Currently dashboard-only; programmatic clients should use webhooks.
+- **[Webhooks](/guides/webhooks)**: push events to your server. Recommended for production.
+- **WebSocket (dashboard)**: the dashboard streams creation, status, progress, and balance over a per-org hub. Currently dashboard-only. Programmatic clients should use webhooks.
 
 ## See also
 
@@ -71,3 +90,11 @@ Two ways to stop polling:
 - [Webhooks](/guides/webhooks)
 - [Error codes](/support/errors)
 - [How credits work](/concepts/credits)
+
+## Related
+
+- [Webhooks](/guides/webhooks): push status changes to your server instead of polling
+- [Credits and billing](/concepts/credits): when and how the terminal debit lands
+- [Error codes](/support/errors): every `error.code` returned by failed jobs
+- [Raw FFmpeg](/guides/raw-ffmpeg): what runs between `dispatched` and `complete`
+- [Changelog](https://rendobar.com/changelog/): platform changes that affect job behavior

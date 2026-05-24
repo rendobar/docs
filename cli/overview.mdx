@@ -3,8 +3,26 @@ title: "CLI overview and quickstart"
 sidebarTitle: "Overview"
 description: "Run FFmpeg in the cloud from your terminal. Pass real ffmpeg flags; the CLI uploads local files, runs the job, and downloads the result."
 icon: "terminal"
-keywords: ["rb cli", "rendobar command line", "ffmpeg cli", "cloud ffmpeg"]
+keywords: ["rb cli", "rendobar command line", "ffmpeg cli", "cloud ffmpeg", "rb ffmpeg"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/cli/overview/#article",
+      "headline": "CLI overview and quickstart",
+      "description": "Run FFmpeg in the cloud from your terminal. The CLI uploads local files, runs the job, and downloads the result.",
+      "datePublished": "2026-04-10",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 The Rendobar CLI runs FFmpeg in the cloud from your shell. You write the same `ffmpeg` command you'd run locally, prefixed with `rb`.
 
@@ -73,3 +91,11 @@ The CLI does one thing: run FFmpeg jobs. It does not bundle filter chaining, bat
 - [Commands](/cli/commands)
 - [CI/CD](/cli/ci-cd)
 - [Troubleshooting](/cli/troubleshooting)
+
+## Related
+
+- [Installation](/cli/installation): one-line install, pin a version, Docker, uninstall
+- [Commands reference](/cli/commands): every `rb` subcommand, flag, and exit code
+- [CI/CD](/cli/ci-cd): GitHub Actions, GitLab CI, and Docker recipes
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the API the CLI calls under the hood
+- [FFmpeg in the cloud](https://rendobar.com/ffmpeg/): supported operations on the marketing site

@@ -3,6 +3,7 @@ title: "MCP server overview"
 sidebarTitle: "Overview"
 description: "Connect AI agents via two transports: a local stdio server for IDE clients (Claude Desktop, Cursor) and a remote HTTP server for web and mobile."
 icon: "plug"
+keywords: ["mcp server", "model context protocol", "claude desktop mcp", "cursor mcp", "ai agent video tools", "rendobar mcp"]
 ---
 
 <script
@@ -23,7 +24,7 @@ icon: "plug"
   }}
 />
 
-Rendobar exposes its API as a Model Context Protocol server so AI agents can submit jobs, upload files, and check status without writing HTTP code. There are two servers — pick by client.
+Rendobar exposes its API as a Model Context Protocol server so AI agents can submit jobs, upload files, and check status without writing HTTP code. There are two servers. Pick by client.
 
 ## Pick a transport
 
@@ -42,7 +43,7 @@ Rendobar exposes its API as a Model Context Protocol server so AI agents can sub
 
 ## Why two servers
 
-The MCP spec has no primitive for streaming bytes from a client to a remote server. A remote MCP can submit jobs but cannot read a file off your laptop — the agent has to dictate a curl command and wait for you to paste back the URL.
+The MCP spec has no primitive for streaming bytes from a client to a remote server. A remote MCP can submit jobs but cannot read a file off your laptop. The agent has to dictate a curl command and wait for you to paste back the URL.
 
 The local server runs on your machine, has access to your files, and uploads them in a single tool call. That is the difference.
 
@@ -59,14 +60,14 @@ Both servers expose the same six job-related tools. Local adds `upload_file` for
 | `list_jobs` | ✓ | ✓ | Recent jobs with filters |
 | `cancel_job` | ✓ | ✓ | Cancel a waiting/dispatched job |
 | `get_account` | ✓ | ✓ | Balance, plan, limits |
-| `upload_file` | ✓ | — | Read local file, upload, return URL |
-| `upload_media` | — | ✓ | Return upload endpoint + curl command |
+| `upload_file` | ✓ | - | Read local file, upload, return URL |
+| `upload_media` | - | ✓ | Return upload endpoint + curl command |
 
 Full schemas: [Tools reference](/mcp/tools).
 
 ## Authentication
 
-Both servers use a Rendobar API key (`rb_live_*` or `rb_test_*`). Get one at [app.rendobar.com](https://app.rendobar.com) → Settings → API Keys.
+Both servers use a Rendobar API key (`rb_*`). Get one at [app.rendobar.com](https://app.rendobar.com) → Settings → API Keys. See [authentication](/authentication) for the full credential model.
 
 - Local: `RENDOBAR_API_KEY` env var, `--api-key` flag, or credentials file
 - Remote: `Authorization: Bearer` header
@@ -78,6 +79,12 @@ Both servers use a Rendobar API key (`rb_live_*` or `rb_test_*`). Get one at [ap
 - [Burn captions onto a local video](/mcp/examples)
 - [Web and mobile setup](/mcp/web-and-mobile)
 
----
-
 The MCP server gives AI agents full access to the same operations available via REST. For a complete list of supported job types, see [rendobar.com/mcp/](https://rendobar.com/mcp/).
+
+## Related
+
+- [MCP tools reference](/mcp/tools): every typed tool with parameters and response shapes
+- [Install for Claude Desktop and other clients](/mcp/installation): per-client config blocks
+- [Connect from web and mobile](/mcp/web-and-mobile): remote HTTP transport for claude.ai and ChatGPT
+- [Authentication](/authentication): API key and OAuth flows for MCP clients
+- [MCP server for AI agents](https://rendobar.com/mcp/): product overview and capability list

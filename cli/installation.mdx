@@ -1,9 +1,27 @@
 ---
 title: "Install the CLI"
-description: "Install the rb binary on macOS, Linux, or Windows. Pin a version, change the install path, run inside Docker, or uninstall."
+description: "Install the rb binary on macOS, Linux, or Windows in one command. Pin a version, change the install path, run inside Docker, or uninstall."
 icon: "download"
-keywords: ["install rendobar cli", "rb install", "rendobar windows install", "rendobar docker"]
+keywords: ["install rendobar cli", "rb install", "rendobar windows install", "rendobar docker", "rb doctor"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/cli/installation/#article",
+      "headline": "Install the CLI",
+      "description": "Install the rb binary on macOS, Linux, or Windows in one command.",
+      "datePublished": "2026-04-10",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Install the `rb` binary in one command, on any of the three supported platforms.
 
@@ -123,3 +141,11 @@ The uninstaller removes the binary and the PATH entry. Add `RENDOBAR_PURGE=1` to
 - [Troubleshooting](/cli/troubleshooting)
 
 For version history and release notes, see the [changelog](https://rendobar.com/changelog/).
+
+## Related
+
+- [CLI overview](/cli/overview): what the `rb` binary does and when to pick it
+- [Authentication](/cli/authentication): `rb login`, API keys, CI credentials
+- [CI/CD](/cli/ci-cd): pin a version and authenticate from a secret
+- [Troubleshooting](/cli/troubleshooting): install, PATH, and Gatekeeper fixes
+- [Changelog](https://rendobar.com/changelog/): version history and release notes

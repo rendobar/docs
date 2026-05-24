@@ -1,10 +1,29 @@
 ---
 title: "raw.ffmpeg reference"
 sidebarTitle: "raw.ffmpeg"
-description: "Execute a custom FFmpeg command with whitelisted flags, sandboxed execution, and signed output URL. Live on all plans."
+description: "Execute a custom FFmpeg command via API with ~120 whitelisted flags, sandboxed execution, and signed output URL. Live on all plans, ~$0.05/min."
 icon: "terminal"
 tag: "Live"
+keywords: ["raw ffmpeg", "ffmpeg api reference", "ffmpeg cloud", "ffmpeg sandboxed", "ffmpeg rest api"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/job-types/raw-ffmpeg/#article",
+      "headline": "raw.ffmpeg reference",
+      "description": "Execute a custom FFmpeg command with whitelisted flags, sandboxed execution, and signed output URL. Live on all plans.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 <Check>
 **Live.** Production-ready, available on all plans.
@@ -22,7 +41,7 @@ Execute a custom FFmpeg command with whitelisted flags. Input files go in `-i` p
 
 ```bash cURL
 curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "raw.ffmpeg",
@@ -37,7 +56,7 @@ curl -X POST https://api.rendobar.com/jobs \
 const res = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer rb_live_YOUR_KEY",
+    "Authorization": "Bearer rb_YOUR_KEY",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -55,7 +74,7 @@ const { data } = await res.json();
 import requests
 res = requests.post(
     "https://api.rendobar.com/jobs",
-    headers={"Authorization": "Bearer rb_live_YOUR_KEY"},
+    headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
         "type": "raw.ffmpeg",
         "inputs": {},
@@ -92,6 +111,14 @@ Poll `GET /jobs/{id}` until `status: "complete"`, then read `outputUrl` (signed,
 
 ## See also
 
-- [Raw FFmpeg guide](/guides/raw-ffmpeg) — security model, allowed flags, examples
-- [CLI](/cli/overview) — same job, terminal interface
+- [Raw FFmpeg guide](/guides/raw-ffmpeg): security model, allowed flags, examples
+- [CLI](/cli/overview): same job, terminal interface
 - [Job lifecycle](/concepts/job-lifecycle)
+
+## Related
+
+- [Raw FFmpeg guide](/guides/raw-ffmpeg): security layers, allowed flags, worked examples
+- [CLI overview](/cli/overview): the same job from your terminal with `rb ffmpeg`
+- [Credits and billing](/concepts/credits): per-compute-second pricing detail
+- [Plan limits](/support/limits): file-size caps, timeouts, and concurrency per plan
+- [FFmpeg in the cloud](https://rendobar.com/ffmpeg/): every operation Rendobar supports

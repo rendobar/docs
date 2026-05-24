@@ -1,9 +1,28 @@
 ---
 title: "MCP troubleshooting"
-description: "Fix common MCP server failures: missing API key, Cursor PATH on macOS, Windows npx.cmd quirks, minimum Node version, and stdout pollution."
+description: "Fix common MCP server failures: missing API key, Cursor PATH on macOS, Windows npx.cmd quirks, Node 20+ requirement, stdout pollution."
 sidebarTitle: "Troubleshooting"
 icon: "wrench"
+keywords: ["rendobar mcp error", "mcp not loading", "claude desktop mcp not working", "cursor mcp path", "mcp api key"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/troubleshooting/#article",
+      "headline": "MCP troubleshooting",
+      "description": "Fix common MCP server failures: missing API key, Cursor PATH on macOS, Windows npx.cmd quirks, Node 20+ requirement.",
+      "datePublished": "2026-04-01",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Known failures with the local stdio server (`@rendobar/mcp`) and the fixes. Errors are quoted from the actual stderr the server emits.
 
@@ -48,7 +67,7 @@ Cursor launched from the macOS Dock inherits the GUI environment, not your shell
     "rendobar": {
       "command": "/Users/you/.nvm/versions/node/v20.18.0/bin/npx",
       "args": ["-y", "@rendobar/mcp"],
-      "env": { "RENDOBAR_API_KEY": "rb_live_..." }
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
     }
   }
 }
@@ -81,11 +100,11 @@ File size (250000000 bytes) exceeds plan limit (104857600 bytes). Upgrade your p
 
 Free plan caps uploads at 100 MB. Pro plan caps at 2 GB. Either compress the file before upload or upgrade.
 
-Check your current limit by asking the agent: *"What's my Rendobar max upload size?"* — it calls `get_account`.
+Check your current limit by asking the agent: *"What's my Rendobar max upload size?"*. It calls `get_account`.
 
 ## Server boots but agent reports no tools
 
-The handshake succeeded but `tools/list` returned empty. This is rare — usually means the package version is corrupt.
+The handshake succeeded but `tools/list` returned empty. This is rare. It usually means the package version is corrupt.
 
 **Fix:** clear the npx cache and reinstall:
 
@@ -98,7 +117,7 @@ You should see a version string like `1.0.1`. If not, file an [issue](https://gi
 
 ## Agent uploaded the wrong file
 
-`upload_file` resolves relative paths against the working directory of the MCP server process — usually your home directory or the directory the IDE was launched from. Always use absolute paths in your prompts to be unambiguous.
+`upload_file` resolves relative paths against the working directory of the MCP server process, usually your home directory or the directory the IDE was launched from. Always use absolute paths in your prompts to be unambiguous.
 
 ## See also
 
@@ -106,3 +125,11 @@ You should see a version string like `1.0.1`. If not, file an [issue](https://gi
 - [Tools reference](/mcp/tools)
 - [Errors](/support/errors)
 - [Report a bug](https://github.com/rendobar/mcp/issues)
+
+## Related
+
+- [Installation](/mcp/installation): the per-client config that may need fixing
+- [MCP overview](/mcp/overview): transport picker if local stdio keeps failing
+- [Tools reference](/mcp/tools): verify the tool you called actually exists
+- [Plan limits](/support/limits): file-size caps behind "exceeds plan limit" errors
+- [MCP product overview](https://rendobar.com/mcp/): supported clients at a glance

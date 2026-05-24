@@ -1,9 +1,28 @@
 ---
 title: "Burn captions onto a local video"
-description: "Build a captioned video with Claude Desktop in 8 minutes: install the MCP server, hand a local mp4 to your agent, and get back a captioned file."
+description: "Build a captioned video with Claude Desktop in 8 minutes. Install the MCP server, hand a local mp4 to your agent, and get back a captioned file."
 sidebarTitle: "Examples"
 icon: "play"
+keywords: ["mcp example", "claude desktop video", "burn captions agent", "rendobar mcp tutorial", "ai video agent"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/examples/#article",
+      "headline": "Burn captions onto a local video",
+      "description": "Build a captioned video with Claude Desktop in 8 minutes via the MCP server.",
+      "datePublished": "2026-04-01",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 In this tutorial we'll use Claude Desktop to caption a local video. The agent uploads it to Rendobar, runs an FFmpeg job that burns subtitles into the video, and returns a download URL. End-to-end takes about eight minutes.
 
@@ -32,7 +51,7 @@ Open Claude Desktop and ask:
 
 > What MCP tools do you have for Rendobar?
 
-The agent lists `upload_file`, `submit_job`, `get_job`, `list_jobs`, `cancel_job`, `get_account`. If it doesn't, the MCP isn't loaded — re-check your config and restart Claude Desktop.
+The agent lists `upload_file`, `submit_job`, `get_job`, `list_jobs`, `cancel_job`, `get_account`. If it doesn't, the MCP isn't loaded. Re-check your config and restart Claude Desktop.
 
 ## Step 2: Check the balance
 
@@ -72,6 +91,14 @@ The output file lives at `cdn.rendobar.com` for 24 hours by default, then auto-d
 
 ## Next
 
-- [Tools reference](/mcp/tools) — full schemas for every tool
-- [`raw.ffmpeg` job type](/job-types/raw-ffmpeg) — what FFmpeg commands are accepted
-- [Troubleshooting](/mcp/troubleshooting) — when something goes wrong
+- [Tools reference](/mcp/tools): full schemas for every tool
+- [`raw.ffmpeg` job type](/job-types/raw-ffmpeg): what FFmpeg commands are accepted
+- [Troubleshooting](/mcp/troubleshooting): when something goes wrong
+
+## Related
+
+- [Tools reference](/mcp/tools): every typed MCP tool with parameter shapes
+- [Installation](/mcp/installation): per-client config blocks if you skipped step 1
+- [raw.ffmpeg guide](/guides/raw-ffmpeg): the FFmpeg security model the agent runs against
+- [Troubleshooting](/mcp/troubleshooting): fixes when tool calls hang or the agent sees no tools
+- [MCP product overview](https://rendobar.com/mcp/): more agent capability examples
