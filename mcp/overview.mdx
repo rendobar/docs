@@ -1,9 +1,27 @@
 ---
-title: "Rendobar MCP"
-description: "Two ways to connect AI agents to Rendobar: a local stdio server for IDE clients and a remote HTTP server for web and mobile."
+title: "MCP server overview"
 sidebarTitle: "Overview"
+description: "Connect AI agents via two transports: a local stdio server for IDE clients (Claude Desktop, Cursor) and a remote HTTP server for web and mobile."
 icon: "plug"
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/overview/#article",
+      "headline": "MCP server overview",
+      "description": "Connect AI agents via two transports: a local stdio server for IDE clients and a remote HTTP server for web and mobile.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Rendobar exposes its API as a Model Context Protocol server so AI agents can submit jobs, upload files, and check status without writing HTTP code. There are two servers — pick by client.
 
@@ -59,3 +77,7 @@ Both servers use a Rendobar API key (`rb_live_*` or `rb_test_*`). Get one at [ap
 - [Tools reference](/mcp/tools)
 - [Burn captions onto a local video](/mcp/examples)
 - [Web and mobile setup](/mcp/web-and-mobile)
+
+---
+
+The MCP server gives AI agents full access to the same operations available via REST. For a complete list of supported job types, see [rendobar.com/mcp/](https://rendobar.com/mcp/).

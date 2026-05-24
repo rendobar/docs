@@ -1,9 +1,27 @@
 ---
-title: "Raw FFmpeg"
-description: "Run any FFmpeg command in the cloud. Whitelisted flags, sandboxed execution, signed download URL. Same FFmpeg syntax you already know."
+title: "Raw FFmpeg guide"
 sidebarTitle: "Raw FFmpeg"
+description: "Run any FFmpeg command in the cloud. Whitelisted flags, sandboxed execution, signed download URL. Same FFmpeg syntax you already know."
 icon: "terminal"
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/guides/raw-ffmpeg/#article",
+      "headline": "Raw FFmpeg guide",
+      "description": "Run any FFmpeg command in the cloud. Whitelisted flags, sandboxed execution, signed download URL. Same FFmpeg syntax you already know.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 You write the FFmpeg command. Rendobar downloads inputs, runs the command in an isolated container, returns a signed download URL. Same syntax you'd run locally.
 
@@ -164,7 +182,11 @@ Full error catalogue: [Error codes](/support/errors).
 
 ## See also
 
-- [Raw FFmpeg API reference](/job-types/raw-ffmpeg)
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg)
 - [CLI](/cli/overview)
 - [Webhooks](/guides/webhooks) — push instead of poll
-- [Credits](/credits)
+- [Credits and billing](/concepts/credits)
+
+---
+
+For a full list of FFmpeg-based operations supported by the API, see [rendobar.com/ffmpeg/](https://rendobar.com/ffmpeg/).
