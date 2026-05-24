@@ -1,20 +1,39 @@
 ---
 title: "Credits and billing"
 sidebarTitle: "Credits"
-description: "Get per-job nanodollar billing from a prepaid balance. Free plan ships with $5, Pro is $9/mo. Credits never expire and failed jobs cost nothing."
+description: "Get per-job nanodollar billing from a prepaid balance. Free plan ships with $5, Pro is $9/mo. Credits never expire. Every terminal job is charged for actual compute used."
 icon: "coins"
+keywords: ["credit-based billing", "nanodollar pricing", "rendobar credits", "video api credits", "prepaid balance"]
 ---
 
-Per-job billing from a prepaid credit balance. New accounts get $5 free. Failed jobs are never charged.
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/concepts/credits/#article",
+      "headline": "Credits and billing",
+      "description": "Per-job nanodollar billing from a prepaid balance. Free plan ships with $5, Pro is $9/mo. Credits never expire. Every terminal job is charged for actual compute used.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Per-job billing from a prepaid credit balance. New accounts get $5 free. Every terminal job is charged for the compute it consumed, including jobs that fail.
 
 ## Plans
 
 | | Free | Pro |
 |---|---|---|
 | Price | $0/mo | $9/mo |
-| Signup credits | $5 (one-time) | — |
-| Monthly credits included | — | $5 |
-| Credit-purchase bonus | — | +20% |
+| Signup credits | $5 (one-time) | - |
+| Monthly credits included | - | $5 |
+| Credit-purchase bonus | - | +20% |
 | Concurrent jobs | 1 | 25 |
 | API requests/min | 30 | 300 |
 | Max input file | 100 MB | 2 GB |
@@ -28,7 +47,7 @@ For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](ht
 
 ## Credit packs
 
-$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds **+20%** to every purchase — buy $25, get $30. Credits never expire.
+$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds **+20%** to every purchase. Buy $25, get $30. Credits never expire.
 
 ## How it works: nanodollar billing
 
@@ -39,16 +58,20 @@ Every job is billed in nanodollars (one-billionth of a US dollar) drawn from you
 
 ## Credit lifecycle
 
-1. **Pre-check.** Submit triggers a balance check against the estimated cost. No deduction. Insufficient balance returns `402 INSUFFICIENT_CREDITS`.
+1. **Submit gate.** Submit is atomic. If your balance is greater than zero and you are under your concurrent-job limit, the job runs. We do not estimate cost up front. Insufficient balance returns `402 INSUFFICIENT_CREDITS`.
 2. **Execution.** Job runs. Balance untouched.
-3. **Debit.** On success, actual cost is computed (real compute time or output duration) and atomically deducted.
-4. **Refund.** Failure or cancellation never deducts. Failed jobs cost zero.
+3. **Debit on terminal status.** Every terminal job (`complete`, `failed`, or `cancelled`) is charged based on actual provider cost, infrastructure cost, and margin. The debit is atomic with the status update.
+4. **No auto-refund.** Failed jobs are still charged for the compute they consumed. If you believe a job failed due to a platform bug, contact support. Refunds are issued at our discretion via the dispute process.
+
+## Negative balance
+
+Because the submit gate checks `balance > 0` rather than an estimate, a single long-running job can drive your balance briefly negative when the terminal debit lands. When that happens, your subscription flips to `past_due` and further submits are blocked with `402 INSUFFICIENT_CREDITS` until you top up. Once your balance is positive again, normal billing resumes.
 
 ## Cost model
 
-`raw.ffmpeg` bills per compute second — wall-clock time FFmpeg ran your command, excluding upload/download. Typical cost: ~$0.05/min.
+`raw.ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. Typical cost: ~$0.05/min. The same per-second rate applies whether the job completes successfully or fails partway through.
 
-Before submitting, the API checks your balance covers the estimated cost. If not:
+If your balance is at or below zero when you submit:
 
 ```json
 { "error": { "code": "INSUFFICIENT_CREDITS", "message": "Not enough credits for this job" } }
@@ -59,21 +82,28 @@ HTTP `402`. Top up at [app.rendobar.com/billing](https://app.rendobar.com/billin
 ## Check your balance
 
 ```bash
-curl https://api.rendobar.com/billing/balance \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+curl https://api.rendobar.com/billing/state \
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
 ```json
-{ "data": { "balance": 5000000000, "rollover": 0 } }
+{
+  "data": {
+    "balance": { "amount": 5.0 },
+    "plan": { "slug": "free", "name": "Free" },
+    "subscription": { "status": "active", "cancelAtPeriodEnd": false },
+    "isPro": false
+  }
+}
 ```
 
-`balance` is in nanodollars (1 USD = 1,000,000,000). The dashboard shows it in dollars.
+`balance.amount` is in dollars. Internally balances are stored in nanodollars (1 USD = 1,000,000,000).
 
 ## Usage tracking
 
 ```bash
 curl "https://api.rendobar.com/billing/usage?start=2026-02-01&end=2026-02-09" \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
 Returns daily usage by job type: count, amount charged, and compute seconds.
@@ -81,11 +111,18 @@ Returns daily usage by job type: count, amount charged, and compute seconds.
 ## Practical advice
 
 - **Start on Free.** $5 signup grant covers many hundreds of small jobs.
-- **Use `rb_test_*` keys while building.** Test-mode runs the full pipeline, returns real output, and doesn't deduct credits.
 - **Store `cost.nanodollars` from every response.** Reconcile against your monthly invoice.
 
 ## See also
 
-- [Job lifecycle](/concepts/job-lifecycle) — where the debit happens
-- [Limits](/support/limits) — full quota table
-- [raw.ffmpeg reference](/job-types/raw-ffmpeg) — the live cost model
+- [Job lifecycle](/concepts/job-lifecycle): where the debit happens
+- [Limits](/support/limits): full quota table
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the live cost model
+
+## Related
+
+- [Plan limits and quotas](/support/limits): exact rate, file, and storage caps per plan
+- [Job lifecycle](/concepts/job-lifecycle): when the debit lands and what statuses mean
+- [Error codes](/support/errors): `INSUFFICIENT_CREDITS`, `PLAN_LIMIT`, and friends
+- [Pricing](https://rendobar.com/pricing/): plan comparison and credit packs
+- [FAQ on cost](/support/faq): common pricing and billing questions

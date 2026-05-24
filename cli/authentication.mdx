@@ -1,9 +1,27 @@
 ---
 title: "Authenticate the CLI"
-description: "Sign in via browser OAuth, paste an API key for non-interactive use, or set RENDOBAR_API_KEY for CI. Tokens auto-refresh."
+description: "Sign in via browser OAuth, paste an API key for non-interactive use, or set RENDOBAR_API_KEY for CI. Tokens auto-refresh every hour."
 icon: "key"
-keywords: ["rb login", "rendobar cli auth", "rendobar api key", "rendobar oauth"]
+keywords: ["rb login", "rendobar cli auth", "rendobar api key", "rendobar oauth", "rb whoami"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/cli/authentication/#article",
+      "headline": "Authenticate the CLI",
+      "description": "Sign in via browser OAuth, paste an API key for non-interactive use, or set RENDOBAR_API_KEY for CI.",
+      "datePublished": "2026-04-10",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 The CLI reads credentials from three sources, in priority order:
 
@@ -31,7 +49,7 @@ If port `14832` is in use, login fails fast. Use `--key` instead.
 For SSH sessions, headless containers, or any environment without a browser:
 
 ```bash
-rb login --key rb_live_xxxxxxxxxxxxxxxxxxxxxxxx
+rb login --key rb_xxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 The CLI verifies the key against the API, then saves it. Keys must start with `rb_`. Get one from [app.rendobar.com](https://app.rendobar.com) → Settings → API keys.
@@ -41,7 +59,7 @@ The CLI verifies the key against the API, then saves it. Keys must start with `r
 `RENDOBAR_API_KEY` beats any saved credential and writes nothing to disk:
 
 ```bash
-export RENDOBAR_API_KEY=rb_live_xxx
+export RENDOBAR_API_KEY=rb_xxx
 rb ffmpeg -i input.mp4 -c:v libx264 -crf 23 out.mp4
 ```
 
@@ -69,7 +87,7 @@ After OAuth login the file looks like:
 After `--key`:
 
 ```json
-{ "type": "apikey", "apiKey": "rb_live_..." }
+{ "type": "apikey", "apiKey": "rb_..." }
 ```
 
 Treat the file as a secret. The CLI does not chmod it for you.
@@ -89,10 +107,10 @@ rb logout
 rb login
 ```
 
-There's no profile system. To run a single command against a different account or test mode, set the env var inline:
+There's no profile system. To run a single command against a different account, set the env var inline:
 
 ```bash
-RENDOBAR_API_KEY=rb_test_xxx rb ffmpeg -i clip.mp4 -c:v libx264 out.mp4
+RENDOBAR_API_KEY=rb_xxx rb ffmpeg -i clip.mp4 -c:v libx264 out.mp4
 ```
 
 ## Sign out
@@ -123,3 +141,11 @@ Hits `/orgs/current` and prints org, plan, balance. Useful as a CI sanity check 
 - [Commands](/cli/commands)
 - [CI/CD](/cli/ci-cd)
 - [Authentication (API)](/authentication)
+
+## Related
+
+- [API authentication](/authentication): keys, OAuth, and session cookies across REST and MCP
+- [Commands reference](/cli/commands): every `rb` flag and exit code
+- [CI/CD](/cli/ci-cd): full GitHub Actions and GitLab CI snippets
+- [Troubleshooting](/cli/troubleshooting): `invalid_grant`, port conflicts, and refresh failures
+- [CLI source repo](https://github.com/rendobar/cli): release tags and issues

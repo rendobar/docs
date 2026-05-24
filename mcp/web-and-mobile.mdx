@@ -3,11 +3,30 @@ title: "Use the MCP from claude.ai or ChatGPT"
 sidebarTitle: "Web and mobile"
 description: "Connect web and mobile AI clients to the remote HTTP MCP at api.rendobar.com/mcp. Local file uploads require an extra curl step to upload first."
 icon: "globe"
+keywords: ["claude.ai mcp", "chatgpt mcp", "remote mcp server", "rendobar streamable http", "browser mcp"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/web-and-mobile/#article",
+      "headline": "Use the MCP from claude.ai or ChatGPT",
+      "description": "Connect web and mobile AI clients to the remote HTTP MCP at api.rendobar.com/mcp.",
+      "datePublished": "2026-04-01",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Browser and mobile clients can't run a local stdio MCP server. Use the remote HTTP server at `https://api.rendobar.com/mcp` instead. Job submission and status polling work the same as local; local file uploads require an extra step.
 
-If you're on a desktop with Claude Desktop, Cursor, Cline, Windsurf, Zed, VS Code, Claude Code, or Continue — install [the local server](/mcp/installation) instead. It's a better fit.
+If you're on a desktop with Claude Desktop, Cursor, Cline, Windsurf, Zed, VS Code, Claude Code, or Continue, install [the local server](/mcp/installation) instead. It's a better fit.
 
 ## Connect
 
@@ -19,9 +38,9 @@ In claude.ai, open **Settings** → **Connectors** → **Add custom connector**:
 - **Name:** Rendobar
 - **URL:** `https://api.rendobar.com/mcp`
 - **Authentication:** Bearer token
-- **Token:** your `rb_live_...` API key
+- **Token:** your `rb_...` API key
 
-Save. Start a new chat — the agent has access to Rendobar tools.
+Save. Start a new chat. The agent has access to Rendobar tools.
 
 </Tab>
 <Tab title="ChatGPT Apps">
@@ -29,7 +48,7 @@ Save. Start a new chat — the agent has access to Rendobar tools.
 In ChatGPT, go to **Settings** → **Apps & Connectors** → **Custom**:
 
 - **MCP server URL:** `https://api.rendobar.com/mcp`
-- **Authentication header:** `Authorization: Bearer rb_live_...`
+- **Authentication header:** `Authorization: Bearer rb_...`
 
 </Tab>
 <Tab title="Custom client">
@@ -38,7 +57,7 @@ Any MCP-compatible client supporting Streamable HTTP transport works:
 
 - **Transport:** Streamable HTTP
 - **URL:** `https://api.rendobar.com/mcp`
-- **Header:** `Authorization: Bearer rb_live_...`
+- **Header:** `Authorization: Bearer rb_...`
 
 </Tab>
 </Tabs>
@@ -53,7 +72,7 @@ The remote server can't read your laptop. When an agent calls `upload_media`, th
 
 ```bash
 curl -X POST \
-  -H "Authorization: Bearer rb_live_..." \
+  -H "Authorization: Bearer rb_..." \
   -H "Content-Type: video/mp4" \
   --data-binary @./video.mp4 \
   "https://api.rendobar.com/uploads?filename=video.mp4"
@@ -65,10 +84,18 @@ For agents to upload files in a single tool call, install [the local server](/mc
 
 ## Limits
 
-Rate limits, file-size caps, and credit consumption are identical to REST and to the local MCP. They are per-organization, not per-tool.
+[Rate limits](/support/limits), file-size caps, and [credit consumption](/concepts/credits) are identical to REST and to the local MCP. They are per-organization, not per-tool.
 
 ## See also
 
 - [Tools reference](/mcp/tools)
-- [Local installation](/mcp/installation) — for desktop and IDE clients
+- [Local installation](/mcp/installation): for desktop and IDE clients
 - [Authentication](/authentication)
+
+## Related
+
+- [MCP overview](/mcp/overview): why local stdio exists alongside remote HTTP
+- [Tools reference](/mcp/tools): the six shared tools plus `upload_media` schema
+- [Authentication](/authentication): API keys and Bearer header details
+- [Local installation](/mcp/installation): switch back to stdio when you're on desktop
+- [MCP product overview](https://rendobar.com/mcp/): every supported client at a glance

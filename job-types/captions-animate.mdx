@@ -1,9 +1,28 @@
 ---
 title: "captions.animate"
-description: "Burn animated word-level captions onto a video. Pick a built-in preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 minute input cap."
+description: "Burn animated word-level captions onto a video at $0.10/min. Pick a preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 min input cap."
 icon: "captions"
 tag: "Live"
+keywords: ["animated captions", "burn subtitles", "whisper captions", "tiktok captions", "ass subtitles", "captions.animate"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/job-types/captions-animate/#article",
+      "headline": "captions.animate",
+      "description": "Burn animated word-level captions onto a video. Pick a preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 min input cap.",
+      "datePublished": "2026-05-03",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 <Check>
 **Live.** Production-ready, available on all plans.
@@ -21,7 +40,7 @@ Returns a video with word-level animated captions burned in. Speech is transcrib
 
 ```bash cURL
 curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "captions.animate",
@@ -39,7 +58,7 @@ curl -X POST https://api.rendobar.com/jobs \
 const res = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer rb_live_YOUR_KEY",
+    "Authorization": "Bearer rb_YOUR_KEY",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -60,7 +79,7 @@ const { data } = await res.json();
 import requests
 res = requests.post(
     "https://api.rendobar.com/jobs",
-    headers={"Authorization": "Bearer rb_live_YOUR_KEY"},
+    headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
         "type": "captions.animate",
         "inputs": {
@@ -88,9 +107,9 @@ res = requests.post(
 
 <ParamField body="mode" type="enum" default="balanced">
   Speed-vs-accuracy tradeoff for transcription.
-  - `fast` — `base.en`, English only, ~3× faster, ~7-9% WER
-  - `balanced` — `small.en`, default, ~5-7% WER
-  - `accurate` — `large-v3-turbo`, ~3× slower, ~3-4% WER
+  - `fast`: `base.en`, English only, ~3× faster, ~7-9% WER
+  - `balanced`: `small.en`, default, ~5-7% WER
+  - `accurate`: `large-v3-turbo`, ~3× slower, ~3-4% WER
 </ParamField>
 
 ## Response
@@ -103,9 +122,17 @@ Poll `GET /jobs/{id}` until `status: "complete"`, then read `outputUrl` (signed,
 
 ## Pricing
 
-$0.10 per input minute. Billed against your credit balance on completion.
+$0.10 per input minute. Billed against your [credit balance](/concepts/credits) on completion.
 
 ## See also
 
 - [Job lifecycle](/concepts/job-lifecycle)
-- [Credits](/credits)
+- [Credits and billing](/concepts/credits)
+
+## Related
+
+- [Job lifecycle](/concepts/job-lifecycle): the six statuses captioning jobs move through
+- [Credits and billing](/concepts/credits): how the per-minute charge debits your balance
+- [raw.ffmpeg](/job-types/raw-ffmpeg): the lower-level job for custom subtitle workflows
+- [Webhooks](/guides/webhooks): get `job.completed` instead of polling captioning jobs
+- [Caption-styling features](https://rendobar.com/features/): every preset and visual option

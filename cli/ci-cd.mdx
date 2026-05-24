@@ -1,10 +1,28 @@
 ---
 title: "Use the CLI in CI/CD"
-description: "Install rb in GitHub Actions, GitLab CI, or Docker. Authenticate from a secret, pin a version, parse JSON output, verify provenance."
+description: "Install rb in GitHub Actions, GitLab CI, or Docker. Authenticate from a secret, pin a version, parse JSON output, verify build provenance."
 sidebarTitle: "CI/CD"
 icon: "infinity"
-keywords: ["rendobar github actions", "rendobar cli ci", "rendobar gitlab", "rendobar docker"]
+keywords: ["rendobar github actions", "rendobar cli ci", "rendobar gitlab", "rendobar docker", "rb ci secret"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/cli/ci-cd/#article",
+      "headline": "Use the CLI in CI/CD",
+      "description": "Install rb in GitHub Actions, GitLab CI, or Docker. Authenticate from a secret, pin a version, parse JSON output.",
+      "datePublished": "2026-04-10",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Three rules for any CI: pin the CLI version, authenticate from a secret, pick an output mode you can parse.
 
@@ -90,10 +108,10 @@ docker run --rm -v $(pwd):/work -w /work \
 
 ## Authenticate from a secret
 
-`RENDOBAR_API_KEY` is the only auth path for CI. It beats any saved credential and writes nothing to disk. Don't run `rb login` in CI — the browser flow will hang.
+`RENDOBAR_API_KEY` is the only auth path for CI. It beats any saved credential and writes nothing to disk. Don't run `rb login` in CI. The browser flow will hang.
 
 ```bash
-export RENDOBAR_API_KEY=rb_live_xxx
+export RENDOBAR_API_KEY=rb_xxx
 rb whoami      # confirm before running anything else
 ```
 
@@ -149,3 +167,11 @@ The CLI does not expose `--idempotency-key`. If a retried CI step shouldn't doub
 - [Authentication](/cli/authentication)
 - [Commands](/cli/commands)
 - [Troubleshooting](/cli/troubleshooting)
+
+## Related
+
+- [CLI overview](/cli/overview): pick between CLI, SDK, and raw HTTP
+- [Authentication](/cli/authentication): `RENDOBAR_API_KEY` as the only CI-safe auth path
+- [Commands reference](/cli/commands): exit codes for boolean assertions
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the API the CLI invokes per run
+- [Changelog](https://rendobar.com/changelog/): pin a release tag with confidence

@@ -3,13 +3,32 @@ title: "Install the MCP server"
 sidebarTitle: "Installation"
 description: "Configure the local stdio MCP server for Claude Desktop, Cursor, Cline, Windsurf, Zed, VS Code, Claude Code, or Continue. Takes 2 minutes."
 icon: "download"
+keywords: ["install rendobar mcp", "claude desktop config", "cursor mcp install", "npx rendobar mcp", "windsurf mcp"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/installation/#article",
+      "headline": "Install the MCP server",
+      "description": "Configure the local stdio MCP server for Claude Desktop, Cursor, Cline, Windsurf, Zed, VS Code, Claude Code, or Continue.",
+      "datePublished": "2026-04-01",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Configure your AI client to spawn `@rendobar/mcp` via `npx`. The server reads local files, submits jobs to `api.rendobar.com`, and streams results back.
 
 ## 1. Get an API key
 
-Sign in at [app.rendobar.com](https://app.rendobar.com) → Settings → API Keys → **Create key**. Copy the `rb_live_...` value.
+Sign in at [app.rendobar.com](https://app.rendobar.com) → Settings → API Keys → **Create key**. Copy the `rb_...` value.
 
 ## 2. Configure your client
 
@@ -27,7 +46,7 @@ Edit the config file:
     "rendobar": {
       "command": "npx",
       "args": ["-y", "@rendobar/mcp"],
-      "env": { "RENDOBAR_API_KEY": "rb_live_..." }
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
     }
   }
 }
@@ -46,7 +65,7 @@ Edit `~/.cursor/mcp.json` (global) or `<project>/.cursor/mcp.json` (project-scop
     "rendobar": {
       "command": "npx",
       "args": ["-y", "@rendobar/mcp"],
-      "env": { "RENDOBAR_API_KEY": "rb_live_..." }
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
     }
   }
 }
@@ -74,7 +93,7 @@ Edit `~/.config/zed/settings.json`. Note the key is `context_servers`, not `mcpS
       "source": "custom",
       "command": "npx",
       "args": ["-y", "@rendobar/mcp"],
-      "env": { "RENDOBAR_API_KEY": "rb_live_..." }
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
     }
   }
 }
@@ -113,7 +132,7 @@ VS Code prompts for the key on first use and stores it in the keychain.
 Run from a terminal:
 
 ```bash
-claude mcp add rendobar -s user --env RENDOBAR_API_KEY=rb_live_... -- npx -y @rendobar/mcp
+claude mcp add rendobar -s user --env RENDOBAR_API_KEY=rb_... -- npx -y @rendobar/mcp
 ```
 
 </Tab>
@@ -126,7 +145,7 @@ type: stdio
 command: npx
 args: ["-y", "@rendobar/mcp"]
 env:
-  RENDOBAR_API_KEY: rb_live_...
+  RENDOBAR_API_KEY: rb_...
 ```
 
 </Tab>
@@ -136,7 +155,7 @@ env:
 
 Open a chat in your client and ask: *"What's my Rendobar balance?"*
 
-The agent calls `get_account` and reports your balance. If you see "RENDOBAR_API_KEY missing" in your client's MCP logs, the env var didn't propagate — re-check the config block.
+The agent calls `get_account` and reports your balance. If you see "RENDOBAR_API_KEY missing" in your client's MCP logs, the env var didn't propagate. Re-check the config block.
 
 ## Requirements
 
@@ -151,7 +170,7 @@ The server reads credentials in this order, first match wins:
 2. `RENDOBAR_API_KEY` environment variable
 3. `~/.config/rendobar/credentials.json` (Unix) or `%APPDATA%\rendobar\credentials.json` (Windows)
 
-The credentials file format is `{ "apiKey": "rb_live_...", "apiBase": "https://api.rendobar.com" }`. The Rendobar CLI's `rb login` command writes this file automatically.
+The credentials file format is `{ "apiKey": "rb_...", "apiBase": "https://api.rendobar.com" }`. The Rendobar CLI's `rb login` command writes this file automatically.
 
 ## Updating
 
@@ -163,3 +182,11 @@ The credentials file format is `{ "apiKey": "rb_live_...", "apiBase": "https://a
 - [Burn captions onto a local video](/mcp/examples)
 - [Troubleshooting](/mcp/troubleshooting)
 - [Web and mobile setup](/mcp/web-and-mobile)
+
+## Related
+
+- [MCP overview](/mcp/overview): pick the right transport for your client
+- [Tools reference](/mcp/tools): schemas for every MCP tool you'll call
+- [Burn captions onto a local video](/mcp/examples): end-to-end Claude Desktop walkthrough
+- [Troubleshooting](/mcp/troubleshooting): fixes for missing API key, PATH, and Node version issues
+- [MCP server for AI agents](https://rendobar.com/mcp/): product overview and capability list
