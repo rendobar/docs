@@ -115,6 +115,10 @@
     {
       "source": "/credits",
       "destination": "/concepts/credits"
+    },
+    {
+      "source": "/guides/captions",
+      "destination": "/job-types/captions-animate"
     }
   ],
   "navbar": {
