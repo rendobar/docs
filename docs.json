@@ -60,7 +60,8 @@
             "group": "Reference",
             "pages": [
               "job-types/raw-ffmpeg",
-              "job-types/captions-animate"
+              "job-types/captions-animate",
+              "job-types/caption-burn"
             ]
           },
           {

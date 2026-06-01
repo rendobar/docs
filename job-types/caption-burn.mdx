@@ -1,0 +1,167 @@
+---
+title: "caption.burn"
+description: "Permanently burn styled subtitles into a video from an SRT, VTT, or ASS file, or auto-transcribe in any language. Web-hex styling, deterministic sizing."
+icon: "closed-captioning"
+tag: "Live"
+---
+
+<Check>
+**Live.** Production-ready, available on all plans.
+</Check>
+
+Burn subtitles permanently into a video. Provide an SRT, VTT, or ASS file as the `subtitles` input, or omit it to auto-transcribe the audio. Style the text with web-hex colors, an outline, a background box, and a position. This is the static counterpart to [`captions.animate`](/job-types/captions-animate), which renders per-word animated captions.
+
+<Info>
+**Timeout:** 600 s max (plan-capped) · **Provider:** triggerdev · **Accepts:** video
+</Info>
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "caption.burn",
+    "inputs": {
+      "source": "https://cdn.rendobar.com/assets/examples/sample.mp4",
+      "subtitles": "https://cdn.rendobar.com/assets/examples/sample.srt"
+    },
+    "params": { "fontFamily": "Inter", "fontSize": 48, "boxEnabled": true }
+  }'
+```
+
+```javascript JavaScript
+const res = await fetch("https://api.rendobar.com/jobs", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer rb_live_YOUR_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    type: "caption.burn",
+    inputs: {
+      source: "https://cdn.rendobar.com/assets/examples/sample.mp4",
+      subtitles: "https://cdn.rendobar.com/assets/examples/sample.srt",
+    },
+    params: { fontFamily: "Inter", fontSize: 48, boxEnabled: true },
+  }),
+});
+const { data } = await res.json();
+```
+
+```python Python
+import requests
+res = requests.post(
+    "https://api.rendobar.com/jobs",
+    headers={"Authorization": "Bearer rb_live_YOUR_KEY"},
+    json={
+        "type": "caption.burn",
+        "inputs": {
+            "source": "https://cdn.rendobar.com/assets/examples/sample.mp4",
+            "subtitles": "https://cdn.rendobar.com/assets/examples/sample.srt",
+        },
+        "params": {"fontFamily": "Inter", "fontSize": 48, "boxEnabled": True},
+    },
+)
+```
+
+</CodeGroup>
+
+Omit `subtitles` to auto-transcribe. The spoken language is detected by default (`language: "auto"`); pass an ISO-639-1 code to skip detection.
+
+## Inputs
+
+<ParamField body="source" type="string" required>
+  URL of the source video to caption.
+</ParamField>
+
+<ParamField body="subtitles" type="string">
+  URL of an SRT, VTT, or ASS subtitle file. A provided ASS file is burned as-is, preserving its own styling. Omit to auto-transcribe the audio.
+</ParamField>
+
+## Parameters
+
+<ParamField body="language" type="enum" default="auto">
+  Spoken language for the auto-transcribe path, as an ISO-639-1 code (e.g. `en`, `es`, `ja`) or `auto` to detect. English uses a faster model; everything else routes to multilingual transcription. Ignored when a subtitle file is provided.
+</ParamField>
+
+<ParamField body="fontFamily" type="string" default="Inter">
+  Font family. Must resolve to a font available to the renderer.
+</ParamField>
+
+<ParamField body="fontSize" type="integer" default="48">
+  Font size in output pixels. Range 8–400.
+</ParamField>
+
+<ParamField body="fontColor" type="string" default="#FFFFFF">
+  Text fill color as web hex (`#RRGGBB` or `#AARRGGBB`, alpha first).
+</ParamField>
+
+<ParamField body="bold" type="boolean" default="true">
+  Render the text bold.
+</ParamField>
+
+<ParamField body="italic" type="boolean" default="false">
+  Render the text italic.
+</ParamField>
+
+<ParamField body="outlineColor" type="string" default="#000000">
+  Outline (stroke) color as web hex.
+</ParamField>
+
+<ParamField body="outlineWidth" type="number" default="2">
+  Outline thickness in pixels. Range 0–20.
+</ParamField>
+
+<ParamField body="shadow" type="number" default="1">
+  Drop-shadow depth in pixels. Range 0–20. `0` disables the shadow.
+</ParamField>
+
+<ParamField body="boxEnabled" type="boolean" default="false">
+  Draw a filled background box behind the text (the accessibility "subtitle bar").
+</ParamField>
+
+<ParamField body="boxColor" type="string" default="#000000">
+  Background box color as web hex. Applies when `boxEnabled` is `true`.
+</ParamField>
+
+<ParamField body="boxOpacity" type="number" default="0.6">
+  Background box opacity, `0` (transparent) to `1` (opaque).
+</ParamField>
+
+<ParamField body="position" type="enum" default="bottom">
+  Vertical placement. One of `bottom`, `center`, `top`.
+</ParamField>
+
+<ParamField body="alignment" type="enum" default="center">
+  Horizontal alignment. One of `left`, `center`, `right`.
+</ParamField>
+
+<ParamField body="marginV" type="integer" default="60">
+  Vertical margin in pixels. Range 0–2000.
+</ParamField>
+
+<ParamField body="marginH" type="integer" default="40">
+  Horizontal margin in pixels. Range 0–2000. Also bounds the line-wrap width.
+</ParamField>
+
+<ParamField body="maxCharsPerLine" type="integer">
+  Maximum characters per line on the auto-transcribe path. Range 10–80.
+</ParamField>
+
+## Response
+
+```json
+{ "data": { "id": "job_abc123", "status": "dispatched" } }
+```
+
+Poll `GET /jobs/{id}` until `status: "complete"`, then read `outputUrl` (signed, 1-hour TTL).
+
+## See also
+
+- [captions.animate](/job-types/captions-animate) — per-word animated captions
+- [Job lifecycle](/concepts/job-lifecycle) — how a job moves from `dispatched` to `complete`
+- [Credits and billing](/concepts/credits) — how usage is charged
