@@ -29,15 +29,14 @@
             "pages": [
               "quickstart",
               "authentication",
-              "credits"
+              "concepts/credits"
             ]
           },
           {
             "group": "Guides",
             "pages": [
               "guides/raw-ffmpeg",
-              "guides/webhooks",
-              "guides/mcp-agents"
+              "guides/webhooks"
             ]
           },
           {
@@ -54,21 +53,25 @@
           {
             "group": "Concepts",
             "pages": [
-              "concepts/job-lifecycle",
-              "concepts/credits"
+              "concepts/job-lifecycle"
             ]
           },
           {
             "group": "Reference",
             "pages": [
-              "job-types/raw-ffmpeg"
+              "job-types/raw-ffmpeg",
+              "job-types/captions-animate"
             ]
           },
           {
             "group": "MCP",
             "pages": [
               "mcp/overview",
-              "mcp/tools-reference"
+              "mcp/installation",
+              "mcp/examples",
+              "mcp/tools",
+              "mcp/web-and-mobile",
+              "mcp/troubleshooting"
             ]
           },
           {
@@ -108,6 +111,16 @@
       ]
     }
   },
+  "redirects": [
+    {
+      "source": "/credits",
+      "destination": "/concepts/credits"
+    },
+    {
+      "source": "/guides/captions",
+      "destination": "/job-types/captions-animate"
+    }
+  ],
   "navbar": {
     "links": [
       {
@@ -133,7 +146,7 @@
     "socials": {
       "github": "https://github.com/rendobar",
       "x": "https://x.com/rendobar",
-      "discord": "https://discord.gg/rendobar"
+      "discord": "https://discord.gg/kAGqjBzx8N"
     },
     "links": [
       {
@@ -182,13 +195,19 @@
       "og:type": "website",
       "og:site_name": "Rendobar",
       "og:locale": "en_US",
-      "og:image": "https://rendobar.com/brand/og-default.png",
+      "og:image": "https://rendobar.com/brand/og-default.jpg",
       "og:image:width": "1200",
       "og:image:height": "630",
-      "og:image:alt": "Rendobar — Serverless media processing API",
-      "og:image:type": "image/png",
+      "og:image:alt": "Rendobar: Media processing API for developers and agents",
+      "og:image:type": "image/jpeg",
       "twitter:card": "summary_large_image",
       "twitter:site": "@rendobar",
+      "twitter:image": "https://rendobar.com/brand/og-default.jpg",
+      "twitter:image:alt": "Rendobar: Media processing API for developers and agents",
+      "twitter:creator": "@rendobar",
+      "format-detection": "telephone=no",
+      "theme-color": "#0A0A0A",
+      "author": "Rendobar",
       "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
     }
   },

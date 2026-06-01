@@ -1,11 +1,29 @@
 ---
 title: "Commands reference"
-description: "Every rb command, every flag, every exit code. Covers ffmpeg, login, logout, whoami, doctor, and update."
+description: "View every rb command, flag, and exit code. Covers ffmpeg, login, logout, whoami, doctor, and update across 6 subcommands."
 sidebarTitle: "Commands"
 icon: "list"
-keywords: ["rb commands", "rendobar cli reference", "rb ffmpeg flags", "rb exit codes"]
+keywords: ["rb commands", "rendobar cli reference", "rb ffmpeg flags", "rb exit codes", "rb doctor"]
 mode: "wide"
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/cli/commands/#article",
+      "headline": "Commands reference",
+      "description": "Every rb command, every flag, every exit code.",
+      "datePublished": "2026-04-10",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Reference for every `rb` command. Use the [overview](/cli/overview) for narrative.
 
@@ -73,7 +91,7 @@ Runs FFmpeg in the cloud. Pass real FFmpeg arguments after the subcommand. Globa
 
 Local input files (`-i ./clip.mp4`) upload automatically before submission and are rewritten to short-lived URLs. Remote inputs (`-i https://...`) pass through as-is.
 
-The trailing positional argument (the FFmpeg output filename) is the local path the result downloads to. With `--no-wait` no download happens — only the job ID prints.
+The trailing positional argument (the FFmpeg output filename) is the local path the result downloads to. With `--no-wait` no download happens. Only the job ID prints.
 
 Job-failure exits `1` and writes the API error to stderr. Insufficient credits exits `2` with a top-up link.
 
@@ -111,7 +129,7 @@ Credential paths and storage details: [Authentication](/cli/authentication).
 
 ```bash
 rb login
-rb login --key rb_live_xxx
+rb login --key rb_xxx
 ```
 
 ---
@@ -164,3 +182,11 @@ Exits `2` if not authenticated, `1` if the API call fails.
 - [Authentication](/cli/authentication)
 - [CI/CD](/cli/ci-cd)
 - [Troubleshooting](/cli/troubleshooting)
+
+## Related
+
+- [CLI overview](/cli/overview): narrative quickstart for `rb ffmpeg`
+- [Authentication](/cli/authentication): `rb login` flow and credential storage
+- [CI/CD](/cli/ci-cd): parse `--json` output and authenticate from a secret
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the underlying API call
+- [Changelog](https://rendobar.com/changelog/): release notes for every `rb` version

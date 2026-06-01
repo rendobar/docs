@@ -1,50 +1,128 @@
 ---
-title: "How credits work"
-description: "Why Rendobar bills in nanodollars from a prepaid balance instead of tier-based minute quotas. The lifecycle, the tradeoff, the cost model."
+title: "Credits and billing"
 sidebarTitle: "Credits"
+description: "Get per-job nanodollar billing from a prepaid balance. Free plan grants $5, Pro is $9/mo. Credits never expire. Every terminal job pays actual compute."
 icon: "coins"
+keywords: ["credit-based billing", "nanodollar pricing", "rendobar credits", "video api credits", "prepaid balance"]
 ---
 
-Rendobar bills every job in nanodollars (one-billionth of a US dollar) drawn from your organization's prepaid balance. This page is the why; for the how-to (plans, balance, top-up), see [Credits & billing](/credits).
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/concepts/credits/#article",
+      "headline": "Credits and billing",
+      "description": "Per-job nanodollar billing from a prepaid balance. Free plan ships with $5, Pro is $9/mo. Credits never expire. Every terminal job is charged for actual compute used.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
-## The two billing models
+Per-job billing from a prepaid credit balance. New accounts get $5 free. Every terminal job is charged for the compute it consumed, including jobs that fail.
 
-Usage-metered APIs pick one:
+## Plans
 
-1. **Tier-based quotas** — you buy a plan, get a bucket of minutes or operations, overage bills flat. Easy to understand, hard to price varying workloads.
-2. **Credit-based nanodollars** — every job has a cost formula, the balance is prepaid, charges are per-job with sub-cent precision. Precise, composable, takes a sentence to explain.
+| | Free | Pro |
+|---|---|---|
+| Price | $0/mo | $9/mo |
+| Signup credits | $5 (one-time) | - |
+| Monthly credits included | - | $5 |
+| Credit-purchase bonus | - | +20% |
+| Concurrent jobs | 1 | 25 |
+| API requests/min | 30 | 300 |
+| Max input file | 100 MB | 2 GB |
+| Job timeout | 5 min | 15 min |
+| Output retention | 7 days | 30 days |
+| Priority queue | No | Yes |
 
-We picked nanodollars.
+`raw.ffmpeg`, MCP, and webhooks are on both plans. Full limits table: [Limits](/support/limits).
 
-## Why
+For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](https://rendobar.com/pricing/).
 
-- **Cost matches resources used.** A 30-second watermark on 1080p shouldn't cost the same as a 10-minute H.265 transcode of a 4K master. Nine decimal places of precision means the bill matches the work.
-- **Prepaid means predictable budgets.** You top up when you want, jobs run only if affordable, no end-of-month surprise bill. The dashboard shows formatted dollars; the nanodollar abstraction stays internal.
+## Credit packs
 
-## What you give up
+$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds **+20%** to every purchase. Buy $25, get $30. Credits never expire.
 
-- **You think in dollars, not operations.** "Can I run this?" becomes "Do I have enough credits?" — not "Do I have enough quota?". Every job response shows both `cost.nanodollars` and `cost.formatted`.
-- **Pricing can change.** Per-job formulas mean we can adjust pricing when underlying infra changes. When that happens, it's announced in the changelog 30 days ahead.
+## How it works: nanodollar billing
+
+Every job is billed in nanodollars (one-billionth of a US dollar) drawn from your prepaid balance. This differs from tier-based quotas where you buy a plan with a bucket of minutes:
+
+- **Cost matches resources used.** A 30-second watermark on 1080p shouldn't cost the same as a 10-minute H.265 transcode of a 4K master.
+- **Prepaid means predictable budgets.** You top up when you want; jobs run only if affordable. No end-of-month surprise bill.
 
 ## Credit lifecycle
 
-1. **Pre-check.** Submit triggers a balance check against the estimated cost. No deduction. Insufficient balance returns `402 INSUFFICIENT_CREDITS`.
+1. **Submit gate.** Submit is atomic. If your balance is greater than zero and you are under your concurrent-job limit, the job runs. We do not estimate cost up front. Insufficient balance returns `402 INSUFFICIENT_CREDITS`.
 2. **Execution.** Job runs. Balance untouched.
-3. **Debit.** On success, actual cost is computed (real compute time or output duration) and atomically deducted.
-4. **Refund.** Failure or cancellation never deducts. Failed jobs cost zero.
+3. **Debit on terminal status.** Every terminal job (`complete`, `failed`, or `cancelled`) is charged based on actual provider cost, infrastructure cost, and margin. The debit is atomic with the status update.
+4. **No auto-refund.** Failed jobs are still charged for the compute they consumed. If you believe a job failed due to a platform bug, contact support. Refunds are issued at our discretion via the dispute process.
 
-## Cost models in flight
+## Negative balance
 
-Today only one model is live: per-compute-time for `raw.ffmpeg` (~$0.05/min). As dedicated job types ship, they'll add per-input-duration, per-output-duration, and flat-rate models — each documented on the job type's reference page.
+Because the submit gate checks `balance > 0` rather than an estimate, a single long-running job can drive your balance briefly negative when the terminal debit lands. When that happens, your subscription flips to `past_due` and further submits are blocked with `402 INSUFFICIENT_CREDITS` until you top up. Once your balance is positive again, normal billing resumes.
+
+## Cost model
+
+`raw.ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. Typical cost: ~$0.05/min. The same per-second rate applies whether the job completes successfully or fails partway through.
+
+If your balance is at or below zero when you submit:
+
+```json
+{ "error": { "code": "INSUFFICIENT_CREDITS", "message": "Not enough credits for this job" } }
+```
+
+HTTP `402`. Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing).
+
+## Check your balance
+
+```bash
+curl https://api.rendobar.com/billing/state \
+  -H "Authorization: Bearer rb_YOUR_KEY"
+```
+
+```json
+{
+  "data": {
+    "balance": { "amount": 5.0 },
+    "plan": { "slug": "free", "name": "Free" },
+    "subscription": { "status": "active", "cancelAtPeriodEnd": false },
+    "isPro": false
+  }
+}
+```
+
+`balance.amount` is in dollars. Internally balances are stored in nanodollars (1 USD = 1,000,000,000).
+
+## Usage tracking
+
+```bash
+curl "https://api.rendobar.com/billing/usage?start=2026-02-01&end=2026-02-09" \
+  -H "Authorization: Bearer rb_YOUR_KEY"
+```
+
+Returns daily usage by job type: count, amount charged, and compute seconds.
 
 ## Practical advice
 
-- **Start on Free.** $5 signup grant is enough for many hundreds of small jobs.
-- **Use `rb_test_*` keys while building.** Test-mode runs the full pipeline, returns real output, doesn't deduct credits.
+- **Start on Free.** $5 signup grant covers many hundreds of small jobs.
 - **Store `cost.nanodollars` from every response.** Reconcile against your monthly invoice.
 
 ## See also
 
-- [Credits & billing](/credits) — plans, packs, top-up, dashboard
-- [Job lifecycle](/concepts/job-lifecycle) — where the debit happens
-- [Raw FFmpeg](/job-types/raw-ffmpeg) — the live cost model
+- [Job lifecycle](/concepts/job-lifecycle): where the debit happens
+- [Limits](/support/limits): full quota table
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the live cost model
+
+## Related
+
+- [Plan limits and quotas](/support/limits): exact rate, file, and storage caps per plan
+- [Job lifecycle](/concepts/job-lifecycle): when the debit lands and what statuses mean
+- [Error codes](/support/errors): `INSUFFICIENT_CREDITS`, `PLAN_LIMIT`, and friends
+- [Pricing](https://rendobar.com/pricing/): plan comparison and credit packs
+- [FAQ on cost](/support/faq): common pricing and billing questions

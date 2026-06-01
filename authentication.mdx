@@ -1,25 +1,44 @@
 ---
 title: "Authentication"
-description: "Authenticate Rendobar API requests with a Bearer API key. Same keys cover REST, MCP, and the CLI. OAuth available for MCP clients."
+description: "Authenticate API requests with a Bearer API key. Same keys cover REST, MCP, and the CLI. OAuth available for MCP clients with native support."
 sidebarTitle: "Authentication"
 icon: "key"
+keywords: ["rendobar authentication", "api key", "bearer token", "rb_ key", "mcp oauth", "rest api auth"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/authentication/#article",
+      "headline": "Authentication",
+      "description": "Authenticate API requests with a Bearer API key. Same keys cover REST, MCP, and the CLI.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Every Rendobar API request needs an API key in the `Authorization` header:
 
 ```bash
 curl https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
-Keys start with `rb_live_` (production) or `rb_test_` (test mode). Get one from [app.rendobar.com](https://app.rendobar.com) → **Settings → API keys**. Test-mode jobs run end to end but don't consume credits.
+Keys start with `rb_`. Get one from [app.rendobar.com](https://app.rendobar.com) → **Settings → API keys**.
 
 ## Three credential types
 
 | Type | Where to use it |
 |---|---|
-| **API key** (`rb_live_*` / `rb_test_*`) | REST API, MCP, CLI in CI |
-| **Session cookie** (`rb_session`) | Dashboard browser sessions only — set automatically when you sign in |
+| **API key** (`rb_*`) | REST API, MCP, CLI in CI |
+| **Session cookie** (`rb_session`) | Dashboard browser sessions only (set automatically when you sign in) |
 | **OAuth 2.1 token** | MCP clients with native OAuth support, or the CLI's `rb login` browser flow |
 
 ## Use a key
@@ -28,12 +47,12 @@ Keys start with `rb_live_` (production) or `rb_test_` (test mode). Get one from 
 
 ```bash cURL
 curl https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
 ```javascript JavaScript
 const res = await fetch("https://api.rendobar.com/jobs", {
-  headers: { "Authorization": "Bearer rb_live_YOUR_KEY" },
+  headers: { "Authorization": "Bearer rb_YOUR_KEY" },
 });
 ```
 
@@ -41,7 +60,7 @@ const res = await fetch("https://api.rendobar.com/jobs", {
 import requests
 res = requests.get(
     "https://api.rendobar.com/jobs",
-    headers={"Authorization": "Bearer rb_live_YOUR_KEY"},
+    headers={"Authorization": "Bearer rb_YOUR_KEY"},
 )
 ```
 
@@ -54,13 +73,13 @@ Keys are scoped to an organization, not a user. Each key has a name. There's no 
 ```bash
 # Create
 curl -X POST https://api.rendobar.com/api-keys \
-  -H "Authorization: Bearer rb_live_EXISTING_KEY" \
+  -H "Authorization: Bearer rb_EXISTING_KEY" \
   -H "Content-Type: application/json" \
   -d '{ "name": "CI Pipeline" }'
 
 # Revoke
 curl -X DELETE https://api.rendobar.com/api-keys/KEY_ID \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
 Revoked keys return `401 UNAUTHORIZED` immediately.
@@ -69,9 +88,9 @@ Revoked keys return `401 UNAUTHORIZED` immediately.
 
 Every authenticated request resolves to:
 
-- `userId` — the authenticated user (when via session or OAuth)
-- `orgId` — the active organization
-- `plan` — current plan; controls rate limits, allowed job types, balance
+- `userId`: the authenticated user (when via session or OAuth)
+- `orgId`: the active organization
+- `plan`: current plan; controls [rate limits](/support/limits), allowed job types, [balance](/concepts/credits)
 
 Used for rate limiting, plan enforcement, and credit checks on every request.
 
@@ -95,3 +114,11 @@ HTTP `401`. Other auth-adjacent errors live in [Error codes](/support/errors).
 - [CLI authentication](/cli/authentication)
 - [MCP overview](/mcp/overview)
 - [Error codes](/support/errors)
+
+## Related
+
+- [Quickstart](/quickstart): submit your first job in under five minutes
+- [CLI authentication](/cli/authentication): `rb login` browser flow and CI key usage
+- [MCP overview](/mcp/overview): how API keys and OAuth work for AI agents
+- [Plan limits](/support/limits): rate limits and concurrency by plan
+- [Pricing](https://rendobar.com/pricing/): Free vs Pro and credit packs

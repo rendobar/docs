@@ -1,19 +1,38 @@
 ---
 title: "Plan limits and quotas"
 sidebarTitle: "Limits"
-description: "Plan limits, rate limits, file size caps, output retention, and storage quotas. Free vs Pro at a glance."
+description: "Compare Free and Pro plan limits across rate limits (30 vs 300/min), file size caps (100 MB vs 2 GB), retention, concurrency, storage."
 icon: "gauge"
+keywords: ["rendobar limits", "api rate limits", "plan limits", "file size limit", "concurrent jobs"]
 ---
 
-Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API.
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/support/limits/#article",
+      "headline": "Plan limits and quotas",
+      "description": "Free and Pro plan limits: rate limits, file size caps, output retention, concurrent jobs, and storage quotas.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. For plan prices and credit packs, see [pricing](https://rendobar.com/pricing/).
 
 ## Plan limits
 
 | | Free | Pro ($9/mo) |
 |---|---|---|
-| Signup credits | $5 (one-time) | — |
-| Monthly credits | — | $5/mo included |
-| Credit-purchase bonus | — | +20% |
+| Signup credits | $5 (one-time) | - |
+| Monthly credits | - | $5/mo included |
+| Credit-purchase bonus | - | +20% |
 | Concurrent jobs | 1 | 25 |
 | API requests / min | 30 | 300 |
 | Max input file | 100 MB | 2 GB |
@@ -31,7 +50,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API.
 - **Signed download URL** (`outputUrl`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
 - **Output retention**: 7 days (Free) or 30 days (Pro). After that, R2 deletes the file; the job record stays but `outputUrl` returns 404.
 - **Storage quota** caps total bytes across all your outputs. Delete old outputs or upgrade if you hit it.
-- **No separate per-output size limit** — bounded by input cap and storage quota.
+- **No separate per-output size limit**. Bounded by input cap and storage quota.
 
 ## Credit packs
 
@@ -59,6 +78,14 @@ For `raw.ffmpeg`, the output format is inferred from the trailing filename (`out
 
 ## See also
 
-- [Credits & billing](/credits)
+- [Credits and billing](/concepts/credits)
 - [Error codes](/support/errors)
 - [Raw FFmpeg](/job-types/raw-ffmpeg)
+
+## Related
+
+- [Credits and billing](/concepts/credits): nanodollar pricing and the prepaid model
+- [Error codes](/support/errors): `PLAN_LIMIT` and `RATE_LIMITED` details
+- [FAQ](/support/faq): cost, rate limit, and refund questions
+- [raw.ffmpeg reference](/job-types/raw-ffmpeg): how plan caps apply to FFmpeg jobs
+- [Pricing](https://rendobar.com/pricing/): plan that raises your concurrency and file caps

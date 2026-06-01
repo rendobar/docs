@@ -3,8 +3,26 @@ title: "CLI troubleshooting"
 description: "Fix common rb CLI errors: install failures, PATH issues, port conflicts, macOS Gatekeeper, expired tokens, rate limits, update rollback."
 sidebarTitle: "Troubleshooting"
 icon: "stethoscope"
-keywords: ["rb cli error", "rendobar cli not found", "rendobar login failed", "rb doctor"]
+keywords: ["rb cli error", "rendobar cli not found", "rendobar login failed", "rb doctor", "rb update failed"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/cli/troubleshooting/#article",
+      "headline": "CLI troubleshooting",
+      "description": "Fix common rb CLI errors: install failures, PATH issues, port conflicts, macOS Gatekeeper, expired tokens, rate limits.",
+      "datePublished": "2026-04-10",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Run this first:
 
@@ -48,7 +66,7 @@ xattr -d com.apple.quarantine $(which rb)
 
 ## Login
 
-**Port 14832 in use.** Another process holds the OAuth callback port. Free it (`lsof -i :14832`) or skip the browser flow: `rb login --key rb_live_xxx`.
+**Port 14832 in use.** Another process holds the OAuth callback port. Free it (`lsof -i :14832`) or skip the browser flow: `rb login --key rb_xxx`.
 
 **Login timed out.** The browser flow waits 120 seconds. Re-run `rb login`. If your network blocks loopback HTTP (some corporate firewalls do), use `--key` instead.
 
@@ -61,7 +79,7 @@ xattr -d com.apple.quarantine $(which rb)
 **`Not authenticated. Run rb login or set RENDOBAR_API_KEY`.** No credentials saved or file corrupt. Pick one:
 
 - Interactive: `rb login`
-- CI: `export RENDOBAR_API_KEY=rb_live_xxx`
+- CI: `export RENDOBAR_API_KEY=rb_xxx`
 - Inspect what the CLI sees: `rb whoami`
 
 **Insufficient credits.** Exits `2` with a top-up link. Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing). Check balance with `rb whoami`.
@@ -74,7 +92,7 @@ rb ffmpeg --json -i in.mp4 -c:v libx264 out.mp4 | jq .
 
 `error.code` and `error.message` are the canonical failure reason.
 
-**Local input file isn't being uploaded.** The CLI treats arguments after `-i` as inputs. A local input is detected only when the path is after `-i`, doesn't look like a URL, and exists on disk. Custom filter graphs reading files via `movie=` won't be detected — upload manually and pass a URL.
+**Local input file isn't being uploaded.** The CLI treats arguments after `-i` as inputs. A local input is detected only when the path is after `-i`, doesn't look like a URL, and exists on disk. Custom filter graphs reading files via `movie=` won't be detected. Upload manually and pass a URL.
 
 ## Update
 
@@ -140,3 +158,11 @@ A TLS error like `unable to verify the first certificate` is the symptom.
 - [Authentication](/cli/authentication)
 - [Commands](/cli/commands)
 - [API errors](/support/errors)
+
+## Related
+
+- [Installation](/cli/installation): re-install steps, PATH variables, version pinning
+- [Authentication](/cli/authentication): `rb login` and credential-file layout
+- [Commands](/cli/commands): exit codes, output modes, every flag
+- [API errors](/support/errors): the canonical `error.code` catalogue
+- [CLI source repo](https://github.com/rendobar/cli): file a bug or check the latest release

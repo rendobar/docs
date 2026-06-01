@@ -1,8 +1,28 @@
 ---
-title: "Error codes"
-description: "Every Rendobar API error code, its HTTP status, and what to do about it. Errors follow {error: {code, message}}."
+title: "API error codes reference"
+sidebarTitle: "Error codes"
+description: "View 13 API error codes, their HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on every endpoint."
 icon: "triangle-exclamation"
+keywords: ["rendobar error codes", "api error reference", "ffmpeg error troubleshooting", "insufficient credits", "rate limited"]
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/support/errors/#article",
+      "headline": "API error codes reference",
+      "description": "Every API error code, its HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on all endpoints.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 Every error response uses the same shape:
 
@@ -40,7 +60,7 @@ The three you'll hit most: `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATION_E
 const res = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer rb_live_YOUR_KEY",
+    "Authorization": "Bearer rb_YOUR_KEY",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -72,7 +92,7 @@ if (!res.ok) {
 import requests
 res = requests.post(
     "https://api.rendobar.com/jobs",
-    headers={"Authorization": "Bearer rb_live_YOUR_KEY"},
+    headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
         "type": "raw.ffmpeg",
         "inputs": {},
@@ -91,3 +111,11 @@ if not res.ok:
 - [Limits](/support/limits)
 - [Job lifecycle](/concepts/job-lifecycle)
 - [Authentication](/authentication)
+
+## Related
+
+- [Plan limits](/support/limits): caps behind `PLAN_LIMIT` and `RATE_LIMITED`
+- [Job lifecycle](/concepts/job-lifecycle): where `PROVIDER_ERROR` and `PROVIDER_TIMEOUT` surface
+- [Credits and billing](/concepts/credits): `INSUFFICIENT_CREDITS` and the prepaid model
+- [FAQ](/support/faq): common questions about failed jobs and refunds
+- [Pricing](https://rendobar.com/pricing/): plan that lifts your concurrency and rate caps

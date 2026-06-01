@@ -1,14 +1,34 @@
 ---
-title: "Quickstart"
-description: "Submit your first raw.ffmpeg job, poll to completion, download the result. Under five minutes from API key to finished MP4."
+title: "API quickstart guide"
+sidebarTitle: "Quickstart"
+description: "Submit your first raw.ffmpeg job, poll to completion, and download the result. Under 5 minutes from API key to finished MP4."
 icon: "rocket"
+keywords: ["rendobar quickstart", "ffmpeg api tutorial", "first api call", "video processing quickstart", "raw ffmpeg job"]
 ---
 
-Get an API key, submit a `raw.ffmpeg` job, poll until complete, download the output.
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/quickstart/#article",
+      "headline": "API quickstart guide",
+      "description": "Submit your first raw.ffmpeg job, poll to completion, and download the result. Under 5 minutes from API key to finished MP4.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Get an API key, submit a [`raw.ffmpeg`](/job-types/raw-ffmpeg) job, poll until complete, download the output.
 
 ## 1. Get an API key
 
-Sign up at [app.rendobar.com](https://app.rendobar.com) and create a key from **Settings → API keys**. Keys start with `rb_`. New accounts get $5 in free credits.
+Sign up at [app.rendobar.com](https://app.rendobar.com) and create a key from **Settings → API keys**. Keys start with `rb_`. New accounts get $5 in free [credits](/concepts/credits).
 
 Prefer the terminal? Skip steps 2–4 and use [the CLI](/cli/overview) instead.
 
@@ -18,7 +38,7 @@ Prefer the terminal? Skip steps 2–4 and use [the CLI](/cli/overview) instead.
 
 ```bash cURL
 curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "raw.ffmpeg",
@@ -33,7 +53,7 @@ curl -X POST https://api.rendobar.com/jobs \
 const res = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer rb_live_YOUR_KEY",
+    "Authorization": "Bearer rb_YOUR_KEY",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -53,7 +73,7 @@ import requests
 
 res = requests.post(
     "https://api.rendobar.com/jobs",
-    headers={"Authorization": "Bearer rb_live_YOUR_KEY"},
+    headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
         "type": "raw.ffmpeg",
         "inputs": {},
@@ -72,23 +92,23 @@ Put input URLs directly in `-i` flags. The output format is inferred from the tr
 Response:
 
 ```json
-{ "data": { "id": "job_abc123", "status": "dispatched" } }
+{ "data": { "id": "job_abc123", "status": "waiting" } }
 ```
 
 ## 3. Poll for completion
 
 ```bash
 curl https://api.rendobar.com/jobs/job_abc123 \
-  -H "Authorization: Bearer rb_live_YOUR_KEY"
+  -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
-Statuses: `waiting → dispatched → running → complete | failed | cancelled`. Poll every 1–2 seconds.
+Statuses: `waiting → dispatched → running → complete | failed | cancelled`. See [job lifecycle](/concepts/job-lifecycle) for what each status means. Poll every 1–2 seconds.
 
 For push instead of poll, configure a [webhook](/guides/webhooks).
 
 ## 4. Download the result
 
-When `status` is `complete`, the response contains `outputUrl` — a signed R2 URL valid for one hour:
+When `status` is `complete`, the response contains `outputUrl`, a signed R2 URL valid for one hour:
 
 ```json
 {
@@ -105,9 +125,19 @@ Re-fetch the job to refresh the URL after it expires.
 
 ## What's next
 
-- [Rendobar CLI](/cli/overview) — skip the curl, run `rb ffmpeg` from your terminal
-- [Authentication](/authentication) — keys, sessions, MCP auth
-- [Raw FFmpeg](/guides/raw-ffmpeg) — full guide with the security model and examples
-- [Webhooks](/guides/webhooks) — push events instead of polling
-- [Credits](/credits) — plans, balance, billing
-- [MCP](/mcp/overview) — drive Rendobar from an AI agent
+- [Rendobar CLI](/cli/overview): skip the curl, run `rb ffmpeg` from your terminal
+- [Authentication](/authentication): keys, sessions, MCP auth
+- [Raw FFmpeg](/guides/raw-ffmpeg): full guide with the security model and examples
+- [Webhooks](/guides/webhooks): push events instead of polling
+- [Credits and billing](/concepts/credits): plans, balance, billing
+- [MCP](/mcp/overview): drive Rendobar from an AI agent
+
+Need more credits? See [pricing](https://rendobar.com/pricing/) for plan and credit-pack options.
+
+## Related
+
+- [Authentication](/authentication): how API keys work across REST, MCP, and CLI
+- [Raw FFmpeg guide](/guides/raw-ffmpeg): security model, allowed flags, worked examples
+- [Job lifecycle](/concepts/job-lifecycle): the six statuses and what triggers each
+- [Pricing and plans](https://rendobar.com/pricing/): Free vs Pro and credit-pack pricing
+- [All supported FFmpeg operations](https://rendobar.com/features/): full feature index

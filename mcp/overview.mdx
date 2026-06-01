@@ -1,105 +1,90 @@
 ---
-title: "MCP integration"
-description: "Connect any MCP-compatible AI agent to api.rendobar.com/mcp. Five typed tools cover submit, status, list, account, upload."
+title: "MCP server overview"
 sidebarTitle: "Overview"
+description: "Connect AI agents via two transports: a local stdio server for IDE clients (Claude Desktop, Cursor) and a remote HTTP server for web and mobile."
 icon: "plug"
+keywords: ["mcp server", "model context protocol", "claude desktop mcp", "cursor mcp", "ai agent video tools", "rendobar mcp"]
 ---
 
-Point any MCP-compatible agent at `https://api.rendobar.com/mcp` and it can submit jobs, poll status, upload files, and check the balance through five typed tools — without writing HTTP code.
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/overview/#article",
+      "headline": "MCP server overview",
+      "description": "Connect AI agents via two transports: a local stdio server for IDE clients and a remote HTTP server for web and mobile.",
+      "datePublished": "2026-03-20",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
-## Connect
+Rendobar exposes its API as a Model Context Protocol server so AI agents can submit jobs, upload files, and check status without writing HTTP code. There are two servers. Pick by client.
 
-<CodeGroup>
+## Pick a transport
 
-```json Claude Desktop / Code
-{
-  "mcpServers": {
-    "rendobar": {
-      "url": "https://api.rendobar.com/mcp",
-      "headers": {
-        "Authorization": "Bearer rb_live_YOUR_KEY"
-      }
-    }
-  }
-}
-```
+<CardGroup cols={2}>
+  <Card title="Local stdio" icon="laptop" href="/mcp/installation">
+    For Claude Desktop, Cursor, Cline, Windsurf, Zed, VS Code, Claude Code, Continue.
 
-```text Custom agent
-Transport: Streamable HTTP
-URL:       https://api.rendobar.com/mcp
-Header:    Authorization: Bearer rb_live_YOUR_KEY
-```
+    Install: `npx -y @rendobar/mcp`. Reads local files. Streams uploads.
+  </Card>
+  <Card title="Remote HTTP" icon="globe" href="/mcp/web-and-mobile">
+    For claude.ai, ChatGPT Apps, hosted MCP gateways.
 
-</CodeGroup>
+    URL: `https://api.rendobar.com/mcp`. No file system access.
+  </Card>
+</CardGroup>
+
+## Why two servers
+
+The MCP spec has no primitive for streaming bytes from a client to a remote server. A remote MCP can submit jobs but cannot read a file off your laptop. The agent has to dictate a curl command and wait for you to paste back the URL.
+
+The local server runs on your machine, has access to your files, and uploads them in a single tool call. That is the difference.
+
+For agents inside a browser (claude.ai) or a phone (ChatGPT mobile), the remote server is the only option.
 
 ## Tools
 
-| Tool | What it does |
-|---|---|
-| `submit_job` | Submit a job. Description dynamically lists available job types from the registry |
-| `get_job` | Status, progress, result, output URL |
-| `list_jobs` | Recent jobs with optional status / type filter |
-| `get_account` | Balance, plan, active job count, rate-limit usage |
-| `upload_media` | Get a temporary upload endpoint for a local file |
+Both servers expose the same six job-related tools. Local adds `upload_file` for disk reads; remote keeps `upload_media` for curl-based uploads.
 
-Detailed parameters: [Tools reference](/mcp/tools-reference).
+| Tool | Local | Remote | Purpose |
+|---|:-:|:-:|---|
+| `submit_job` | ✓ | ✓ | Submit any active job type |
+| `get_job` | ✓ | ✓ | Poll status, fetch result |
+| `list_jobs` | ✓ | ✓ | Recent jobs with filters |
+| `cancel_job` | ✓ | ✓ | Cancel a waiting/dispatched job |
+| `get_account` | ✓ | ✓ | Balance, plan, limits |
+| `upload_file` | ✓ | - | Read local file, upload, return URL |
+| `upload_media` | - | ✓ | Return upload endpoint + curl command |
 
-<Tip>
-The `submit_job` description enumerates available job types at runtime, so agents discover capabilities without a separate discovery tool.
-</Tip>
+Full schemas: [Tools reference](/mcp/tools).
 
 ## Authentication
 
-API key in the `Authorization` header — same key as REST. MCP clients with native OAuth 2.1 can use Rendobar's authorization server instead:
+Both servers use a Rendobar API key (`rb_*`). Get one at [app.rendobar.com](https://app.rendobar.com) → Settings → API Keys. See [authentication](/authentication) for the full credential model.
 
-1. **Register** — client dynamically registers with the authorization server
-2. **Authorize** — user grants consent in their browser (one-time)
-3. **Token** — client receives an access token scoped to the user's organization
-4. **Operate** — subsequent tool calls use the token automatically
-
-API keys are simpler and recommended for non-interactive integrations.
-
-## Example: agent submits a render
-
-```
-1. get_account()
-   → { balance: "$10.50", plan: "pro", limits: { activeJobs: "0/25" } }
-
-2. submit_job({
-     type: "raw.ffmpeg",
-     inputs: { "video.mp4": "https://example.com/video.mp4" },
-     params: { command: "ffmpeg -i video.mp4 -vf scale=1280:720 output.mp4" }
-   })
-   → { jobId: "job_x1y2z3", status: "dispatched", estimatedCost: "$0.05" }
-
-3. get_job({ jobId: "job_x1y2z3" })
-   → { status: "complete", cost: "$0.05", outputUrl: "https://..." }
-```
-
-## Example: agent uploads a local file
-
-```
-1. upload_media({ filename: "video.mp4" })
-   → { uploadEndpoint: "https://api.rendobar.com/uploads?filename=video.mp4",
-       method: "POST",
-       instructions: "..." }
-
-2. (Agent or user POSTs the file to uploadEndpoint)
-
-3. submit_job({
-     type: "raw.ffmpeg",
-     inputs: { "video.mp4": "https://api.rendobar.com/uploads/dl/..." },
-     params: { command: "ffmpeg -i video.mp4 -vf scale=640:480 output.mp4" }
-   })
-```
-
-## Rate limits + billing
-
-MCP tool calls share the same rate limits and credit model as REST. Each `submit_job` deducts on completion. Limits are per-organization.
+- Local: `RENDOBAR_API_KEY` env var, `--api-key` flag, or credentials file
+- Remote: `Authorization: Bearer` header
 
 ## See also
 
-- [MCP guide](/guides/mcp-agents) — task-focused walkthrough
-- [Tools reference](/mcp/tools-reference)
-- [Authentication](/authentication)
-- [Raw FFmpeg](/job-types/raw-ffmpeg)
+- [Install for your client](/mcp/installation)
+- [Tools reference](/mcp/tools)
+- [Burn captions onto a local video](/mcp/examples)
+- [Web and mobile setup](/mcp/web-and-mobile)
+
+The MCP server gives AI agents full access to the same operations available via REST. For a complete list of supported job types, see [rendobar.com/mcp/](https://rendobar.com/mcp/).
+
+## Related
+
+- [MCP tools reference](/mcp/tools): every typed tool with parameters and response shapes
+- [Install for Claude Desktop and other clients](/mcp/installation): per-client config blocks
+- [Connect from web and mobile](/mcp/web-and-mobile): remote HTTP transport for claude.ai and ChatGPT
+- [Authentication](/authentication): API key and OAuth flows for MCP clients
+- [MCP server for AI agents](https://rendobar.com/mcp/): product overview and capability list

@@ -1,0 +1,192 @@
+---
+title: "Install the MCP server"
+sidebarTitle: "Installation"
+description: "Configure the local stdio MCP server for Claude Desktop, Cursor, Cline, Windsurf, Zed, VS Code, Claude Code, or Continue. Takes 2 minutes."
+icon: "download"
+keywords: ["install rendobar mcp", "claude desktop config", "cursor mcp install", "npx rendobar mcp", "windsurf mcp"]
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/installation/#article",
+      "headline": "Install the MCP server",
+      "description": "Configure the local stdio MCP server for Claude Desktop, Cursor, Cline, Windsurf, Zed, VS Code, Claude Code, or Continue.",
+      "datePublished": "2026-04-01",
+      "dateModified": "2026-05-24",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Configure your AI client to spawn `@rendobar/mcp` via `npx`. The server reads local files, submits jobs to `api.rendobar.com`, and streams results back.
+
+## 1. Get an API key
+
+Sign in at [app.rendobar.com](https://app.rendobar.com) → Settings → API Keys → **Create key**. Copy the `rb_...` value.
+
+## 2. Configure your client
+
+<Tabs>
+<Tab title="Claude Desktop">
+
+Edit the config file:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "rendobar": {
+      "command": "npx",
+      "args": ["-y", "@rendobar/mcp"],
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
+    }
+  }
+}
+```
+
+Restart Claude Desktop.
+
+</Tab>
+<Tab title="Cursor">
+
+Edit `~/.cursor/mcp.json` (global) or `<project>/.cursor/mcp.json` (project-scoped):
+
+```json
+{
+  "mcpServers": {
+    "rendobar": {
+      "command": "npx",
+      "args": ["-y", "@rendobar/mcp"],
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab title="Cline">
+
+Open Cline's MCP panel → **Configure** → paste the same `mcpServers` block as Claude Desktop. Reload Cline.
+
+</Tab>
+<Tab title="Windsurf">
+
+Edit `~/.codeium/windsurf/mcp_config.json`. Same schema as Claude Desktop.
+
+</Tab>
+<Tab title="Zed">
+
+Edit `~/.config/zed/settings.json`. Note the key is `context_servers`, not `mcpServers`:
+
+```json
+{
+  "context_servers": {
+    "rendobar": {
+      "source": "custom",
+      "command": "npx",
+      "args": ["-y", "@rendobar/mcp"],
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab title="VS Code">
+
+Requires VS Code 1.101+. Edit `.vscode/mcp.json`. Note the key is `servers`:
+
+```json
+{
+  "servers": {
+    "rendobar": {
+      "command": "npx",
+      "args": ["-y", "@rendobar/mcp"],
+      "env": { "RENDOBAR_API_KEY": "${input:rendobarKey}" }
+    }
+  },
+  "inputs": [
+    {
+      "id": "rendobarKey",
+      "type": "promptString",
+      "password": true,
+      "description": "Rendobar API Key"
+    }
+  ]
+}
+```
+
+VS Code prompts for the key on first use and stores it in the keychain.
+
+</Tab>
+<Tab title="Claude Code">
+
+Run from a terminal:
+
+```bash
+claude mcp add rendobar -s user --env RENDOBAR_API_KEY=rb_... -- npx -y @rendobar/mcp
+```
+
+</Tab>
+<Tab title="Continue">
+
+Create `.continue/mcpServers/rendobar.yaml` in your workspace:
+
+```yaml
+type: stdio
+command: npx
+args: ["-y", "@rendobar/mcp"]
+env:
+  RENDOBAR_API_KEY: rb_...
+```
+
+</Tab>
+</Tabs>
+
+## 3. Verify
+
+Open a chat in your client and ask: *"What's my Rendobar balance?"*
+
+The agent calls `get_account` and reports your balance. If you see "RENDOBAR_API_KEY missing" in your client's MCP logs, the env var didn't propagate. Re-check the config block.
+
+## Requirements
+
+- Node 20.10 or later (`node --version`). The server checks at startup and exits with a clear message if older.
+- npm 9+ for `npx -y` to resolve scoped packages.
+
+## Auth resolution order
+
+The server reads credentials in this order, first match wins:
+
+1. `--api-key=<key>` command-line flag
+2. `RENDOBAR_API_KEY` environment variable
+3. `~/.config/rendobar/credentials.json` (Unix) or `%APPDATA%\rendobar\credentials.json` (Windows)
+
+The credentials file format is `{ "apiKey": "rb_...", "apiBase": "https://api.rendobar.com" }`. The Rendobar CLI's `rb login` command writes this file automatically.
+
+## Updating
+
+`npx -y @rendobar/mcp` always pulls the latest published version. Pin a specific version with `@rendobar/mcp@1.0.1` in the `args` array if you need reproducibility.
+
+## See also
+
+- [Tools reference](/mcp/tools)
+- [Burn captions onto a local video](/mcp/examples)
+- [Troubleshooting](/mcp/troubleshooting)
+- [Web and mobile setup](/mcp/web-and-mobile)
+
+## Related
+
+- [MCP overview](/mcp/overview): pick the right transport for your client
+- [Tools reference](/mcp/tools): schemas for every MCP tool you'll call
+- [Burn captions onto a local video](/mcp/examples): end-to-end Claude Desktop walkthrough
+- [Troubleshooting](/mcp/troubleshooting): fixes for missing API key, PATH, and Node version issues
+- [MCP server for AI agents](https://rendobar.com/mcp/): product overview and capability list

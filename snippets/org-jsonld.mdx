@@ -1,0 +1,25 @@
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://rendobar.com/#organization",
+          "name": "Rendobar",
+          "url": "https://rendobar.com",
+          "logo": "https://rendobar.com/brand/og-logo.png",
+          "sameAs": ["https://github.com/rendobar", "https://x.com/rendobar"]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://rendobar.com/#website",
+          "url": "https://rendobar.com",
+          "name": "Rendobar",
+          "publisher": { "@id": "https://rendobar.com/#organization" }
+        }
+      ]
+    })
+  }}
+/>
