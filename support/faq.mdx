@@ -28,7 +28,7 @@ keywords: ["rendobar faq", "video api faq", "rendobar pricing faq", "ffmpeg api 
           "name": "What can I do with Rendobar today?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The live API is raw.ffmpeg, any whitelisted FFmpeg command against URLs you provide. That covers transcoding, trimming, filtering, overlays, audio extraction, frame extraction, and anything else FFmpeg does from the command line. More dedicated job types are on the roadmap."
+            "text": "The live API is the ffmpeg job type, any whitelisted FFmpeg command against URLs you provide. That covers transcoding, trimming, filtering, overlays, audio extraction, frame extraction, and anything else FFmpeg does from the command line. More dedicated job types are on the roadmap."
           }
         },
         {
@@ -76,7 +76,7 @@ keywords: ["rendobar faq", "video api faq", "rendobar pricing faq", "ffmpeg api 
           "name": "Can I run custom FFmpeg commands?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. That is the entire raw.ffmpeg job. Commands run through 8 security layers (flag whitelist, format/filter blocklists, sandbox isolation) before execution."
+            "text": "Yes. That is the entire ffmpeg job type. Commands run through 8 security layers (flag whitelist, format/filter blocklists, sandbox isolation) before execution."
           }
         },
         {
@@ -99,7 +99,7 @@ keywords: ["rendobar faq", "video api faq", "rendobar pricing faq", "ffmpeg api 
 </Accordion>
 
 <Accordion title="What can I do with Rendobar today?">
-  The live API is `raw.ffmpeg`, any whitelisted FFmpeg command against URLs you provide. That covers transcoding, trimming, filtering, overlays, audio extraction, frame extraction, and anything else FFmpeg does from the command line. More dedicated job types are on the roadmap.
+  The live API is the `ffmpeg` job type, any whitelisted FFmpeg command against URLs you provide. That covers transcoding, trimming, filtering, overlays, audio extraction, frame extraction, and anything else FFmpeg does from the command line. More dedicated job types are on the roadmap.
 </Accordion>
 
 <Accordion title="What video formats are supported?">
@@ -123,7 +123,7 @@ keywords: ["rendobar faq", "video api faq", "rendobar pricing faq", "ffmpeg api 
 </Accordion>
 
 <Accordion title="Can I run custom FFmpeg commands?">
-  Yes. That is the entire `raw.ffmpeg` job. Commands run through 8 security layers (flag whitelist, format/filter blocklists, sandbox isolation) before execution. [Raw FFmpeg](/guides/raw-ffmpeg).
+  Yes. That is the entire `ffmpeg` job type. Commands run through 8 security layers (flag whitelist, format/filter blocklists, sandbox isolation) before execution. [FFmpeg](/guides/ffmpeg).
 </Accordion>
 
 <Accordion title="How do I get push updates instead of polling?">
