@@ -64,7 +64,7 @@ const res = await fetch("https://api.rendobar.com/jobs", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    type: "raw.ffmpeg",
+    type: "ffmpeg",
     inputs: {},
     params: { command: "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 output.mp4" },
   }),
@@ -94,7 +94,7 @@ res = requests.post(
     "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
-        "type": "raw.ffmpeg",
+        "type": "ffmpeg",
         "inputs": {},
         "params": {"command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 output.mp4"},
     },

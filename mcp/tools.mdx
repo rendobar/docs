@@ -75,15 +75,15 @@ For seamless local uploads, use the local server's `upload_file` instead.
 Submit any active job type. The tool description enumerates current types at server startup.
 
 <ParamField body="type" type="string" required>
-  Job type from the registry. `raw.ffmpeg` is the only Live type today.
+  Job type from the registry. `ffmpeg` is the only Live type today.
 </ParamField>
 
 <ParamField body="inputs" type="Record<string, string>" required>
-  Map of input name to URL. For `raw.ffmpeg`, keys match filenames in the command.
+  Map of input name to URL. For `ffmpeg`, keys match filenames in the command.
 </ParamField>
 
 <ParamField body="params" type="Record<string, unknown>">
-  Type-specific parameters. For `raw.ffmpeg`: `{ command: "ffmpeg -i input -c copy output.mp4" }`.
+  Type-specific parameters. For `ffmpeg`: `{ command: "ffmpeg -i input -c copy output.mp4" }`.
 </ParamField>
 
 <ParamField body="idempotencyKey" type="string">
@@ -117,7 +117,7 @@ Recent jobs.
 </ParamField>
 
 <ParamField body="type" type="string">
-  Filter by job type, e.g. `raw.ffmpeg`.
+  Filter by job type, e.g. `ffmpeg`.
 </ParamField>
 
 <ParamField body="limit" type="integer" default="10">
@@ -169,12 +169,12 @@ Common codes: `UNAUTHORIZED`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATIO
 
 - [Install for your client](/mcp/installation)
 - [Burn captions onto a local video](/mcp/examples)
-- [Job types](/job-types/raw-ffmpeg)
+- [Job types](/job-types/ffmpeg)
 
 ## Related
 
 - [MCP overview](/mcp/overview): when to pick local stdio vs remote HTTP transport
 - [Installation](/mcp/installation): config blocks for every supported client
 - [Burn captions onto a local video](/mcp/examples): worked tool-call sequence end to end
-- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the main job type called by `submit_job`
+- [FFmpeg reference](/job-types/ffmpeg): the main job type called by `submit_job`
 - [MCP product overview](https://rendobar.com/mcp/): capability list and positioning

@@ -35,7 +35,7 @@
           {
             "group": "Guides",
             "pages": [
-              "guides/raw-ffmpeg",
+              "guides/ffmpeg",
               "guides/webhooks"
             ]
           },
@@ -59,7 +59,7 @@
           {
             "group": "Reference",
             "pages": [
-              "job-types/raw-ffmpeg",
+              "job-types/ffmpeg",
               "job-types/captions-animate",
               "job-types/caption-burn"
             ]
@@ -120,6 +120,14 @@
     {
       "source": "/guides/captions",
       "destination": "/job-types/captions-animate"
+    },
+    {
+      "source": "/job-types/raw-ffmpeg",
+      "destination": "/job-types/ffmpeg"
+    },
+    {
+      "source": "/guides/raw-ffmpeg",
+      "destination": "/guides/ffmpeg"
     }
   ],
   "navbar": {
