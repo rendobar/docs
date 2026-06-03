@@ -98,16 +98,12 @@ Unrecognised flags are rejected before dispatch with `VALIDATION_ERROR`.
 
 ## Security model
 
-Eight layers, in order:
+Every command is validated before it runs, then executed in an isolated, network-restricted sandbox.
 
-1. **Clean environment.** Inherited env vars stripped. Only `PATH`, `HOME`, `TMPDIR` remain.
-2. **Flag whitelist.** ~120 known-safe flags, including stream specifiers.
-3. **Format blocklist.** `-f lavfi`, `concat`, `hls`, `tee`, `segment`, `dash`, `null` blocked.
-4. **Filter function blocklist.** File-reading filters (`movie`, `amovie`, `sendcmd`, `zmq`, `ladspa`, `frei0r`) blocked.
-5. **Filter parameter blocklist.** `textfile=`, `filename=` in subtitles, absolute paths in subtitle filters blocked.
-6. **Pattern blocklist.** Path traversal (`../`), `/proc/`, `/sys/`, `subfile:` blocked.
-7. **Per-input protocol restriction.** `-protocol_whitelist file` injected before each `-i` server-side.
-8. **Container isolation.** Trigger.dev container sandboxing, restricted stdio.
+- **Flag allowlist.** Only known-safe flags pass. Anything unrecognised is rejected with `VALIDATION_ERROR` before dispatch.
+- **No reads through filters.** Filters and formats that read from disk, fetch over the network, or run external code are blocked.
+- **Path containment.** Inputs are limited to the files you provide. Path traversal and access to system paths are rejected.
+- **Sandboxed execution.** Each job runs in an isolated container with a clean environment, restricted I/O, and no ambient network access.
 
 ## Cost & timeout
 
