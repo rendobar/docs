@@ -84,17 +84,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Changelog",
-        "groups": [
-          {
-            "group": "Changelog",
-            "pages": [
-              "changelog/2026-03-20"
-            ]
-          }
-        ]
       }
     ],
     "global": {
@@ -113,6 +102,14 @@
     }
   },
   "redirects": [
+    {
+      "source": "/changelog/2026-03-20",
+      "destination": "https://rendobar.com/changelog/"
+    },
+    {
+      "source": "/changelog",
+      "destination": "https://rendobar.com/changelog/"
+    },
     {
       "source": "/credits",
       "destination": "/concepts/credits"
@@ -139,6 +136,10 @@
       {
         "label": "Blog",
         "href": "https://rendobar.com/blog/"
+      },
+      {
+        "label": "Changelog",
+        "href": "https://rendobar.com/changelog/"
       },
       {
         "label": "Pricing",
