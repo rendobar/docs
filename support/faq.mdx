@@ -68,7 +68,7 @@ keywords: ["rendobar faq", "video api faq", "rendobar pricing faq", "ffmpeg api 
           "name": "What happens if a job fails?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Failed jobs are charged for the compute they used. Rendobar has no auto-refund. If you believe a failure was caused by a Rendobar bug or platform issue, contact support and we will review for a discretionary refund. Successful and failed jobs are billed the same way: actual provider cost plus infrastructure cost plus margin. Inspect error.code and error.message on the job, and retry via POST /jobs/{id}/retry if appropriate."
+            "text": "Failed jobs are charged for the compute they used. Rendobar has no auto-refund. If you believe a failure was caused by a Rendobar bug or platform issue, contact support and we will review for a discretionary refund. Successful and failed jobs are billed the same way: for the compute the job consumed. Inspect error.code and error.message on the job, and retry via POST /jobs/{id}/retry if appropriate."
           }
         },
         {
@@ -119,7 +119,7 @@ keywords: ["rendobar faq", "video api faq", "rendobar pricing faq", "ffmpeg api 
 </Accordion>
 
 <Accordion title="What happens if a job fails?">
-  Failed jobs are charged for the compute they used. Rendobar has no auto-refund. If you believe a failure was caused by a Rendobar bug or platform issue, contact support and we will review for a discretionary refund. Successful and failed jobs are billed the same way: actual provider cost plus infrastructure cost plus margin. Inspect `error.code` and `error.message` on the job, and retry via `POST /jobs/{id}/retry` if appropriate. [Error codes](/support/errors).
+  Failed jobs are charged for the compute they used. Rendobar has no auto-refund. If you believe a failure was caused by a Rendobar bug or platform issue, contact support and we will review for a discretionary refund. Successful and failed jobs are billed the same way: for the compute the job consumed. Inspect `error.code` and `error.message` on the job, and retry via `POST /jobs/{id}/retry` if appropriate. [Error codes](/support/errors).
 </Accordion>
 
 <Accordion title="Can I run custom FFmpeg commands?">

@@ -3,7 +3,7 @@ title: "captions.animate"
 description: "Burn animated word-level captions onto a video at $0.10/min. Pick a preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 min input cap."
 icon: "captions"
 tag: "Live"
-keywords: ["animated captions", "burn subtitles", "whisper captions", "tiktok captions", "ass subtitles", "captions.animate"]
+keywords: ["animated captions", "burn subtitles", "auto captions", "tiktok captions", "subtitles", "captions.animate"]
 ---
 
 <script
@@ -28,10 +28,10 @@ keywords: ["animated captions", "burn subtitles", "whisper captions", "tiktok ca
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Returns a video with word-level animated captions burned in. Speech is transcribed by whisper.cpp, segmented into cues, and rendered as styled ASS subtitles before FFmpeg burns them onto the source.
+Returns a video with word-level animated captions burned in. Speech is automatically transcribed, segmented into timed cues, and rendered as styled subtitles burned onto the source.
 
 <Info>
-**Timeout:** 600 s · **Provider:** triggerdev · **Accepts:** video · **Limits:** single speaker, 5 min input
+**Timeout:** 600 s · **Accepts:** video · **Limits:** single speaker, 5 min input
 </Info>
 
 ## Request

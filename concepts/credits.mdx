@@ -60,7 +60,7 @@ Every job is billed in nanodollars (one-billionth of a US dollar) drawn from you
 
 1. **Submit gate.** Submit is atomic. If your balance is greater than zero and you are under your concurrent-job limit, the job runs. We do not estimate cost up front. Insufficient balance returns `402 INSUFFICIENT_CREDITS`.
 2. **Execution.** Job runs. Balance untouched.
-3. **Debit on terminal status.** Every terminal job (`complete`, `failed`, or `cancelled`) is charged based on actual provider cost, infrastructure cost, and margin. The debit is atomic with the status update.
+3. **Debit on terminal status.** Every terminal job (`complete`, `failed`, or `cancelled`) is charged for the compute it consumed. The debit is atomic with the status update.
 4. **No auto-refund.** Failed jobs are still charged for the compute they consumed. If you believe a job failed due to a platform bug, contact support. Refunds are issued at our discretion via the dispute process.
 
 ## Negative balance
