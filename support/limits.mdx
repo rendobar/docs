@@ -43,7 +43,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 | Priority queue | No | Yes |
 | Custom providers | No | Yes |
 
-`raw.ffmpeg`, MCP, and webhooks are on both plans.
+`ffmpeg`, MCP, and webhooks are on both plans.
 
 ## Output URLs
 
@@ -74,18 +74,18 @@ Rendobar accepts every FFmpeg-compatible input format. Default outputs by media 
 | Audio | MP3 |
 | Image | PNG |
 
-For `raw.ffmpeg`, the output format is inferred from the trailing filename (`output.mp4` → MP4). Override with `params.outputFormat`.
+For `ffmpeg`, the output format is inferred from the trailing filename (`output.mp4` → MP4). Override with `params.outputFormat`.
 
 ## See also
 
 - [Credits and billing](/concepts/credits)
 - [Error codes](/support/errors)
-- [Raw FFmpeg](/job-types/raw-ffmpeg)
+- [FFmpeg](/job-types/ffmpeg)
 
 ## Related
 
 - [Credits and billing](/concepts/credits): nanodollar pricing and the prepaid model
 - [Error codes](/support/errors): `PLAN_LIMIT` and `RATE_LIMITED` details
 - [FAQ](/support/faq): cost, rate limit, and refund questions
-- [raw.ffmpeg reference](/job-types/raw-ffmpeg): how plan caps apply to FFmpeg jobs
+- [FFmpeg reference](/job-types/ffmpeg): how plan caps apply to FFmpeg jobs
 - [Pricing](https://rendobar.com/pricing/): plan that raises your concurrency and file caps

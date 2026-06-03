@@ -41,7 +41,7 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. Every t
 | Output retention | 7 days | 30 days |
 | Priority queue | No | Yes |
 
-`raw.ffmpeg`, MCP, and webhooks are on both plans. Full limits table: [Limits](/support/limits).
+`ffmpeg`, MCP, and webhooks are on both plans. Full limits table: [Limits](/support/limits).
 
 For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](https://rendobar.com/pricing/).
 
@@ -69,7 +69,7 @@ Because the submit gate checks `balance > 0` rather than an estimate, a single l
 
 ## Cost model
 
-`raw.ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. Typical cost: ~$0.05/min. The same per-second rate applies whether the job completes successfully or fails partway through.
+`ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. Typical cost: ~$0.05/min. The same per-second rate applies whether the job completes successfully or fails partway through.
 
 If your balance is at or below zero when you submit:
 
@@ -117,7 +117,7 @@ Returns daily usage by job type: count, amount charged, and compute seconds.
 
 - [Job lifecycle](/concepts/job-lifecycle): where the debit happens
 - [Limits](/support/limits): full quota table
-- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the live cost model
+- [FFmpeg reference](/job-types/ffmpeg): the live cost model
 
 ## Related
 

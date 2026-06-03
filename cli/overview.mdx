@@ -36,7 +36,7 @@ rb login
 rb ffmpeg -i input.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 output.mp4
 ```
 
-The binary is called `rb`. It auto-uploads local inputs, submits a [`raw.ffmpeg`](/job-types/raw-ffmpeg) job, and downloads the result to the path your `ffmpeg` command names.
+The binary is called `rb`. It auto-uploads local inputs, submits an [`ffmpeg`](/job-types/ffmpeg) job, and downloads the result to the path your `ffmpeg` command names.
 
 ## CLI or SDK
 
@@ -45,7 +45,7 @@ The binary is called `rb`. It auto-uploads local inputs, submits a [`raw.ffmpeg`
 | A shell or CI script | CLI |
 | A Node.js / TypeScript program | [SDK](https://www.npmjs.com/package/@rendobar/sdk) |
 
-The CLI covers `raw.ffmpeg` and the auth + diagnostics around it. The SDK covers every endpoint with typed responses, webhooks, and batch orchestration.
+The CLI covers `ffmpeg` and the auth + diagnostics around it. The SDK covers every endpoint with typed responses, webhooks, and batch orchestration.
 
 ## Install
 
@@ -82,7 +82,7 @@ rb ffmpeg -i ./clip.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 out.mp4
 
 ## Scope
 
-The CLI does one thing: run FFmpeg jobs. It does not bundle filter chaining, batch primitives, or the other [job types](/job-types/raw-ffmpeg). Submit those via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/job-types/raw-ffmpeg).
+The CLI does one thing: run FFmpeg jobs. It does not bundle filter chaining, batch primitives, or the other [job types](/job-types/ffmpeg). Submit those via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/job-types/ffmpeg).
 
 ## See also
 
@@ -97,5 +97,5 @@ The CLI does one thing: run FFmpeg jobs. It does not bundle filter chaining, bat
 - [Installation](/cli/installation): one-line install, pin a version, Docker, uninstall
 - [Commands reference](/cli/commands): every `rb` subcommand, flag, and exit code
 - [CI/CD](/cli/ci-cd): GitHub Actions, GitLab CI, and Docker recipes
-- [raw.ffmpeg reference](/job-types/raw-ffmpeg): the API the CLI calls under the hood
+- [FFmpeg reference](/job-types/ffmpeg): the API the CLI calls under the hood
 - [FFmpeg in the cloud](https://rendobar.com/ffmpeg/): supported operations on the marketing site

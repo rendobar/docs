@@ -1,9 +1,9 @@
 ---
 title: "API quickstart guide"
 sidebarTitle: "Quickstart"
-description: "Submit your first raw.ffmpeg job, poll to completion, and download the result. Under 5 minutes from API key to finished MP4."
+description: "Submit your first ffmpeg job, poll to completion, and download the result. Under 5 minutes from API key to finished MP4."
 icon: "rocket"
-keywords: ["rendobar quickstart", "ffmpeg api tutorial", "first api call", "video processing quickstart", "raw ffmpeg job"]
+keywords: ["rendobar quickstart", "ffmpeg api tutorial", "first api call", "video processing quickstart", "ffmpeg job"]
 ---
 
 <script
@@ -14,7 +14,7 @@ keywords: ["rendobar quickstart", "ffmpeg api tutorial", "first api call", "vide
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/quickstart/#article",
       "headline": "API quickstart guide",
-      "description": "Submit your first raw.ffmpeg job, poll to completion, and download the result. Under 5 minutes from API key to finished MP4.",
+      "description": "Submit your first ffmpeg job, poll to completion, and download the result. Under 5 minutes from API key to finished MP4.",
       "datePublished": "2026-03-20",
       "dateModified": "2026-05-24",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
@@ -24,7 +24,7 @@ keywords: ["rendobar quickstart", "ffmpeg api tutorial", "first api call", "vide
   }}
 />
 
-Get an API key, submit a [`raw.ffmpeg`](/job-types/raw-ffmpeg) job, poll until complete, download the output.
+Get an API key, submit an [`ffmpeg`](/job-types/ffmpeg) job, poll until complete, download the output.
 
 ## 1. Get an API key
 
@@ -41,7 +41,7 @@ curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "raw.ffmpeg",
+    "type": "ffmpeg",
     "inputs": {},
     "params": {
       "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4"
@@ -57,7 +57,7 @@ const res = await fetch("https://api.rendobar.com/jobs", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    type: "raw.ffmpeg",
+    type: "ffmpeg",
     inputs: {},
     params: {
       command: "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4",
@@ -75,7 +75,7 @@ res = requests.post(
     "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
-        "type": "raw.ffmpeg",
+        "type": "ffmpeg",
         "inputs": {},
         "params": {
             "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4",
@@ -127,7 +127,7 @@ Re-fetch the job to refresh the URL after it expires.
 
 - [Rendobar CLI](/cli/overview): skip the curl, run `rb ffmpeg` from your terminal
 - [Authentication](/authentication): keys, sessions, MCP auth
-- [Raw FFmpeg](/guides/raw-ffmpeg): full guide with the security model and examples
+- [FFmpeg](/guides/ffmpeg): full guide with the security model and examples
 - [Webhooks](/guides/webhooks): push events instead of polling
 - [Credits and billing](/concepts/credits): plans, balance, billing
 - [MCP](/mcp/overview): drive Rendobar from an AI agent
@@ -137,7 +137,7 @@ Need more credits? See [pricing](https://rendobar.com/pricing/) for plan and cre
 ## Related
 
 - [Authentication](/authentication): how API keys work across REST, MCP, and CLI
-- [Raw FFmpeg guide](/guides/raw-ffmpeg): security model, allowed flags, worked examples
+- [FFmpeg guide](/guides/ffmpeg): security model, allowed flags, worked examples
 - [Job lifecycle](/concepts/job-lifecycle): the six statuses and what triggers each
 - [Pricing and plans](https://rendobar.com/pricing/): Free vs Pro and credit-pack pricing
 - [All supported FFmpeg operations](https://rendobar.com/features/): full feature index

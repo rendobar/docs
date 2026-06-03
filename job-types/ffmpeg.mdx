@@ -1,10 +1,10 @@
 ---
-title: "raw.ffmpeg reference"
-sidebarTitle: "raw.ffmpeg"
+title: "FFmpeg reference"
+sidebarTitle: "FFmpeg"
 description: "Execute a custom FFmpeg command via API with ~120 whitelisted flags, sandboxed execution, and signed output URL. Live on all plans, ~$0.05/min."
 icon: "terminal"
 tag: "Live"
-keywords: ["raw ffmpeg", "ffmpeg api reference", "ffmpeg cloud", "ffmpeg sandboxed", "ffmpeg rest api"]
+keywords: ["ffmpeg api reference", "ffmpeg cloud", "ffmpeg sandboxed", "ffmpeg rest api", "ffmpeg command api"]
 ---
 
 <script
@@ -13,8 +13,8 @@ keywords: ["raw ffmpeg", "ffmpeg api reference", "ffmpeg cloud", "ffmpeg sandbox
     __html: JSON.stringify({
       "@context": "https://schema.org",
       "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/job-types/raw-ffmpeg/#article",
-      "headline": "raw.ffmpeg reference",
+      "@id": "https://rendobar.com/docs/job-types/ffmpeg/#article",
+      "headline": "FFmpeg reference",
       "description": "Execute a custom FFmpeg command with whitelisted flags, sandboxed execution, and signed output URL. Live on all plans.",
       "datePublished": "2026-03-20",
       "dateModified": "2026-05-24",
@@ -44,7 +44,7 @@ curl -X POST https://api.rendobar.com/jobs \
   -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "raw.ffmpeg",
+    "type": "ffmpeg",
     "inputs": {},
     "params": {
       "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4"
@@ -60,7 +60,7 @@ const res = await fetch("https://api.rendobar.com/jobs", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    type: "raw.ffmpeg",
+    type: "ffmpeg",
     inputs: {},
     params: {
       command: "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
@@ -76,7 +76,7 @@ res = requests.post(
     "https://api.rendobar.com/jobs",
     headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
-        "type": "raw.ffmpeg",
+        "type": "ffmpeg",
         "inputs": {},
         "params": {
             "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
@@ -111,13 +111,13 @@ Poll `GET /jobs/{id}` until `status: "complete"`, then read `outputUrl` (signed,
 
 ## See also
 
-- [Raw FFmpeg guide](/guides/raw-ffmpeg): security model, allowed flags, examples
+- [FFmpeg guide](/guides/ffmpeg): security model, allowed flags, examples
 - [CLI](/cli/overview): same job, terminal interface
 - [Job lifecycle](/concepts/job-lifecycle)
 
 ## Related
 
-- [Raw FFmpeg guide](/guides/raw-ffmpeg): security layers, allowed flags, worked examples
+- [FFmpeg guide](/guides/ffmpeg): security layers, allowed flags, worked examples
 - [CLI overview](/cli/overview): the same job from your terminal with `rb ffmpeg`
 - [Credits and billing](/concepts/credits): per-compute-second pricing detail
 - [Plan limits](/support/limits): file-size caps, timeouts, and concurrency per plan
