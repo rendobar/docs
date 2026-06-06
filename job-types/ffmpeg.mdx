@@ -130,44 +130,7 @@ res = requests.post(
 
 Poll `GET /jobs/{id}` until `status: "complete"`. On success the job carries an `output` object. On failure it carries an `error` object. The filenames your command writes define the output.
 
-`output` is one shape for every job type. Read `output.data` for a computed answer, `output.file.url` for the file to play or download, and `output.files` for the full list.
-
-<ResponseField name="output" type="object">
-  Present when `status` is `complete`.
-
-  <Expandable title="output fields">
-    <ResponseField name="data" type="object | null">
-      The computed answer for jobs that return one, e.g. a probe result. `null` for FFmpeg jobs that only write files.
-    </ResponseField>
-    <ResponseField name="file" type="File | null">
-      The headline result: the single output file, or a stream manifest (`type: "playlist"`). `null` for a set of files with no single headline. Always one of `files`.
-    </ResponseField>
-    <ResponseField name="files" type="File[]">
-      Every file the job produced. A single-file job lists one. A stream lists the manifest plus segments. A set lists every member.
-    </ResponseField>
-    <ResponseField name="expiresAt" type="integer | null">
-      Unix ms when the file URLs expire. Present when `files` is non-empty. Re-fetch the job to refresh.
-    </ResponseField>
-  </Expandable>
-
-  <Expandable title="File">
-    <ResponseField name="url" type="string">
-      Signed download or serving URL.
-    </ResponseField>
-    <ResponseField name="path" type="string">
-      The filename your command wrote, e.g. `output.mp4`.
-    </ResponseField>
-    <ResponseField name="type" type="string">
-      Open enum: `video`, `image`, `audio`, `captions`, `playlist`, `data`, or `other`. Tolerate unknown values.
-    </ResponseField>
-    <ResponseField name="size" type="integer">
-      File size in bytes.
-    </ResponseField>
-    <ResponseField name="meta" type="object">
-      Optional probed metadata: `format`, `width`, `height`, `durationMs`. Each field is present when known.
-    </ResponseField>
-  </Expandable>
-</ResponseField>
+`output` is one shape for every job type, documented in full on [Job output](/concepts/job-output). FFmpeg jobs set `output.data` to `null` and return their files in `output.file` and `output.files`. Read `output.file.url` for the file to play or download, and `output.files` for the full list.
 
 <ResponseField name="error" type="object">
   Present when `status` is `failed`.
@@ -188,10 +151,11 @@ Poll `GET /jobs/{id}` until `status: "complete"`. On success the job carries an 
   </Expandable>
 </ResponseField>
 
-See [output files](/guides/ffmpeg#output-files) in the guide for full request and response examples.
+See [Job output](/concepts/job-output) for the full shape and the single-file, stream, and set patterns, and [output files](/guides/ffmpeg#output-files) in the guide for worked request and response examples.
 
 ## See also
 
+- [Job output](/concepts/job-output): the output shape every job returns
 - [FFmpeg guide](/guides/ffmpeg): security model, allowed flags, examples
 - [CLI](/cli/overview): same job, terminal interface
 - [Job lifecycle](/concepts/job-lifecycle)

@@ -223,11 +223,11 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 
 The filenames your command writes define the output. You get back every file it produced.
 
-Every completed job, FFmpeg or otherwise, returns the same `output` shape:
+Every completed job, FFmpeg or otherwise, returns the same `output` shape. [Job output](/concepts/job-output) documents it in full. The short version:
 
-- `output.data`: the computed answer (a probe result, a transcript). `null` for jobs that only write files.
-- `output.file`: the headline result you play or download, one file or a stream manifest. `null` for data-only jobs and pure file sets.
-- `output.files`: every file the job produced, the complete list. `[]` for data-only jobs.
+- `output.data`: the computed answer (a probe result, a transcript). `null` for FFmpeg jobs, which only write files.
+- `output.file`: the headline result you play or download, one file or a stream manifest. `null` for pure file sets.
+- `output.files`: every file the job produced, the complete list.
 - `output.expiresAt`: Unix ms when the URLs expire, present when `files` is non-empty.
 
 Each file is `{ url, path, type, size, meta? }`. The `type` is an open enum: `video`, `image`, `audio`, `captions`, `playlist`, `data`, or `other`. Tolerate values you don't recognise.

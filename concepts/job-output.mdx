@@ -1,0 +1,278 @@
+---
+title: "Job output shape"
+description: "Read the output shape every Rendobar job returns: data, file, files, and expiresAt, the File type, and the four output patterns with examples."
+sidebarTitle: "Job output"
+icon: "box-open"
+keywords: ["job output", "output shape", "output.data", "output.file", "output.files", "file type enum", "rendobar response"]
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/concepts/job-output/#article",
+      "headline": "Job output",
+      "description": "The output shape every Rendobar job returns: data, file, files, and expiresAt, the File type, and the four output patterns.",
+      "datePublished": "2026-06-06",
+      "dateModified": "2026-06-06",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Every job returns the same `output` shape, no matter the type. A `complete` job carries one `output` object. Read `output.data` for a computed answer, `output.file.url` for the file to play or download, and `output.files` for the full list.
+
+```json
+{
+  "data": <job-type-specific JSON> | null,
+  "file": <File> | null,
+  "files": <File>[],
+  "expiresAt": <unix ms> | null
+}
+```
+
+`output` is present when `status` is `complete`. A `failed` job carries an `error` object instead. See [Job lifecycle](/concepts/job-lifecycle) for status transitions.
+
+## Fields
+
+<ResponseField name="data" type="object | null">
+  The computed answer for jobs that return one, such as a probe result, detections, or a transcript. `null` for jobs that only write files. The shape is job-type-specific, so each type documents its own. See [Per-type data shapes](#per-type-data-shapes).
+</ResponseField>
+
+<ResponseField name="file" type="File | null">
+  The headline result you play or download: a single output file, or a stream manifest (`.m3u8` / `.mpd`, typed `playlist`). `null` for data-only jobs and for pure file sets with no single headline. Always one of `files`.
+</ResponseField>
+
+<ResponseField name="files" type="File[]">
+  Every file the job produced, the complete list. A single-file job lists one. A stream lists the manifest plus segments. A set lists every member. `[]` for data-only jobs.
+</ResponseField>
+
+<ResponseField name="expiresAt" type="integer | null">
+  Unix ms when the file URLs expire. Present when `files` is non-empty. Re-fetch the job with `GET /jobs/{id}` to mint fresh URLs.
+</ResponseField>
+
+## The File type
+
+Each entry in `file` and `files` is the same shape:
+
+```json
+{
+  "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+  "path": "output.mp4",
+  "type": "video",
+  "size": 4194304,
+  "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+}
+```
+
+<ResponseField name="url" type="string">
+  Signed download or serving URL. Expires at `output.expiresAt`.
+</ResponseField>
+
+<ResponseField name="path" type="string">
+  The filename the job wrote, such as `output.mp4`.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Open enum: `video`, `image`, `audio`, `captions`, `playlist`, `data`, or `other`. Treat it as open. Tolerate values you don't recognize, since new types can appear without a version bump.
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Optional probed metadata: `format`, `width`, `height`, `durationMs`. Each field is present when known.
+</ResponseField>
+
+## Invariants
+
+Three rules hold for every job type. Code against them.
+
+- **`output.file` is always one of `output.files`** (or `null`). The headline is never a file missing from the full list.
+- **`output.expiresAt` is present whenever `output.files` is non-empty.** Data-only jobs leave both `files` empty and `expiresAt` null.
+- **A `complete` job always has `output.data` or `output.files`** (or both). It never returns an empty result.
+
+## How to consume
+
+The read path is the same every time:
+
+```ts
+const { data: job } = await res.json();
+
+// 1. The computed answer, for jobs that return one.
+if (job.output.data) {
+  console.log(job.output.data);
+}
+
+// 2. The thing to play or download.
+if (job.output.file) {
+  console.log(job.output.file.url);
+}
+
+// 3. The full list, for sets and streams.
+for (const f of job.output.files) {
+  console.log(f.path, f.type, f.size);
+}
+```
+
+You never branch on a job-type discriminator to find the result. `output.data`, `output.file`, and `output.files` mean the same thing for `ffmpeg`, `extract.metadata`, `caption.extract`, and every other type.
+
+## Output patterns
+
+Four patterns cover every job. The shape is identical. Which fields are populated depends on what the job produced.
+
+### Single file
+
+One output file. `file` is that file, `files` lists one, `data` is null. The most common pattern for transform jobs (FFmpeg, transcode, watermark, render).
+
+```json
+{
+  "data": null,
+  "file": {
+    "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+    "path": "output.mp4",
+    "type": "video",
+    "size": 4194304,
+    "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+  },
+  "files": [
+    {
+      "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+      "path": "output.mp4",
+      "type": "video",
+      "size": 4194304,
+      "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+    }
+  ],
+  "expiresAt": 1735689600000
+}
+```
+
+### Stream
+
+An HLS or DASH stream. `file` is the manifest, typed `playlist`. Point a player at `file.url` directly. `files` carries the manifest plus every segment.
+
+```json
+{
+  "data": null,
+  "file": { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
+  "files": [
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576 },
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "path": "seg_001.ts", "type": "video", "size": 1041203 }
+  ],
+  "expiresAt": 1735689600000
+}
+```
+
+### Set
+
+An unordered set with no single headline, such as an image sequence, a `-f segment` split, or a resolution ladder. `file` is `null`. Read `files` for the list.
+
+```json
+{
+  "data": null,
+  "file": null,
+  "files": [
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800 },
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120 },
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_002.png", "path": "frame_002.png", "type": "image", "size": 203904 }
+  ],
+  "expiresAt": 1735689600000
+}
+```
+
+### Data-only
+
+A job that computes an answer instead of writing files. `data` carries the result. `file` is null, `files` is empty, `expiresAt` is null.
+
+```json
+{
+  "data": {
+    "width": 1280,
+    "height": 720,
+    "durationMs": 30000,
+    "codec": "h264",
+    "fps": 30,
+    "bitrate": 2500000,
+    "audioCodec": "aac",
+    "audioChannels": 2,
+    "audioSampleRate": 48000
+  },
+  "file": null,
+  "files": [],
+  "expiresAt": null
+}
+```
+
+## Per-type data shapes
+
+`output.data` is the only part of the output that varies by job type. Transform jobs leave it `null` and return files. Analysis jobs return their result here and write no file.
+
+The rule of thumb:
+
+- **Transform jobs** (`ffmpeg`, `transcode`, `watermark.*`, `caption.burn`, `render.*`) return files with `data: null`.
+- **Analysis jobs** (moderation, detection, captions, transcript, OCR, metadata) return their result in `data` and usually write no file.
+
+<Info>
+**Status:** Only `ffmpeg` is live today. The other job types below are documented but not yet callable. See each [job type page](/job-types/ffmpeg) for its availability banner.
+</Info>
+
+| Job type | `data` shape | Files |
+|---|---|---|
+| `ffmpeg` | `null` | The files your command wrote |
+| `extract.metadata` | Probe result (see below) | None (data-only) |
+| `extract.scenes` | Scene cut list | None (data-only) |
+| `extract.text` | Recognized text with positions and timestamps | None (data-only) |
+| `caption.extract` | Transcript with word timings | A captions file (`.srt` / `.vtt`) |
+| `compliance.moderate` | Moderation labels with confidences | None (data-only) |
+| `compliance.gdpr.detect` | Detected regions (faces, plates) with bounding boxes | None (data-only) |
+| `watermark.detect` | Match result with confidence | None (data-only) |
+| `transcode`, `watermark.apply`, `caption.burn` | `null` | The transformed media |
+
+### extract.metadata
+
+`output.data` is the probe result. The job runs `ffprobe`, returns the result inline, and writes no file.
+
+```json
+{
+  "data": {
+    "width": 1280,
+    "height": 720,
+    "durationMs": 30000,
+    "codec": "h264",
+    "fps": 30,
+    "bitrate": 2500000,
+    "audioCodec": "aac",
+    "audioChannels": 2,
+    "audioSampleRate": 48000
+  },
+  "file": null,
+  "files": [],
+  "expiresAt": null
+}
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `width` | integer | Frame width in pixels |
+| `height` | integer | Frame height in pixels |
+| `durationMs` | integer | Duration in milliseconds |
+| `codec` | string | Video codec, such as `h264` |
+| `fps` | number | Frames per second |
+| `bitrate` | integer | Overall bitrate in bits per second |
+| `audioCodec` | string | Audio codec, present when the file has audio |
+| `audioChannels` | integer | Channel count, present when the file has audio |
+| `audioSampleRate` | integer | Sample rate in Hz, present when the file has audio |
+
+## See also
+
+- [Job lifecycle](/concepts/job-lifecycle): the statuses a job moves through before `output` exists
+- [FFmpeg reference](/job-types/ffmpeg): the response for a file-producing job
+- [POST /jobs](/quickstart): submit a job and read the result
+- [Error codes](/support/errors): the `error` shape a `failed` job returns instead

@@ -62,7 +62,7 @@ waiting → dispatched → running → complete
 
 Full catalogue: [Error codes](/support/errors).
 
-## Output shape
+## Output
 
 A `complete` job carries one `output` shape, the same for every job type:
 
@@ -75,40 +75,7 @@ A `complete` job carries one `output` shape, the same for every job type:
 }
 ```
 
-- `output.data`: the computed answer (a probe result, detections, a transcript). `null` for jobs that only write files.
-- `output.file`: the headline result to play or download, a single file or a stream manifest (`type: "playlist"`). `null` for data-only jobs and pure file sets.
-- `output.files`: every file the job produced, the full list. `[]` for data-only jobs.
-- `output.expiresAt`: Unix ms when the file URLs expire, present when `files` is non-empty.
-
-Each file is `{ url, path, type, size, meta? }`. The `type` is an open enum (`video`, `image`, `audio`, `captions`, `playlist`, `data`, `other`). Tolerate values you don't recognise.
-
-Two invariants hold. `output.file` is always one of `output.files` (or `null`). `output.expiresAt` is present whenever `output.files` is non-empty.
-
-A job that computes an answer rather than writing files returns it in `output.data`. The `data` field is job-type-specific, so each job type documents its own shape. An `extract.metadata` probe sets `data` and leaves `file` null and `files` empty:
-
-```json
-{
-  "data": {
-    "id": "job_abc123",
-    "status": "complete",
-    "output": {
-      "data": {
-        "format": "mp4",
-        "durationMs": 30000,
-        "streams": [
-          { "type": "video", "codec": "h264", "width": 1280, "height": 720, "fps": 30 },
-          { "type": "audio", "codec": "aac", "channels": 2, "sampleRate": 48000 }
-        ]
-      },
-      "file": null,
-      "files": [],
-      "expiresAt": null
-    }
-  }
-}
-```
-
-Read [How it runs](/guides/ffmpeg#output-files) for the file-producing variants (single file, stream, set).
+Read `output.data` for a computed answer, `output.file.url` for the file to play or download, and `output.files` for the full list. The shape, the `File` type, the invariants, and the per-type `data` shapes live in one place: [Job output](/concepts/job-output).
 
 ## Timeouts
 
