@@ -128,74 +128,43 @@ res = requests.post(
 { "data": { "id": "job_abc123", "status": "dispatched" } }
 ```
 
-Poll `GET /jobs/{id}` until `status: "complete"`. On success the job carries an `output` object discriminated on `kind`. On failure it carries an `error` object. The filenames your command writes define the output.
+Poll `GET /jobs/{id}` until `status: "complete"`. On success the job carries an `output` object. On failure it carries an `error` object. The filenames your command writes define the output.
+
+`output` is one shape for every job type. Read `output.data` for a computed answer, `output.file.url` for the file to play or download, and `output.files` for the full list.
 
 <ResponseField name="output" type="object">
-  Present when `status` is `complete`. The `kind` field tells you the shape.
+  Present when `status` is `complete`.
 
-  <Expandable title="output.kind: file">
-    <ResponseField name="kind" type='"file"'>
-      A single-file result. The command wrote one file.
+  <Expandable title="output fields">
+    <ResponseField name="data" type="object | null">
+      The computed answer for jobs that return one, e.g. a probe result. `null` for FFmpeg jobs that only write files.
     </ResponseField>
+    <ResponseField name="file" type="File | null">
+      The headline result: the single output file, or a stream manifest (`type: "playlist"`). `null` for a set of files with no single headline. Always one of `files`.
+    </ResponseField>
+    <ResponseField name="files" type="File[]">
+      Every file the job produced. A single-file job lists one. A stream lists the manifest plus segments. A set lists every member.
+    </ResponseField>
+    <ResponseField name="expiresAt" type="integer | null">
+      Unix ms when the file URLs expire. Present when `files` is non-empty. Re-fetch the job to refresh.
+    </ResponseField>
+  </Expandable>
+
+  <Expandable title="File">
     <ResponseField name="url" type="string">
-      Signed download URL for the file.
+      Signed download or serving URL.
     </ResponseField>
-    <ResponseField name="expiresAt" type="integer">
-      Unix ms when `url` expires. Re-fetch the job to refresh.
+    <ResponseField name="path" type="string">
+      The filename your command wrote, e.g. `output.mp4`.
     </ResponseField>
-    <ResponseField name="poster" type="string | null">
-      Signed URL for a generated poster frame, or `null`.
+    <ResponseField name="type" type="string">
+      Open enum: `video`, `image`, `audio`, `captions`, `playlist`, `data`, or `other`. Tolerate unknown values.
+    </ResponseField>
+    <ResponseField name="size" type="integer">
+      File size in bytes.
     </ResponseField>
     <ResponseField name="meta" type="object">
-      Probed metadata: `format`, `width`, `height`, `durationMs`, `sizeBytes`. Each field is present when known.
-    </ResponseField>
-  </Expandable>
-
-  <Expandable title="output.kind: stream">
-    <ResponseField name="kind" type='"stream"'>
-      An HLS or DASH result. The command wrote a manifest plus segments.
-    </ResponseField>
-    <ResponseField name="url" type="string">
-      Playable manifest URL. Point a player at it directly.
-    </ResponseField>
-    <ResponseField name="manifest" type='"hls" | "dash"'>
-      Which manifest format this stream uses.
-    </ResponseField>
-    <ResponseField name="baseUrl" type="string">
-      Serving base URL for the prefix, trailing slash.
-    </ResponseField>
-    <ResponseField name="expiresAt" type="integer">
-      Unix ms when every URL here expires. Re-fetch the job to refresh.
-    </ResponseField>
-    <ResponseField name="fileCount" type="integer">
-      Total files under the served prefix.
-    </ResponseField>
-    <ResponseField name="files" type="array">
-      Each file as `{ path, url, size }`.
-    </ResponseField>
-    <ResponseField name="manifestUrl" type="string">
-      URL of the machine-readable `_manifest.json` listing every file.
-    </ResponseField>
-  </Expandable>
-
-  <Expandable title="output.kind: set">
-    <ResponseField name="kind" type='"set"'>
-      An unordered collection: image sequences, `-f segment` output, a resolution ladder. No top-level playable URL.
-    </ResponseField>
-    <ResponseField name="baseUrl" type="string">
-      Serving base URL for the prefix, trailing slash.
-    </ResponseField>
-    <ResponseField name="expiresAt" type="integer">
-      Unix ms when every URL here expires. Re-fetch the job to refresh.
-    </ResponseField>
-    <ResponseField name="fileCount" type="integer">
-      Total files under the served prefix.
-    </ResponseField>
-    <ResponseField name="files" type="array">
-      Each file as `{ path, url, size }`.
-    </ResponseField>
-    <ResponseField name="manifestUrl" type="string">
-      URL of the machine-readable `_manifest.json` listing every file.
+      Optional probed metadata: `format`, `width`, `height`, `durationMs`. Each field is present when known.
     </ResponseField>
   </Expandable>
 </ResponseField>

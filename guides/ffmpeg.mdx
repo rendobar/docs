@@ -50,7 +50,7 @@ From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=12
 3. **Substitute**: URLs replaced with local paths in the FFmpeg command
 4. **Execute**: FFmpeg runs in an isolated container with network disabled
 5. **Upload**: output goes to R2
-6. **Return**: signed `output.url` available via `GET /jobs/{id}`
+6. **Return**: signed `output.file.url` available via `GET /jobs/{id}`
 
 ## Input sources
 
@@ -223,7 +223,16 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 
 The filenames your command writes define the output. You get back every file it produced.
 
-A completed job carries an `output` object discriminated on `kind`. A command that writes one file returns `output.kind: "file"` with the signed `url` and probed `meta`:
+Every completed job, FFmpeg or otherwise, returns the same `output` shape:
+
+- `output.data`: the computed answer (a probe result, a transcript). `null` for jobs that only write files.
+- `output.file`: the headline result you play or download, one file or a stream manifest. `null` for data-only jobs and pure file sets.
+- `output.files`: every file the job produced, the complete list. `[]` for data-only jobs.
+- `output.expiresAt`: Unix ms when the URLs expire, present when `files` is non-empty.
+
+Each file is `{ url, path, type, size, meta? }`. The `type` is an open enum: `video`, `image`, `audio`, `captions`, `playlist`, `data`, or `other`. Tolerate values you don't recognise.
+
+A command that writes one file sets `output.file` to that file, and `output.files` to a list of one:
 
 ```json
 {
@@ -231,23 +240,30 @@ A completed job carries an `output` object discriminated on `kind`. A command th
     "id": "job_abc123",
     "status": "complete",
     "output": {
-      "kind": "file",
-      "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
-      "expiresAt": 1735689600000,
-      "poster": null,
-      "meta": {
-        "format": "mp4",
-        "width": 1280,
-        "height": 720,
-        "durationMs": 30000,
-        "sizeBytes": 4194304
-      }
+      "data": null,
+      "file": {
+        "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+        "path": "output.mp4",
+        "type": "video",
+        "size": 4194304,
+        "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+      },
+      "files": [
+        {
+          "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+          "path": "output.mp4",
+          "type": "video",
+          "size": 4194304,
+          "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+        }
+      ],
+      "expiresAt": 1735689600000
     }
   }
 }
 ```
 
-A command that writes many files (HLS or DASH segments, image sequences, `-f segment`) returns `output.kind: "stream"` or `output.kind: "set"` instead. It carries the full set:
+A command that writes a stream (HLS or DASH) sets `output.file` to the manifest, typed `playlist`. Point a player at `output.file.url` directly. `output.files` carries the manifest plus every segment:
 
 ```json
 {
@@ -259,7 +275,31 @@ A command that writes many files (HLS or DASH segments, image sequences, `-f seg
 }
 ```
 
-The completed job carries the playlist plus every segment:
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": {
+        "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8",
+        "path": "master.m3u8",
+        "type": "playlist",
+        "size": 412
+      },
+      "files": [
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "path": "seg_001.ts", "type": "video", "size": 1041203 }
+      ],
+      "expiresAt": 1735689600000
+    }
+  }
+}
+```
+
+A command that writes an unordered set (image sequence, `-f segment`, a resolution ladder) has no single headline result. `output.file` is `null`. Read `output.files` for the list:
 
 ```json
 {
@@ -267,26 +307,22 @@ The completed job carries the playlist plus every segment:
     "id": "job_abc123",
     "status": "complete",
     "output": {
-      "kind": "stream",
-      "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8",
-      "manifest": "hls",
-      "baseUrl": "https://api.rendobar.com/v/job_abc123/<token>/",
-      "expiresAt": 1735689600000,
-      "fileCount": 5,
+      "data": null,
+      "file": null,
       "files": [
-        { "path": "master.m3u8", "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "size": 412 },
-        { "path": "seg_000.ts", "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "size": 1048576 },
-        { "path": "seg_001.ts", "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "size": 1041203 }
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_002.png", "path": "frame_002.png", "type": "image", "size": 203904 }
       ],
-      "manifestUrl": "https://api.rendobar.com/v/job_abc123/<token>/_manifest.json"
+      "expiresAt": 1735689600000
     }
   }
 }
 ```
 
-For a stream, `output.url` is the playable manifest. Point a player at it directly. An unordered collection (image sequence, resolution ladder) has `output.kind: "set"` and no top-level `url`. Read `files` or `manifestUrl` for the full list.
+Consuming the result is the same every time. The answer is `output.data`. The thing you play or download is `output.file.url`. The full list is `output.files`. Two invariants hold: `output.file` is always one of `output.files` (or `null`), and `output.expiresAt` is present whenever `output.files` is non-empty.
 
-Every URL expires at `output.expiresAt`. Re-fetch the job with `GET /jobs/{id}` to mint fresh ones.
+URLs expire at `output.expiresAt`. Re-fetch the job with `GET /jobs/{id}` to mint fresh ones.
 
 ## Error handling
 

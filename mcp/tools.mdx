@@ -124,7 +124,7 @@ Recent jobs.
   1 to 50.
 </ParamField>
 
-**Returns:** `{ jobs: [{ id, type, status, createdAt, cost, output? }], total }`. `output` is included only when `status` is `complete`. Read `output.url` for the file.
+**Returns:** `{ jobs: [{ id, type, status, createdAt, cost, output? }], total }`. `output` is included only when `status` is `complete`. Read `output.file.url` for the file, or `output.data` for a computed answer.
 
 ## `cancel_job`
 

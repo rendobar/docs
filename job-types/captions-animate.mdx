@@ -118,7 +118,7 @@ res = requests.post(
 { "data": { "id": "job_abc123", "status": "dispatched" } }
 ```
 
-Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.url` (signed, 1-hour TTL). The result is `output.kind: "file"`.
+Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (signed, 1-hour TTL). The captioned video is a single file, so `output.files` lists that one file.
 
 ## Pricing
 
