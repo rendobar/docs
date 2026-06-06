@@ -104,8 +104,8 @@ Poll a job by ID.
 
 - `waiting` / `dispatched`: `{ id, type, status }`
 - `running`: adds `progress` (0–1) and `step` (current step name)
-- `complete`: adds `cost` (e.g. `"$0.05"`), `durationMs`, `outputUrl`, `output: { format, resolution, durationMs, fileSizeBytes }`
-- `failed`: adds `error: { code, message }`
+- `complete`: adds `cost` and `output`. For a single file, `output: { kind: "file", url, expiresAt, poster, meta: { format, width, height, durationMs, sizeBytes } }`. HLS/DASH returns `kind: "stream"`, image sequences return `kind: "set"`
+- `failed`: adds `error: { code, message, detail, retryable }`
 - `cancelled`: terminal, no extra fields
 
 ## `list_jobs`
@@ -124,7 +124,7 @@ Recent jobs.
   1 to 50.
 </ParamField>
 
-**Returns:** `{ jobs: [{ id, type, status, createdAt, cost, outputUrl? }], total }`. `outputUrl` is included only when `status` is `complete`.
+**Returns:** `{ jobs: [{ id, type, status, createdAt, cost, output? }], total }`. `output` is included only when `status` is `complete`. Read `output.url` for the file.
 
 ## `cancel_job`
 

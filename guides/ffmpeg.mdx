@@ -50,7 +50,7 @@ From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=12
 3. **Substitute**: URLs replaced with local paths in the FFmpeg command
 4. **Execute**: FFmpeg runs in an isolated container with network disabled
 5. **Upload**: output goes to R2
-6. **Return**: signed `outputUrl` available via `GET /jobs/{id}`
+6. **Return**: signed `output.url` available via `GET /jobs/{id}`
 
 ## Input sources
 
@@ -223,13 +223,31 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 
 The filenames your command writes define the output. You get back every file it produced.
 
-A command that writes one file returns a single download URL. Fetch the job and read `outputUrl`:
+A completed job carries an `output` object discriminated on `kind`. A command that writes one file returns `output.kind: "file"` with the signed `url` and probed `meta`:
 
 ```json
-{ "data": { "id": "job_abc123", "status": "complete", "outputUrl": "https://api.rendobar.com/dl/job_abc123?token=<token>" } }
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "kind": "file",
+      "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+      "expiresAt": 1735689600000,
+      "poster": null,
+      "meta": {
+        "format": "mp4",
+        "width": 1280,
+        "height": 720,
+        "durationMs": 30000,
+        "sizeBytes": 4194304
+      }
+    }
+  }
+}
 ```
 
-A command that writes many files (HLS or DASH segments, image sequences, `-f segment`) returns an `output` object instead. It carries the full set:
+A command that writes many files (HLS or DASH segments, image sequences, `-f segment`) returns `output.kind: "stream"` or `output.kind: "set"` instead. It carries the full set:
 
 ```json
 {
@@ -249,9 +267,9 @@ The completed job carries the playlist plus every segment:
     "id": "job_abc123",
     "status": "complete",
     "output": {
-      "type": "stream",
+      "kind": "stream",
       "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8",
-      "playlist": "master.m3u8",
+      "manifest": "hls",
       "baseUrl": "https://api.rendobar.com/v/job_abc123/<token>/",
       "expiresAt": 1735689600000,
       "fileCount": 5,
@@ -266,32 +284,30 @@ The completed job carries the playlist plus every segment:
 }
 ```
 
-For a stream, `output.url` is the playable playlist. Point a player at it directly. An unordered collection (image sequence, resolution ladder) has `output.type: "set"` and no top-level `url`. Read `files` or `manifestUrl` for the full list.
+For a stream, `output.url` is the playable manifest. Point a player at it directly. An unordered collection (image sequence, resolution ladder) has `output.kind: "set"` and no top-level `url`. Read `files` or `manifestUrl` for the full list.
 
 Every URL expires at `output.expiresAt`. Re-fetch the job with `GET /jobs/{id}` to mint fresh ones.
 
 ## Error handling
 
-FFmpeg exits non-zero → job fails with `PROVIDER_ERROR`:
-
-```json
-{ "error": { "code": "PROVIDER_ERROR", "message": "FFmpeg process exited with code 1" } }
-```
-
-A failed job also carries `errorDetail`: the last ~2 KB of the real FFmpeg stderr. Fetch the job to read it and see exactly why FFmpeg stopped.
+A failed job carries an `error` object with `code`, `message`, `detail`, and `retryable`. When FFmpeg exits non-zero, `error.detail` holds the last ~2 KB of the real stderr. Fetch the job to see exactly why FFmpeg stopped.
 
 ```json
 {
   "data": {
     "id": "job_abc123",
     "status": "failed",
-    "errorCode": "PROVIDER_ERROR",
-    "errorDetail": "[in#0 @ 0x55…] Error opening input: Invalid data found when processing input\nError opening input file clip.mp4.\n"
+    "error": {
+      "code": "PROVIDER_ERROR",
+      "message": "FFmpeg process exited with code 1",
+      "detail": "[in#0 @ 0x55…] Error opening input: Invalid data found when processing input\nError opening input file clip.mp4.\n",
+      "retryable": false
+    }
   }
 }
 ```
 
-Disallowed flag → rejected before dispatch with `VALIDATION_ERROR`:
+A disallowed flag is rejected before dispatch. The request fails with the error envelope, so no job is created:
 
 ```json
 { "error": { "code": "VALIDATION_ERROR", "message": "Flag '-protocol_whitelist' is not allowed in FFmpeg commands" } }

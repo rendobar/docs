@@ -108,15 +108,21 @@ For push instead of poll, configure a [webhook](/guides/webhooks).
 
 ## 4. Download the result
 
-When `status` is `complete`, the response contains `outputUrl`, a signed R2 URL valid for one hour:
+When `status` is `complete`, the response contains an `output` object. For a single file it's `output.kind: "file"` with a signed `url` valid for one hour:
 
 ```json
 {
   "data": {
     "id": "job_abc123",
     "status": "complete",
-    "outputUrl": "https://r2.rendobar.com/...",
-    "cost": { "nanodollars": 50000000, "formatted": "$0.05" }
+    "output": {
+      "kind": "file",
+      "url": "https://r2.rendobar.com/...",
+      "expiresAt": 1735689600000,
+      "poster": null,
+      "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000, "sizeBytes": 4194304 }
+    },
+    "cost": { "amount": 50000000, "currency": "USD", "formatted": "$0.05" }
   }
 }
 ```

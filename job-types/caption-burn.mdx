@@ -159,7 +159,7 @@ Omit `subtitles` to auto-transcribe. The spoken language is detected by default 
 { "data": { "id": "job_abc123", "status": "dispatched" } }
 ```
 
-Poll `GET /jobs/{id}` until `status: "complete"`, then read `outputUrl` (signed, 1-hour TTL).
+Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.url` (signed, 1-hour TTL). The result is `output.kind: "file"`.
 
 ## See also
 
