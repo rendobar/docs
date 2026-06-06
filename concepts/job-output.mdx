@@ -55,6 +55,18 @@ Every job returns the same `output` shape, no matter the type. A `complete` job 
   Unix ms when the file URLs expire. Present when `files` is non-empty. Re-fetch the job with `GET /jobs/{id}` to mint fresh URLs.
 </ResponseField>
 
+## Choosing file vs files
+
+`files` is the complete list of everything a job wrote. Most jobs return a single output, but some return many: an image sequence, the segments of an HLS stream, or a resolution ladder. When a job can produce more than one file, read `files`.
+
+`file` is a shortcut for the common case. When you expect a single output, read `output.file.url` and you have the result, with no need to index into the list. For a single-output job, `file` is that one file, so it is the same entry as `files[0]`. That overlap is on purpose. It keeps the everyday case a one-liner while `files` stays the honest, complete manifest of what came out.
+
+A job with no single headline sets `file` to `null`. So a `null` file is also the signal that the result is a pure set of files or a data-only answer, not one file you play or download.
+
+<Tip>
+Expecting one output? Read `output.file.url` directly. Handling a job that can write many files (frames, HLS segments, a ladder)? Iterate `output.files`. Both always agree: `file`, when set, is one of `files`.
+</Tip>
+
 ## The File type
 
 Each entry in `file` and `files` is the same shape:
