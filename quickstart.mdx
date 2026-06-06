@@ -108,20 +108,39 @@ For push instead of poll, configure a [webhook](/guides/webhooks).
 
 ## 4. Download the result
 
-When `status` is `complete`, the response contains `outputUrl`, a signed R2 URL valid for one hour:
+When `status` is `complete`, the response contains an `output` object. The file to download is `output.file.url`, signed and valid for one hour:
 
 ```json
 {
   "data": {
     "id": "job_abc123",
     "status": "complete",
-    "outputUrl": "https://r2.rendobar.com/...",
-    "cost": { "nanodollars": 50000000, "formatted": "$0.05" }
+    "output": {
+      "data": null,
+      "file": {
+        "url": "https://r2.rendobar.com/...",
+        "path": "output.mp4",
+        "type": "video",
+        "size": 4194304,
+        "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+      },
+      "files": [
+        {
+          "url": "https://r2.rendobar.com/...",
+          "path": "output.mp4",
+          "type": "video",
+          "size": 4194304,
+          "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+        }
+      ],
+      "expiresAt": 1735689600000
+    },
+    "cost": { "amount": 50000000, "currency": "USD", "formatted": "$0.05" }
   }
 }
 ```
 
-Re-fetch the job to refresh the URL after it expires.
+Every job type returns this same `output` shape: `data` for a computed answer, `file` for the headline result, `files` for the full list. Re-fetch the job to refresh the URLs after they expire.
 
 ## What's next
 

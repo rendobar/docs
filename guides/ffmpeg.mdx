@@ -50,14 +50,72 @@ From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=12
 3. **Substitute**: URLs replaced with local paths in the FFmpeg command
 4. **Execute**: FFmpeg runs in an isolated container with network disabled
 5. **Upload**: output goes to R2
-6. **Return**: signed `outputUrl` available via `GET /jobs/{id}`
+6. **Return**: signed `output.file.url` available via `GET /jobs/{id}`
+
+## Input sources
+
+Most commands put the source URL straight in the command and skip `inputs` entirely. It's optional and defaults to an empty map:
+
+```json
+{
+  "type": "ffmpeg",
+  "params": {
+    "command": "ffmpeg -i https://example.com/clip.mp4 -vf scale=1280:720 output.mp4"
+  }
+}
+```
+
+Reach for the `inputs` map only when a file can't go inline: a file a filter reads by name (see below), inline text you don't want to host, an already-uploaded asset, or when you need a stable filename. Each key is a filename staged under that exact name, and the command references it by bare name.
+
+A value can be one of four shapes:
+
+| Value | Use it for |
+|---|---|
+| `"https://..."` | A remote file. Shorthand for `{ "url": "..." }` |
+| `{ "url": "https://..." }` | A remote file, explicit form |
+| `{ "content": "...text..." }` | Inline text you don't want to host (≤64 KB) |
+| `{ "ref": "asset_abc123" }` | A file you already uploaded, by its asset ID (returned by the uploads endpoint) |
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {
+    "clip.mp4": "https://example.com/clip.mp4",
+    "logo.png": { "ref": "asset_brandlogo" }
+  },
+  "params": {
+    "command": "ffmpeg -i clip.mp4 -i logo.png -filter_complex overlay=10:10 output.mp4"
+  }
+}
+```
+
+### Auxiliary files read by a filter
+
+Some files aren't passed as `-i` arguments. Filters like `subtitles=`, `lut3d=`, and `drawtext fontfile=`, and the lists read by the `concat` demuxer, read a file by name from the working directory. Provide those through `inputs` so they're staged before the command runs.
+
+This burns a subtitle track that lives only in the request, with no file to host:
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {
+    "video.mp4": "https://example.com/video.mp4",
+    "subs.srt": {
+      "content": "1\n00:00:01,000 --> 00:00:04,000\nRendered on Rendobar.\n"
+    }
+  },
+  "params": {
+    "command": "ffmpeg -i video.mp4 -vf subtitles=subs.srt -c:v libx264 -c:a copy output.mp4"
+  }
+}
+```
 
 ## Parameters
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `type` | string | yes | - | `"ffmpeg"` |
-| `inputs` | object | yes | - | `{}` when URLs are inline in the command. Otherwise a name→URL map matching filenames in the command |
+| `inputs` | object | yes | - | Working directory for the command. Maps a filename to a source (URL, `{url}`, `{content}`, or `{ref}`). `{}` when every input is an inline `-i` URL. See [Input sources](#input-sources) |
 | `params.command` | string | yes | - | Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions |
 | `params.outputFormat` | string | no | inferred | Override container format. Inferred from trailing filename if omitted |
 | `params.timeout` | int | no | `120` | Server-side max execution in seconds. Range 1–900 |
@@ -161,15 +219,131 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 }
 ```
 
-## Error handling
+## Output files
 
-FFmpeg exits non-zero → job fails with `PROVIDER_ERROR`:
+The filenames your command writes define the output. You get back every file it produced.
+
+Every completed job, FFmpeg or otherwise, returns the same `output` shape. [Job output](/concepts/job-output) documents it in full. The short version:
+
+- `output.data`: the computed answer (a probe result, a transcript). `null` for FFmpeg jobs, which only write files.
+- `output.file`: the headline result you play or download, one file or a stream manifest. `null` for pure file sets.
+- `output.files`: every file the job produced, the complete list.
+- `output.expiresAt`: Unix ms when the URLs expire, present when `files` is non-empty.
+
+Each file is `{ url, path, type, size, meta? }`. The `type` is an open enum: `video`, `image`, `audio`, `captions`, `playlist`, `data`, or `other`. Tolerate values you don't recognise.
+
+A command that writes one file sets `output.file` to that file, and `output.files` to a list of one:
 
 ```json
-{ "error": { "code": "PROVIDER_ERROR", "message": "FFmpeg process exited with code 1" } }
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": {
+        "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+        "path": "output.mp4",
+        "type": "video",
+        "size": 4194304,
+        "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+      },
+      "files": [
+        {
+          "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+          "path": "output.mp4",
+          "type": "video",
+          "size": 4194304,
+          "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+        }
+      ],
+      "expiresAt": 1735689600000
+    }
+  }
+}
 ```
 
-Disallowed flag → rejected before dispatch with `VALIDATION_ERROR`:
+A command that writes a stream (HLS or DASH) sets `output.file` to the manifest, typed `playlist`. Point a player at `output.file.url` directly. `output.files` carries the manifest plus every segment:
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": { "video.mp4": "https://example.com/video.mp4" },
+  "params": {
+    "command": "ffmpeg -i video.mp4 -c:v libx264 -c:a aac -f hls -hls_time 6 -hls_segment_filename seg_%03d.ts master.m3u8"
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": {
+        "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8",
+        "path": "master.m3u8",
+        "type": "playlist",
+        "size": 412
+      },
+      "files": [
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "path": "seg_001.ts", "type": "video", "size": 1041203 }
+      ],
+      "expiresAt": 1735689600000
+    }
+  }
+}
+```
+
+A command that writes an unordered set (image sequence, `-f segment`, a resolution ladder) has no single headline result. `output.file` is `null`. Read `output.files` for the list:
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": null,
+      "files": [
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_002.png", "path": "frame_002.png", "type": "image", "size": 203904 }
+      ],
+      "expiresAt": 1735689600000
+    }
+  }
+}
+```
+
+Consuming the result is the same every time. The answer is `output.data`. The thing you play or download is `output.file.url`. The full list is `output.files`. Two invariants hold: `output.file` is always one of `output.files` (or `null`), and `output.expiresAt` is present whenever `output.files` is non-empty.
+
+URLs expire at `output.expiresAt`. Re-fetch the job with `GET /jobs/{id}` to mint fresh ones.
+
+## Error handling
+
+A failed job carries an `error` object with `code`, `message`, `detail`, and `retryable`. When FFmpeg exits non-zero, `error.detail` holds the last ~2 KB of the real stderr. Fetch the job to see exactly why FFmpeg stopped.
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "failed",
+    "error": {
+      "code": "PROVIDER_ERROR",
+      "message": "FFmpeg process exited with code 1",
+      "detail": "[in#0 @ 0x55…] Error opening input: Invalid data found when processing input\nError opening input file clip.mp4.\n",
+      "retryable": false
+    }
+  }
+}
+```
+
+A disallowed flag is rejected before dispatch. The request fails with the error envelope, so no job is created:
 
 ```json
 { "error": { "code": "VALIDATION_ERROR", "message": "Flag '-protocol_whitelist' is not allowed in FFmpeg commands" } }

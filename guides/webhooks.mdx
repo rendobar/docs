@@ -47,8 +47,8 @@ Manage endpoints (create, update, delete, test) via the API or the dashboard.
 
 | Event | When |
 |---|---|
-| `job.completed` | Job finished successfully. Includes output URL + metadata |
-| `job.failed` | Job failed. Includes `error.code` and `error.message` |
+| `job.completed` | Job finished successfully. Carries the unified `output` and `cost` |
+| `job.failed` | Job failed. Carries the unified `error` (`code`, `message`, `detail`, `retryable`) |
 | `job.running` | Job started executing on a provider |
 | `batch.completed` | Every job in a batch finished (success or fail) |
 
@@ -62,20 +62,33 @@ X-Rendobar-Delivery: del_x1y2z3
 X-Rendobar-Attempt: 1
 ```
 
+The webhook carries the same contract as [GET /jobs/{id}](/concepts/job-output). A `job.completed` payload includes the unified `output` object. The `data` field has the structured answer for analysis jobs, `file.url` is a signed, time-limited URL, and `files` lists every produced file. Read [Job output](/concepts/job-output) for the full shape, the File type, and the four output patterns.
+
 ```json
 {
   "event": "job.completed",
   "jobId": "job_a1b2c3d4",
-  "result": {
-    "url": "https://r2.rendobar.com/...",
-    "metadata": {
-      "durationMs": 127500,
-      "width": 1920,
-      "height": 1080,
-      "fileSize": 15234567
-    }
+  "output": {
+    "data": null,
+    "file": {
+      "url": "https://api.rendobar.com/dl/job_a1b2c3d4?token=...",
+      "path": "output.mp4",
+      "type": "video",
+      "size": 15234567,
+      "meta": { "format": "mp4", "width": 1920, "height": 1080, "durationMs": 127500 }
+    },
+    "files": [
+      {
+        "url": "https://api.rendobar.com/dl/job_a1b2c3d4?token=...",
+        "path": "output.mp4",
+        "type": "video",
+        "size": 15234567,
+        "meta": { "format": "mp4", "width": 1920, "height": 1080, "durationMs": 127500 }
+      }
+    ],
+    "expiresAt": 1707440415000
   },
-  "cost": { "nanodollars": 50000000, "formatted": "$0.05" },
+  "cost": { "amount": 50000000, "currency": "USD", "formatted": "$0.05" },
   "timing": {
     "createdAt": 1707436800000,
     "startedAt": 1707436805000,
@@ -84,13 +97,20 @@ X-Rendobar-Attempt: 1
 }
 ```
 
-For `job.failed`, replace `result` with `error`:
+The `output` shape is identical for every job type. A data-only job (such as `extract.metadata`) carries its answer in `output.data` with `file` null and `files` empty. A stream job carries the manifest as `output.file` and every segment in `output.files`. See [Job output](/concepts/job-output) for each pattern.
+
+For `job.failed`, the payload carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job-output) error shape: `code`, `message`, `detail` (the provider stderr tail, or null), and `retryable`.
 
 ```json
 {
   "event": "job.failed",
   "jobId": "job_a1b2c3d4",
-  "error": { "code": "PROVIDER_ERROR", "message": "FFmpeg process exited with code 1" },
+  "error": {
+    "code": "PROVIDER_ERROR",
+    "message": "FFmpeg process exited with code 1",
+    "detail": "Conversion failed: Invalid data found when processing input",
+    "retryable": false
+  },
   "timing": { "createdAt": 1707436800000, "startedAt": 1707436805000, "completedAt": 1707436810000 }
 }
 ```
@@ -173,6 +193,7 @@ curl https://api.rendobar.com/webhook-endpoints/YOUR_ENDPOINT_ID/deliveries \
 
 ## See also
 
+- [Job output](/concepts/job-output): the canonical `output` and `error` shape this payload carries
 - [Job lifecycle](/concepts/job-lifecycle)
 - [FFmpeg](/guides/ffmpeg)
 - [Error codes](/support/errors)

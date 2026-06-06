@@ -47,8 +47,8 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 
 ## Output URLs
 
-- **Signed download URL** (`outputUrl`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
-- **Output retention**: 7 days (Free) or 30 days (Pro). After that, R2 deletes the file; the job record stays but `outputUrl` returns 404.
+- **Signed download URL** (`output.file.url`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
+- **Output retention**: 7 days (Free) or 30 days (Pro). After that, R2 deletes the file; the job record stays but the file URLs return 404.
 - **Storage quota** caps total bytes across all your outputs. Delete old outputs or upgrade if you hit it.
 - **No separate per-output size limit**. Bounded by input cap and storage quota.
 

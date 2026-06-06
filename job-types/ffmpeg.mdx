@@ -29,7 +29,7 @@ keywords: ["ffmpeg api reference", "ffmpeg cloud", "ffmpeg sandboxed", "ffmpeg r
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Execute a custom FFmpeg command with whitelisted flags. Input files go in `-i` positions and are downloaded into a sandbox before execution.
+Execute a custom FFmpeg command with whitelisted flags. The `inputs` map stages source files into the working directory by name. The command references them by bare name, and inline `-i` URLs also work.
 
 <Info>
 **Timeout:** 900 s max (plan-capped) · **Accepts:** video, audio, image
@@ -89,8 +89,29 @@ res = requests.post(
 
 ## Parameters
 
+<ParamField body="inputs" type="object" default="{}">
+  Working directory for the command. Optional, defaults to an empty map. Each key is a path-safe filename staged under that exact name. Each value is the source for that file. Omit it when every input is an inline `-i` URL. A value is one of:
+
+  <Expandable title="Input source shapes">
+    <ResponseField name="URL string" type="string">
+      Remote file. Shorthand for `{ "url": "..." }`.
+    </ResponseField>
+    <ResponseField name="url" type="object">
+      `{ "url": "https://..." }`. Remote file, explicit form.
+    </ResponseField>
+    <ResponseField name="content" type="object">
+      `{ "content": "...text..." }`. Inline text staged verbatim, up to 64 KB. For subtitles, `concat` lists, and LUTs with nothing to host.
+    </ResponseField>
+    <ResponseField name="ref" type="object">
+      `{ "ref": "asset_abc123" }`. A file you already uploaded, by its asset ID (returned by the uploads endpoint).
+    </ResponseField>
+  </Expandable>
+
+  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See the [FFmpeg guide](/guides/ffmpeg#input-sources).
+</ParamField>
+
 <ParamField body="command" type="string" required>
-  Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions.
+  Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions, or reference staged `inputs` files by name.
 </ParamField>
 
 <ParamField body="outputFormat" type="enum" default="inferred">
@@ -107,10 +128,34 @@ res = requests.post(
 { "data": { "id": "job_abc123", "status": "dispatched" } }
 ```
 
-Poll `GET /jobs/{id}` until `status: "complete"`, then read `outputUrl` (signed, 1-hour TTL).
+Poll `GET /jobs/{id}` until `status: "complete"`. On success the job carries an `output` object. On failure it carries an `error` object. The filenames your command writes define the output.
+
+`output` is one shape for every job type, documented in full on [Job output](/concepts/job-output). FFmpeg jobs set `output.data` to `null` and return their files in `output.file` and `output.files`. Read `output.file.url` for the file to play or download, and `output.files` for the full list.
+
+<ResponseField name="error" type="object">
+  Present when `status` is `failed`.
+
+  <Expandable title="error fields">
+    <ResponseField name="code" type="string">
+      Stable error code, e.g. `PROVIDER_ERROR`.
+    </ResponseField>
+    <ResponseField name="message" type="string">
+      Human-readable summary of what went wrong.
+    </ResponseField>
+    <ResponseField name="detail" type="string | null">
+      Extra context. For FFmpeg failures, the last ~2 KB of stderr. `null` when there is nothing to add.
+    </ResponseField>
+    <ResponseField name="retryable" type="boolean">
+      Whether re-running the same job could succeed.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+See [Job output](/concepts/job-output) for the full shape and the single-file, stream, and set patterns, and [output files](/guides/ffmpeg#output-files) in the guide for worked request and response examples.
 
 ## See also
 
+- [Job output](/concepts/job-output): the output shape every job returns
 - [FFmpeg guide](/guides/ffmpeg): security model, allowed flags, examples
 - [CLI](/cli/overview): same job, terminal interface
 - [Job lifecycle](/concepts/job-lifecycle)

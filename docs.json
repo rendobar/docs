@@ -53,7 +53,8 @@
           {
             "group": "Concepts",
             "pages": [
-              "concepts/job-lifecycle"
+              "concepts/job-lifecycle",
+              "concepts/job-output"
             ]
           },
           {

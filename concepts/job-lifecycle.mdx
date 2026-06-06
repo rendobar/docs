@@ -62,6 +62,21 @@ waiting → dispatched → running → complete
 
 Full catalogue: [Error codes](/support/errors).
 
+## Output
+
+A `complete` job carries one `output` shape, the same for every job type:
+
+```json
+{
+  "data": <job-type-specific JSON> | null,
+  "file": <File> | null,
+  "files": <File>[],
+  "expiresAt": <unix ms> | null
+}
+```
+
+Read `output.data` for a computed answer, `output.file.url` for the file to play or download, and `output.files` for the full list. The shape, the `File` type, the invariants, and the per-type `data` shapes live in one place: [Job output](/concepts/job-output).
+
 ## Timeouts
 
 Each job type has a max execution time. Exceeding it auto-fails with `PROVIDER_TIMEOUT`; credits are refunded. A background job runs every 2 minutes to detect stuck jobs that were dispatched or running but never reported back.
