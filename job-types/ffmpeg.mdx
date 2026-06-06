@@ -29,7 +29,7 @@ keywords: ["ffmpeg api reference", "ffmpeg cloud", "ffmpeg sandboxed", "ffmpeg r
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Execute a custom FFmpeg command with whitelisted flags. Input files go in `-i` positions and are downloaded into a sandbox before execution.
+Execute a custom FFmpeg command with whitelisted flags. The `inputs` map stages source files into the working directory by name. The command references them by bare name, and inline `-i` URLs also work.
 
 <Info>
 **Timeout:** 900 s max (plan-capped) · **Accepts:** video, audio, image
@@ -89,8 +89,29 @@ res = requests.post(
 
 ## Parameters
 
+<ParamField body="inputs" type="object" required>
+  Working directory for the command. Each key is a path-safe filename staged under that exact name. Each value is the source for that file. `{}` when every input is an inline `-i` URL. A value is one of:
+
+  <Expandable title="Input source shapes">
+    <ResponseField name="URL string" type="string">
+      Remote file. Shorthand for `{ "url": "..." }`.
+    </ResponseField>
+    <ResponseField name="url" type="object">
+      `{ "url": "https://..." }`. Remote file, explicit form.
+    </ResponseField>
+    <ResponseField name="content" type="object">
+      `{ "content": "...text..." }`. Inline text staged verbatim, up to 64 KB. For subtitles, `concat` lists, and LUTs with nothing to host.
+    </ResponseField>
+    <ResponseField name="ref" type="object">
+      `{ "ref": "uploads/..." }`. A file you already uploaded.
+    </ResponseField>
+  </Expandable>
+
+  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See the [FFmpeg guide](/guides/ffmpeg#input-sources).
+</ParamField>
+
 <ParamField body="command" type="string" required>
-  Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions.
+  Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions, or reference staged `inputs` files by name.
 </ParamField>
 
 <ParamField body="outputFormat" type="enum" default="inferred">
@@ -107,7 +128,48 @@ res = requests.post(
 { "data": { "id": "job_abc123", "status": "dispatched" } }
 ```
 
-Poll `GET /jobs/{id}` until `status: "complete"`, then read `outputUrl` (signed, 1-hour TTL).
+Poll `GET /jobs/{id}` until `status: "complete"`. The filenames your command writes define the output.
+
+<ResponseField name="outputUrl" type="string">
+  Signed download URL for a single-file output. Present when the command wrote one file.
+</ResponseField>
+
+<ResponseField name="output" type="object">
+  Present when the command wrote multiple files (HLS/DASH, image sequences, `-f segment`).
+
+  <Expandable title="output fields">
+    <ResponseField name="type" type="enum">
+      `stream` for an HLS/DASH playlist. `set` for an unordered collection.
+    </ResponseField>
+    <ResponseField name="url" type="string">
+      Playable playlist for a `stream`. Absent for a `set`.
+    </ResponseField>
+    <ResponseField name="playlist" type="string">
+      Entry playlist filename, e.g. `master.m3u8`.
+    </ResponseField>
+    <ResponseField name="baseUrl" type="string">
+      Serving base URL for the prefix, trailing slash.
+    </ResponseField>
+    <ResponseField name="expiresAt" type="integer">
+      Unix ms when every URL here expires. Re-fetch the job to refresh.
+    </ResponseField>
+    <ResponseField name="fileCount" type="integer">
+      Total files under the served prefix.
+    </ResponseField>
+    <ResponseField name="files" type="array">
+      Each file as `{ path, url, size }`.
+    </ResponseField>
+    <ResponseField name="manifestUrl" type="string">
+      URL of the machine-readable `_manifest.json` listing every file.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="errorDetail" type="string">
+  On a failed job, the last ~2 KB of the real FFmpeg stderr for debugging.
+</ResponseField>
+
+See [output files](/guides/ffmpeg#output-files) in the guide for full request and response examples.
 
 ## See also
 

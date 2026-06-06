@@ -52,12 +52,61 @@ From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=12
 5. **Upload**: output goes to R2
 6. **Return**: signed `outputUrl` available via `GET /jobs/{id}`
 
+## Input sources
+
+The `inputs` map is the working directory for your command. Each key is a filename that gets staged under that exact name. Each value is the source for that file. Your command references the file by its bare name.
+
+A value can be one of four shapes:
+
+| Value | Use it for |
+|---|---|
+| `"https://..."` | A remote file. Shorthand for `{ "url": "..." }` |
+| `{ "url": "https://..." }` | A remote file, explicit form |
+| `{ "content": "...text..." }` | Inline text you don't want to host (≤64 KB) |
+| `{ "ref": "uploads/..." }` | A file you already uploaded |
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {
+    "clip.mp4": "https://example.com/clip.mp4",
+    "logo.png": { "ref": "uploads/brand-logo.png" }
+  },
+  "params": {
+    "command": "ffmpeg -i clip.mp4 -i logo.png -filter_complex overlay=10:10 output.mp4"
+  }
+}
+```
+
+Inline `-i https://...` URLs in the command still work, so `inputs` can stay `{}` for simple jobs. Use `inputs` when a file needs a stable name or has no public URL.
+
+### Auxiliary files read by a filter
+
+Some files aren't passed as `-i` arguments. Filters like `subtitles=`, `lut3d=`, and `drawtext fontfile=`, and the lists read by the `concat` demuxer, read a file by name from the working directory. Provide those through `inputs` so they're staged before the command runs.
+
+This burns a subtitle track that lives only in the request, with no file to host:
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {
+    "video.mp4": "https://example.com/video.mp4",
+    "subs.srt": {
+      "content": "1\n00:00:01,000 --> 00:00:04,000\nRendered on Rendobar.\n"
+    }
+  },
+  "params": {
+    "command": "ffmpeg -i video.mp4 -vf subtitles=subs.srt -c:v libx264 -c:a copy output.mp4"
+  }
+}
+```
+
 ## Parameters
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `type` | string | yes | - | `"ffmpeg"` |
-| `inputs` | object | yes | - | `{}` when URLs are inline in the command. Otherwise a name→URL map matching filenames in the command |
+| `inputs` | object | yes | - | Working directory for the command. Maps a filename to a source (URL, `{url}`, `{content}`, or `{ref}`). `{}` when every input is an inline `-i` URL. See [Input sources](#input-sources) |
 | `params.command` | string | yes | - | Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions |
 | `params.outputFormat` | string | no | inferred | Override container format. Inferred from trailing filename if omitted |
 | `params.timeout` | int | no | `120` | Server-side max execution in seconds. Range 1–900 |
@@ -161,12 +210,76 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 }
 ```
 
+## Output files
+
+The filenames your command writes define the output. You get back every file it produced.
+
+A command that writes one file returns a single download URL. Fetch the job and read `outputUrl`:
+
+```json
+{ "data": { "id": "job_abc123", "status": "complete", "outputUrl": "https://serve.rendobar.com/..." } }
+```
+
+A command that writes many files (HLS or DASH segments, image sequences, `-f segment`) returns an `output` object instead. It carries the full set:
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": { "video.mp4": "https://example.com/video.mp4" },
+  "params": {
+    "command": "ffmpeg -i video.mp4 -c:v libx264 -c:a aac -f hls -hls_time 6 -hls_segment_filename seg_%03d.ts master.m3u8"
+  }
+}
+```
+
+The completed job carries the playlist plus every segment:
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "type": "stream",
+      "url": "https://serve.rendobar.com/t/abc/master.m3u8",
+      "playlist": "master.m3u8",
+      "baseUrl": "https://serve.rendobar.com/t/abc/",
+      "expiresAt": 1735689600000,
+      "fileCount": 5,
+      "files": [
+        { "path": "master.m3u8", "url": "https://serve.rendobar.com/t/abc/master.m3u8", "size": 412 },
+        { "path": "seg_000.ts", "url": "https://serve.rendobar.com/t/abc/seg_000.ts", "size": 1048576 },
+        { "path": "seg_001.ts", "url": "https://serve.rendobar.com/t/abc/seg_001.ts", "size": 1041203 }
+      ],
+      "manifestUrl": "https://serve.rendobar.com/t/abc/_manifest.json"
+    }
+  }
+}
+```
+
+For a stream, `output.url` is the playable playlist. Point a player at it directly. An unordered collection (image sequence, resolution ladder) has `output.type: "set"` and no top-level `url`. Read `files` or `manifestUrl` for the full list.
+
+Every URL expires at `output.expiresAt`. Re-fetch the job with `GET /jobs/{id}` to mint fresh ones.
+
 ## Error handling
 
 FFmpeg exits non-zero → job fails with `PROVIDER_ERROR`:
 
 ```json
 { "error": { "code": "PROVIDER_ERROR", "message": "FFmpeg process exited with code 1" } }
+```
+
+A failed job also carries `errorDetail`: the last ~2 KB of the real FFmpeg stderr. Fetch the job to read it and see exactly why FFmpeg stopped.
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "failed",
+    "errorCode": "PROVIDER_ERROR",
+    "errorDetail": "[in#0 @ 0x55…] Error opening input: Invalid data found when processing input\nError opening input file clip.mp4.\n"
+  }
+}
 ```
 
 Disallowed flag → rejected before dispatch with `VALIDATION_ERROR`:
