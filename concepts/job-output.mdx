@@ -128,7 +128,7 @@ Four patterns cover every job. The shape is identical. Which fields are populate
 
 ### Single file
 
-One output file. `file` is that file, `files` lists one, `data` is null. The most common pattern for transform jobs (FFmpeg, transcode, watermark, render).
+One output file. `file` is that file, `files` lists one, `data` is null. The most common pattern for transform jobs (FFmpeg, transcode, watermark).
 
 ```json
 {
@@ -216,7 +216,7 @@ A job that computes an answer instead of writing files. `data` carries the resul
 
 The rule of thumb:
 
-- **Transform jobs** (`ffmpeg`, `transcode`, `watermark.*`, `caption.burn`, `render.*`) return files with `data: null`.
+- **Transform jobs** (`ffmpeg`, `transcode`, `watermark.*`, `caption.burn`) return files with `data: null`.
 - **Analysis jobs** (moderation, detection, captions, transcript, OCR, metadata) return their result in `data` and usually write no file.
 
 <Info>

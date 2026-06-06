@@ -104,7 +104,7 @@ Poll a job by ID.
 
 - `waiting` / `dispatched`: `{ id, type, status }`
 - `running`: adds `progress` (0–1) and `step` (current step name)
-- `complete`: adds `cost` and `output`. For a single file, `output: { kind: "file", url, expiresAt, poster, meta: { format, width, height, durationMs, sizeBytes } }`. HLS/DASH returns `kind: "stream"`, image sequences return `kind: "set"`
+- `complete`: adds `cost` and `output`. The `output` shape is the same for every job type: `{ data, file, files, expiresAt }`. Read `output.file.url` for the file to play or download, `output.data` for a computed answer. See [Job output](/concepts/job-output)
 - `failed`: adds `error: { code, message, detail, retryable }`
 - `cancelled`: terminal, no extra fields
 
