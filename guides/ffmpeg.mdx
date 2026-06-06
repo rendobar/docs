@@ -54,7 +54,19 @@ From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=12
 
 ## Input sources
 
-The `inputs` map is the working directory for your command. Each key is a filename that gets staged under that exact name. Each value is the source for that file. Your command references the file by its bare name.
+Most commands put the source URL straight in the command and leave `inputs` empty:
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {},
+  "params": {
+    "command": "ffmpeg -i https://example.com/clip.mp4 -vf scale=1280:720 output.mp4"
+  }
+}
+```
+
+Reach for the `inputs` map only when a file can't go inline: a file a filter reads by name (see below), inline text you don't want to host, an already-uploaded asset, or when you need a stable filename. Each key is a filename staged under that exact name, and the command references it by bare name.
 
 A value can be one of four shapes:
 
@@ -77,8 +89,6 @@ A value can be one of four shapes:
   }
 }
 ```
-
-Inline `-i https://...` URLs in the command still work, so `inputs` can stay `{}` for simple jobs. Use `inputs` when a file needs a stable name or has no public URL.
 
 ### Auxiliary files read by a filter
 
