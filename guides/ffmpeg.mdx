@@ -217,7 +217,7 @@ The filenames your command writes define the output. You get back every file it 
 A command that writes one file returns a single download URL. Fetch the job and read `outputUrl`:
 
 ```json
-{ "data": { "id": "job_abc123", "status": "complete", "outputUrl": "https://serve.rendobar.com/..." } }
+{ "data": { "id": "job_abc123", "status": "complete", "outputUrl": "https://api.rendobar.com/dl/job_abc123?token=<token>" } }
 ```
 
 A command that writes many files (HLS or DASH segments, image sequences, `-f segment`) returns an `output` object instead. It carries the full set:
@@ -241,17 +241,17 @@ The completed job carries the playlist plus every segment:
     "status": "complete",
     "output": {
       "type": "stream",
-      "url": "https://serve.rendobar.com/t/abc/master.m3u8",
+      "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8",
       "playlist": "master.m3u8",
-      "baseUrl": "https://serve.rendobar.com/t/abc/",
+      "baseUrl": "https://api.rendobar.com/v/job_abc123/<token>/",
       "expiresAt": 1735689600000,
       "fileCount": 5,
       "files": [
-        { "path": "master.m3u8", "url": "https://serve.rendobar.com/t/abc/master.m3u8", "size": 412 },
-        { "path": "seg_000.ts", "url": "https://serve.rendobar.com/t/abc/seg_000.ts", "size": 1048576 },
-        { "path": "seg_001.ts", "url": "https://serve.rendobar.com/t/abc/seg_001.ts", "size": 1041203 }
+        { "path": "master.m3u8", "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "size": 412 },
+        { "path": "seg_000.ts", "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "size": 1048576 },
+        { "path": "seg_001.ts", "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "size": 1041203 }
       ],
-      "manifestUrl": "https://serve.rendobar.com/t/abc/_manifest.json"
+      "manifestUrl": "https://api.rendobar.com/v/job_abc123/<token>/_manifest.json"
     }
   }
 }
