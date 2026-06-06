@@ -63,14 +63,14 @@ A value can be one of four shapes:
 | `"https://..."` | A remote file. Shorthand for `{ "url": "..." }` |
 | `{ "url": "https://..." }` | A remote file, explicit form |
 | `{ "content": "...text..." }` | Inline text you don't want to host (≤64 KB) |
-| `{ "ref": "uploads/..." }` | A file you already uploaded |
+| `{ "ref": "asset_abc123" }` | A file you already uploaded, by its asset ID (returned by the uploads endpoint) |
 
 ```json
 {
   "type": "ffmpeg",
   "inputs": {
     "clip.mp4": "https://example.com/clip.mp4",
-    "logo.png": { "ref": "uploads/brand-logo.png" }
+    "logo.png": { "ref": "asset_brandlogo" }
   },
   "params": {
     "command": "ffmpeg -i clip.mp4 -i logo.png -filter_complex overlay=10:10 output.mp4"

@@ -103,7 +103,7 @@ res = requests.post(
       `{ "content": "...text..." }`. Inline text staged verbatim, up to 64 KB. For subtitles, `concat` lists, and LUTs with nothing to host.
     </ResponseField>
     <ResponseField name="ref" type="object">
-      `{ "ref": "uploads/..." }`. A file you already uploaded.
+      `{ "ref": "asset_abc123" }`. A file you already uploaded, by its asset ID (returned by the uploads endpoint).
     </ResponseField>
   </Expandable>
 
