@@ -89,8 +89,8 @@ res = requests.post(
 
 ## Parameters
 
-<ParamField body="inputs" type="object" required>
-  Working directory for the command. Each key is a path-safe filename staged under that exact name. Each value is the source for that file. `{}` when every input is an inline `-i` URL. A value is one of:
+<ParamField body="inputs" type="object" default="{}">
+  Working directory for the command. Optional, defaults to an empty map. Each key is a path-safe filename staged under that exact name. Each value is the source for that file. Omit it when every input is an inline `-i` URL. A value is one of:
 
   <Expandable title="Input source shapes">
     <ResponseField name="URL string" type="string">

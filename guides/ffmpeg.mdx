@@ -54,12 +54,11 @@ From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=12
 
 ## Input sources
 
-Most commands put the source URL straight in the command and leave `inputs` empty:
+Most commands put the source URL straight in the command and skip `inputs` entirely. It's optional and defaults to an empty map:
 
 ```json
 {
   "type": "ffmpeg",
-  "inputs": {},
   "params": {
     "command": "ffmpeg -i https://example.com/clip.mp4 -vf scale=1280:720 output.mp4"
   }
