@@ -203,6 +203,7 @@
   "seo": {
     "indexing": "all",
     "metatags": {
+      "canonical": "https://rendobar.com/docs",
       "og:type": "website",
       "og:site_name": "Rendobar",
       "og:locale": "en_US",
