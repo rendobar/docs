@@ -67,21 +67,24 @@ Most commands put the source URL straight in the command and skip `inputs` entir
 
 Reach for the `inputs` map only when a file can't go inline: a file a filter reads by name (see below), inline text you don't want to host, an already-uploaded asset, or when you need a stable filename. Each key is a filename staged under that exact name, and the command references it by bare name.
 
-A value can be one of four shapes:
+A value can be one of three shapes:
 
 | Value | Use it for |
 |---|---|
 | `"https://..."` | A remote file. Shorthand for `{ "url": "..." }` |
 | `{ "url": "https://..." }` | A remote file, explicit form |
 | `{ "content": "...text..." }` | Inline text you don't want to host (≤64 KB) |
-| `{ "ref": "asset_abc123" }` | A file you already uploaded, by its asset ID (returned by the uploads endpoint) |
+
+A file you already uploaded is referenced by its **content URL**: the `url`
+returned by the uploads endpoint, like `https://api.rendobar.com/assets/asset_abc123/content`.
+Pass it like any other URL.
 
 ```json
 {
   "type": "ffmpeg",
   "inputs": {
     "clip.mp4": "https://example.com/clip.mp4",
-    "logo.png": { "ref": "asset_brandlogo" }
+    "logo.png": "https://api.rendobar.com/assets/asset_brandlogo/content"
   },
   "params": {
     "command": "ffmpeg -i clip.mp4 -i logo.png -filter_complex overlay=10:10 output.mp4"
@@ -115,7 +118,7 @@ This burns a subtitle track that lives only in the request, with no file to host
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `type` | string | yes | - | `"ffmpeg"` |
-| `inputs` | object | yes | - | Working directory for the command. Maps a filename to a source (URL, `{url}`, `{content}`, or `{ref}`). `{}` when every input is an inline `-i` URL. See [Input sources](#input-sources) |
+| `inputs` | object | yes | - | Working directory for the command. Maps a filename to a source (URL, `{url}`, or `{content}`; an uploaded asset's content URL is just a URL). `{}` when every input is an inline `-i` URL. See [Input sources](#input-sources) |
 | `params.command` | string | yes | - | Real FFmpeg command starting with `ffmpeg`. Input URLs go in `-i` positions |
 | `params.outputFormat` | string | no | inferred | Override container format. Inferred from trailing filename if omitted |
 | `params.timeout` | int | no | `120` | Server-side max execution in seconds. Range 1–900 |
