@@ -6,6 +6,9 @@
  * - title: 13-52 chars, sentence case, no em/en-dash, no pipe, no --, no "Rendobar"
  * - description: 100-160 chars, starts with allowed action verb, no em-dash, no "Rendobar" prefix
  * - description must be present on every page (except snippets)
+ * - canonical: must equal https://rendobar.com/docs/<page-path>. Mintlify's
+ *   auto-canonical drops the /docs subpath on the rendobar.mintlify.app
+ *   subdomain (points at a 404), so every page pins its canonical explicitly.
  *
  * Exit 0 = all pass. Exit 1 = at least one violation.
  */
@@ -147,6 +150,21 @@ function validate(filePath, fm, violations) {
         message: `Description starts with unallowed word "${firstWord}": "${description.slice(0, 60)}..."`,
       });
     }
+  }
+
+  // --- Canonical checks ---
+  const expectedCanonical =
+    'https://rendobar.com/docs/' + rel.replace(/\\/g, '/').replace(/\.mdx$/, '');
+  if (!fm.canonical) {
+    violations.push({
+      file: rel, field: 'canonical',
+      message: `Missing canonical field (expected "${expectedCanonical}")`,
+    });
+  } else if (fm.canonical !== expectedCanonical) {
+    violations.push({
+      file: rel, field: 'canonical',
+      message: `Canonical "${fm.canonical}" does not match expected "${expectedCanonical}"`,
+    });
   }
 }
 
