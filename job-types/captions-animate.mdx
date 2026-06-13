@@ -1,9 +1,9 @@
 ---
 title: "captions.animate"
-description: "Burn animated word-level captions onto a video at $0.10/min. Pick a preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 min input cap."
+description: "Burn animated word-level captions onto a video at $0.10/min. 11 presets, custom position, translation, AI keyword highlighting, and SRT/VTT output."
 icon: "captions"
 tag: "Live"
-keywords: ["animated captions", "burn subtitles", "auto captions", "tiktok captions", "subtitles", "captions.animate"]
+keywords: ["animated captions", "burn subtitles", "auto captions", "tiktok captions", "subtitles", "caption translation", "captions.animate"]
 canonical: "https://rendobar.com/docs/job-types/captions-animate"
 ---
 
@@ -15,9 +15,9 @@ canonical: "https://rendobar.com/docs/job-types/captions-animate"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/job-types/captions-animate/#article",
       "headline": "captions.animate",
-      "description": "Burn animated word-level captions onto a video. Pick a preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 min input cap.",
+      "description": "Burn animated word-level captions onto a video. Choose from 11 presets, override the style, translate, highlight key words, and return SRT/VTT.",
       "datePublished": "2026-05-03",
-      "dateModified": "2026-05-24",
+      "dateModified": "2026-06-13",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -29,10 +29,10 @@ canonical: "https://rendobar.com/docs/job-types/captions-animate"
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Returns a video with word-level animated captions burned in. Speech is automatically transcribed, segmented into timed cues, and rendered as styled subtitles burned onto the source.
+Returns a video with word-level animated captions burned in. Speech is automatically transcribed, segmented into timed cues, and rendered as styled subtitles burned onto the source. Pick a built-in preset or override any part of the style. Optionally translate the captions, let AI highlight the key words, and get the transcript back as SRT and VTT.
 
 <Info>
-**Timeout:** 600 s · **Accepts:** video · **Limits:** single speaker, 5 min input
+**Timeout:** 600 s · **Accepts:** video · **Limits:** single speaker
 </Info>
 
 ## Request
@@ -96,10 +96,88 @@ res = requests.post(
 
 </CodeGroup>
 
+A fuller example, using a different preset, top placement, Spanish translation, AI highlighting, and the caption data returned alongside the video:
+
+```json
+{
+  "type": "captions.animate",
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+  },
+  "params": {
+    "preset": "neon",
+    "style": { "position": "top", "entrance": "pop" },
+    "translateTo": "es",
+    "autoEmphasis": true,
+    "captionData": true
+  }
+}
+```
+
+## Inputs
+
+<ParamField body="source" type="string" required>
+  URL to the source video. An uploaded asset's content URL works too.
+</ParamField>
+
+<ParamField body="subtitles" type="string">
+  Optional SRT or VTT URL. When provided, its text is animated and transcription is skipped (bring your own transcript).
+</ParamField>
+
+<ParamField body="font" type="string">
+  Optional font file URL (TTF/OTF). Set `style.font` to this font's family name to render captions in it.
+</ParamField>
+
 ## Parameters
 
 <ParamField body="preset" type="enum" default="hormozi">
-  Built-in caption style. One of: `hormozi`, `mrbeast`, `tiktok`, `pill`.
+  Built-in caption style. One of: `hormozi`, `mrbeast`, `tiktok`, `pill`, `karaoke`, `word-pop`, `minimal`, `subtitle-block`, `neon`, `gold`, `reveal`.
+</ParamField>
+
+<ParamField body="style" type="object">
+  Override the preset. Any field set here wins over the preset; unset fields fall through. Supply `style` with no `preset` to start from the default base.
+
+  <Expandable title="style properties">
+    <ParamField body="font" type="string">
+      Font family name (a bundled font, or the family name of a font you passed via the `font` input).
+    </ParamField>
+    <ParamField body="case" type="enum">
+      `upper` or `normal`.
+    </ParamField>
+    <ParamField body="fill" type="string">
+      Inactive-word colour, `#RRGGBB`.
+    </ParamField>
+    <ParamField body="stroke" type="object">
+      `{ "color": "#RRGGBB", "width": <px> }`.
+    </ParamField>
+    <ParamField body="shadow" type="number">
+      Shadow distance in px.
+    </ParamField>
+    <ParamField body="position" type="enum">
+      Caption placement: `top`, `center`, or `bottom`.
+    </ParamField>
+    <ParamField body="highlight" type="object">
+      Active (spoken) word treatment: `{ "color": "#RRGGBB", "scale": <100-200> }`.
+    </ParamField>
+    <ParamField body="emphasis" type="object">
+      Accent colour for AI-highlighted words: `{ "color": "#RRGGBB" }`. Used with `autoEmphasis`.
+    </ParamField>
+    <ParamField body="entrance" type="enum">
+      Per-word entrance: `fade` or `pop`. Words reveal one by one as they're spoken.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="captionData" type="boolean" default={false}>
+  Also return the caption data on `output.data`: the word-level transcript plus SRT and VTT, alongside the burned video.
+</ParamField>
+
+<ParamField body="autoEmphasis" type="boolean" default={false}>
+  Let the model highlight the important words in an accent colour (the `style.emphasis` colour, or the preset's accent). Falls back to no emphasis if unavailable.
+</ParamField>
+
+<ParamField body="translateTo" type="enum">
+  Translate the captions into this language before animating: `es`, `fr`, `de`, `pt`, `it`, or `nl`. Omit to keep the original language.
 </ParamField>
 
 <ParamField body="language" type="string">
@@ -119,7 +197,23 @@ res = requests.post(
 { "data": { "id": "job_abc123", "status": "dispatched" } }
 ```
 
-Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (signed, 1-hour TTL). The captioned video is a single file, so `output.files` lists that one file.
+Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (signed, 1-hour TTL). The captioned video is a single file.
+
+When `captionData` is `true`, `output.data` also carries the transcript:
+
+```json
+{
+  "output": {
+    "file": { "url": "https://..." },
+    "data": {
+      "language": "en",
+      "words": [{ "text": "hello", "start": 0.0, "end": 0.32 }],
+      "srt": "1\n00:00:00,000 --> 00:00:01,400\nHello world\n",
+      "vtt": "WEBVTT\n\n00:00:00.000 --> 00:00:01.400\nHello world\n"
+    }
+  }
+}
+```
 
 ## Pricing
 
