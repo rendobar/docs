@@ -123,6 +123,16 @@ res = requests.post(
   Max execution time in seconds. Range 1–900. Plan caps apply (Free 5 min, Pro 15 min).
 </ParamField>
 
+<ParamField body="compute" type="enum" default="auto">
+  Which machine class runs the job. One of `auto`, `cpu`, `gpu`.
+
+  - `auto` (default): a command using an NVENC or CUDA encoder, like `h264_nvenc`, routes to a GPU. Everything else runs on CPU. You don't set anything.
+  - `gpu`: force a GPU machine.
+  - `cpu`: force a CPU machine. A command that calls an NVENC encoder is rejected with `VALIDATION_ERROR`.
+
+  GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require the Pro plan**; a GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan.
+</ParamField>
+
 ## Response
 
 ```json
