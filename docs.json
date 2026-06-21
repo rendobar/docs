@@ -65,6 +65,7 @@
               "job-types/caption-burn",
               {
                 "group": "Compose",
+                "icon": "film",
                 "pages": [
                   "job-types/compose/overview",
                   "job-types/compose/transitions",
