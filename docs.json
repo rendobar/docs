@@ -63,7 +63,16 @@
               "job-types/ffmpeg",
               "job-types/captions-animate",
               "job-types/caption-burn",
-              "job-types/compose"
+              {
+                "group": "Compose",
+                "pages": [
+                  "job-types/compose/overview",
+                  "job-types/compose/transitions",
+                  "job-types/compose/motion",
+                  "job-types/compose/color",
+                  "job-types/compose/compositing-text"
+                ]
+              }
             ]
           },
           {

@@ -1,0 +1,122 @@
+---
+title: "Compose: render from a timeline"
+sidebarTitle: "Overview"
+description: "Render a video from a declarative JSON timeline. Tracks, clips, transitions, and per-clip effects, in one API call."
+icon: "film"
+tag: "Beta"
+keywords: ["video compose api", "json timeline to video", "video transitions api", "compose"]
+canonical: "https://rendobar.com/docs/job-types/compose/overview"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/job-types/compose/overview/#article",
+      "headline": "Compose: render from a timeline",
+      "description": "Render a video from a declarative JSON timeline. Tracks, clips, transitions, and per-clip effects, in one API call.",
+      "datePublished": "2026-06-21",
+      "dateModified": "2026-06-21",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+<Note>
+**Beta.** Compose is rolling out. Parameters below are stable, the full field reference lands with general availability.
+</Note>
+
+`compose` renders a video from a JSON timeline. You describe an edit as tracks and clips, and Rendobar renders it to a single file. No FFmpeg filtergraphs, no local rendering.
+
+## How it works
+
+A timeline has two layers of structure:
+
+- **Tracks** stack on top of each other. The first track is the background, each later track composites over the ones below it (overlays, captions, picture-in-picture).
+- **Clips** sit on a track in time. Each clip has a `start` and `length` in seconds and wraps one asset (a video, image, text, or audio). Two clips on the same track are joined by a [transition](/job-types/compose/transitions).
+
+Every clip can also carry effects. They are grouped into [Motion and speed](/job-types/compose/motion), [Color and filters](/job-types/compose/color), and [Compositing and text](/job-types/compose/compositing-text).
+
+## Your first render
+
+The job's `params` is the timeline itself: `schemaVersion`, an `output`, and the `timeline` of tracks. This one plays two clips with a one-second crossfade between them.
+
+<CodeGroup>
+
+```ts SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.create({
+  type: "compose",
+  inputs: {},
+  params: {
+    schemaVersion: 1,
+    output: { format: "mp4", resolution: { width: 1280, height: 720 }, fps: 30 },
+    timeline: {
+      tracks: [
+        {
+          clips: [
+            { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/a.mp4", trim: { from: 0, to: 3 } }, start: 0, length: 3 },
+            { type: "transition", transition: "crossfade", duration: 1 },
+            { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/b.mp4", trim: { from: 0, to: 3 } }, start: 2, length: 3 },
+          ],
+        },
+      ],
+    },
+  },
+});
+
+const result = await client.jobs.wait(job.id);
+console.log(outputUrl(result));
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "compose",
+    "inputs": {},
+    "params": {
+      "schemaVersion": 1,
+      "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },
+      "timeline": {
+        "tracks": [
+          {
+            "clips": [
+              { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 },
+              { "type": "transition", "transition": "crossfade", "duration": 1 },
+              { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/b.mp4", "trim": { "from": 0, "to": 3 } }, "start": 2, "length": 3 }
+            ]
+          }
+        ]
+      }
+    }
+  }'
+```
+
+</CodeGroup>
+
+<Info>
+**Assets:** video, image, text, audio · **Output:** mp4 / mov / webp / jpg / png · **Timeout:** 600 s
+</Info>
+
+## Output
+
+Set the canvas with `output`. Pick the `resolution` and `fps`, and Rendobar fits every clip to it.
+
+```json
+"output": { "format": "mp4", "resolution": { "width": 1080, "height": 1920 }, "fps": 30, "videoCodec": "h264", "audioCodec": "aac" }
+```
+
+A `9:16` canvas with a `crop` on the clip turns landscape footage into a vertical Reel that fills the frame, no black bars.
+
+<Frame caption="Landscape footage reframed to a vertical 9:16 Reel (crop)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/reframe.mp4" autoPlay loop muted playsInline style={{ maxWidth: "300px" }} />
+</Frame>

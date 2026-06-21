@@ -1,0 +1,39 @@
+---
+title: "Compose transitions"
+sidebarTitle: "Transitions"
+description: "Add a crossfade, fade, wipe, slide, or zoom between two clips on a track, with directional control for wipes and slides."
+icon: "arrow-right-arrow-left"
+tag: "Beta"
+keywords: ["video transitions api", "crossfade", "wipe transition", "slide transition", "compose"]
+canonical: "https://rendobar.com/docs/job-types/compose/transitions"
+---
+
+To join two clips on a track, put a transition between them: `{ "type": "transition", "transition": "<name>", "duration": <seconds> }`. `wipe` and `slide` also accept `direction: "left" | "right" | "up" | "down"`.
+
+| Transition | Effect |
+| --- | --- |
+| `crossfade` | A dissolves directly into B |
+| `fade` | A dips through black, then B fades up |
+| `wipe` | a hard edge sweeps across (directional) |
+| `slide` | B slides in over A from an edge (directional) |
+| `zoom` | B grows in from the center |
+
+<Frame caption="crossfade">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/crossfade.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="fade (dip to black)">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/fade.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="wipe, direction: left">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/wipe-left.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="slide, direction: left">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-left.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="zoom">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/zoom.mp4" autoPlay loop muted playsInline />
+</Frame>
