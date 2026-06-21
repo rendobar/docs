@@ -47,35 +47,14 @@ Submit a timeline as the `params.timeline` of a `compose` job. This one plays tw
 
 <CodeGroup>
 
-```bash cURL
-curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "compose",
-    "params": {
-      "timeline": {
-        "schemaVersion": 1,
-        "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },
-        "timeline": {
-          "tracks": [
-            {
-              "clips": [
-                { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 },
-                { "type": "transition", "transition": "crossfade", "duration": 1 },
-                { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/b.mp4", "trim": { "from": 0, "to": 3 } }, "start": 2, "length": 3 }
-              ]
-            }
-          ]
-        }
-      }
-    }
-  }'
-```
-
 ```ts SDK
-await rendobar.jobs.create({
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.create({
   type: "compose",
+  inputs: {},
   params: {
     timeline: {
       schemaVersion: 1,
@@ -94,6 +73,36 @@ await rendobar.jobs.create({
     },
   },
 });
+
+const result = await client.jobs.wait(job.id);
+console.log(outputUrl(result));
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "compose",
+    "inputs": {},
+    "params": {
+      "timeline": {
+        "schemaVersion": 1,
+        "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },
+        "timeline": {
+          "tracks": [
+            {
+              "clips": [
+                { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 },
+                { "type": "transition", "transition": "crossfade", "duration": 1 },
+                { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/b.mp4", "trim": { "from": 0, "to": 3 } }, "start": 2, "length": 3 }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }'
 ```
 
 </CodeGroup>
