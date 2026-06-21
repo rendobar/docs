@@ -18,22 +18,20 @@ To join two clips on a track, put a transition between them: `{ "type": "transit
 | `slide` | B slides in over A from an edge (directional) |
 | `zoom` | B grows in from the center |
 
-<Frame caption="crossfade">
-  <video src="https://cdn.rendobar.com/assets/showcase/transitions/crossfade.mp4" autoPlay loop muted playsInline />
-</Frame>
-
-<Frame caption="fade (dip to black)">
-  <video src="https://cdn.rendobar.com/assets/showcase/transitions/fade.mp4" autoPlay loop muted playsInline />
-</Frame>
-
-<Frame caption="wipe, direction: left">
-  <video src="https://cdn.rendobar.com/assets/showcase/transitions/wipe-left.mp4" autoPlay loop muted playsInline />
-</Frame>
-
-<Frame caption="slide, direction: left">
-  <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-left.mp4" autoPlay loop muted playsInline />
-</Frame>
-
-<Frame caption="zoom">
-  <video src="https://cdn.rendobar.com/assets/showcase/transitions/zoom.mp4" autoPlay loop muted playsInline />
-</Frame>
+<Columns cols={3}>
+  <Frame caption="crossfade">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/crossfade.mp4" autoPlay loop muted playsInline />
+  </Frame>
+  <Frame caption="fade">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/fade.mp4" autoPlay loop muted playsInline />
+  </Frame>
+  <Frame caption="zoom">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/zoom.mp4" autoPlay loop muted playsInline />
+  </Frame>
+  <Frame caption="wipe (left)">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/wipe-left.mp4" autoPlay loop muted playsInline />
+  </Frame>
+  <Frame caption="slide (left)">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-left.mp4" autoPlay loop muted playsInline />
+  </Frame>
+</Columns>
