@@ -43,7 +43,7 @@ Every clip can carry effects: transform, color, speed, opacity, blur, blend mode
 
 ## Your first render
 
-Submit a timeline as the `params.timeline` of a `compose` job. This one plays two clips with a one-second crossfade between them.
+The job's `params` is the timeline itself: `schemaVersion`, an `output`, and the `timeline` of tracks. This one plays two clips with a one-second crossfade between them.
 
 <CodeGroup>
 
@@ -56,20 +56,18 @@ const job = await client.jobs.create({
   type: "compose",
   inputs: {},
   params: {
+    schemaVersion: 1,
+    output: { format: "mp4", resolution: { width: 1280, height: 720 }, fps: 30 },
     timeline: {
-      schemaVersion: 1,
-      output: { format: "mp4", resolution: { width: 1280, height: 720 }, fps: 30 },
-      timeline: {
-        tracks: [
-          {
-            clips: [
-              { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/a.mp4", trim: { from: 0, to: 3 } }, start: 0, length: 3 },
-              { type: "transition", transition: "crossfade", duration: 1 },
-              { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/b.mp4", trim: { from: 0, to: 3 } }, start: 2, length: 3 },
-            ],
-          },
-        ],
-      },
+      tracks: [
+        {
+          clips: [
+            { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/a.mp4", trim: { from: 0, to: 3 } }, start: 0, length: 3 },
+            { type: "transition", transition: "crossfade", duration: 1 },
+            { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/b.mp4", trim: { from: 0, to: 3 } }, start: 2, length: 3 },
+          ],
+        },
+      ],
     },
   },
 });
@@ -86,20 +84,18 @@ curl -X POST https://api.rendobar.com/jobs \
     "type": "compose",
     "inputs": {},
     "params": {
+      "schemaVersion": 1,
+      "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },
       "timeline": {
-        "schemaVersion": 1,
-        "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },
-        "timeline": {
-          "tracks": [
-            {
-              "clips": [
-                { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 },
-                { "type": "transition", "transition": "crossfade", "duration": 1 },
-                { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/b.mp4", "trim": { "from": 0, "to": 3 } }, "start": 2, "length": 3 }
-              ]
-            }
-          ]
-        }
+        "tracks": [
+          {
+            "clips": [
+              { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 },
+              { "type": "transition", "transition": "crossfade", "duration": 1 },
+              { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/b.mp4", "trim": { "from": 0, "to": 3 } }, "start": 2, "length": 3 }
+            ]
+          }
+        ]
       }
     }
   }'
