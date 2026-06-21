@@ -1,0 +1,123 @@
+---
+title: "Compose video from a timeline"
+sidebarTitle: "compose"
+description: "Render a video from a declarative JSON timeline. Transitions, Ken Burns, chroma key, color grading, picture-in-picture, and animated titles."
+icon: "film"
+tag: "Beta"
+keywords: ["video compose api", "json timeline to video", "video transitions api", "chroma key api", "ken burns effect", "picture in picture", "compose"]
+canonical: "https://rendobar.com/docs/job-types/compose"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/job-types/compose/#article",
+      "headline": "Compose video from a timeline",
+      "description": "Render a video from a declarative JSON timeline. Transitions, Ken Burns, chroma key, color grading, picture-in-picture, and animated titles.",
+      "datePublished": "2026-06-21",
+      "dateModified": "2026-06-21",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+<Note>
+**Beta.** Compose is rolling out. The full timeline reference and request examples land with general availability.
+</Note>
+
+Describe an edit as a JSON timeline of tracks and clips, and `compose` renders it to a single video. Each clip can carry transforms, color, speed, opacity, blend modes, chroma key, and text. Clips on one track join with a transition. Every clip below is a real `compose` render.
+
+## Transitions
+
+A transition joins two clips on a track. Pass `{ "type": "transition", "transition": "<name>", "duration": <seconds> }` between them. `wipe` and `slide` also take `direction: "left" | "right" | "up" | "down"`.
+
+<Frame caption="crossfade — A dissolves directly into B">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/crossfade.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="fade — A dips through black, then B fades up">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/fade.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="wipe — a hard edge sweeps across (direction: left)">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/wipe-left.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="slide — B slides in over A (direction: left)">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-left.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="zoom — B grows in from the center">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/zoom.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+## Before and after
+
+Each effect below shows the source on the left and the `compose` result on the right.
+
+### Reframe and layout
+
+<Frame caption="Turn landscape footage into a vertical Reel, with a blurred fill instead of black bars (crop + blur)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/reframe-vertical.mp4" autoPlay loop muted playsInline style={{ maxWidth: "300px" }} />
+</Frame>
+
+<Frame caption="Webcam over your content, for reactions and screen-shares (picture-in-picture)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/pip-webcam.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+### Motion
+
+<Frame caption="Bring a still photo to life for slideshows and docs (Ken Burns pan and zoom)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/kenburns.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="Dramatic slow-motion of an action beat (speed)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/slowmo.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="Speed up a slow process into a timelapse (speed)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/timelapse.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+### Color
+
+<Frame caption="Cinematic color grade to set a mood (color)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/color-grade.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="Lift flat or hazy footage (color)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/social-pop.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="Dramatic black and white (filter)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/black-white.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+### Compositing
+
+<Frame caption="Put a presenter on any background (chroma key)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/chroma.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="Add a cinematic light-leak glow (screen blend)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/light-leak.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+### Text and polish
+
+<Frame caption="Add a title card and a lower-third name tag (text)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/title-lowerthird.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="Keep a call-to-action readable over busy footage (blur backdrop + text)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/blur-text.mp4" autoPlay loop muted playsInline />
+</Frame>
+
+<Frame caption="Clean fade in and out for intros and outros (opacity)">
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/fade-in-out.mp4" autoPlay loop muted playsInline />
+</Frame>

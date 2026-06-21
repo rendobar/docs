@@ -62,7 +62,8 @@
             "pages": [
               "job-types/ffmpeg",
               "job-types/captions-animate",
-              "job-types/caption-burn"
+              "job-types/caption-burn",
+              "job-types/compose"
             ]
           },
           {
