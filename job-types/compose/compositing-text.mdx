@@ -15,8 +15,7 @@ Each effect below is a field on a clip. The source is on the left, the `compose`
 `chromaKey` removes a solid background color so you can drop a presenter onto any scene. Put the keyed clip on an overlay track above the new background.
 
 ```json
-{ "asset": { "type": "video", "src": "greenscreen.mp4" }, "start": 0, "length": 3,
-  "chromaKey": { "color": "#66DD09", "similarity": 0.28 } }
+"chromaKey": { "color": "#66DD09", "similarity": 0.28 }
 ```
 
 <Frame caption="Put a presenter on any background (chroma key)">
@@ -28,7 +27,8 @@ Each effect below is a field on a clip. The source is on the left, the `compose`
 `blendMode` controls how an overlay composites with the track below: `screen`, `multiply`, `overlay`, `add`, and more. A light-leak clip over your footage with `screen` adds a cinematic glow.
 
 ```json
-{ "asset": { "type": "video", "src": "lightleak.mp4" }, "start": 0, "length": 3, "blendMode": "screen", "opacity": 0.7 }
+"blendMode": "screen",
+"opacity": 0.7
 ```
 
 <Frame caption="Add a cinematic light-leak glow (screen blend)">
@@ -40,7 +40,12 @@ Each effect below is a field on a clip. The source is on the left, the `compose`
 `opacity` takes a number or keyframes. Keyframe it from `0` to `1` and back for a clean fade in and out. `blur` softens a clip, useful as a backdrop that keeps overlaid text readable.
 
 ```json
-"opacity": [ { "time": 0, "value": 0 }, { "time": 0.6, "value": 1 }, { "time": 2.4, "value": 1 }, { "time": 3, "value": 0 } ]
+"opacity": [
+  { "time": 0, "value": 0 },
+  { "time": 0.6, "value": 1 },
+  { "time": 2.4, "value": 1 },
+  { "time": 3, "value": 0 }
+]
 ```
 
 <Frame caption="Clean fade in and out for intros and outros (opacity)">
@@ -56,10 +61,18 @@ Each effect below is a field on a clip. The source is on the left, the `compose`
 A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`, `position`, and an `animate` entrance (`fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`). Put one text clip on its own track for a title card, another low and left for a lower-third name tag.
 
 ```json
-{ "asset": { "type": "text", "text": "Coastal Escape",
-    "style": { "font": "Inter", "weight": 800, "size": 84, "color": "#FFFFFF",
-               "position": { "x": "50%", "y": "38%" }, "animate": { "type": "slideUp", "duration": 0.7 } } },
-  "start": 0, "length": 4 }
+"asset": {
+  "type": "text",
+  "text": "Coastal Escape",
+  "style": {
+    "font": "Inter",
+    "size": 84,
+    "weight": 800,
+    "color": "#FFFFFF",
+    "position": { "x": "50%", "y": "38%" },
+    "animate": { "type": "slideUp", "duration": 0.7 }
+  }
+}
 ```
 
 <Frame caption="Add a title card and a lower-third name tag (text)">

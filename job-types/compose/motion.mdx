@@ -15,9 +15,11 @@ Each effect below is a field on a clip. The source is on the left, the `compose`
 `transform` positions and scales a clip. Add `animateTo` and it animates from the start values to the end values over the clip, the Ken Burns move that brings a still photo to life.
 
 ```json
-{ "asset": { "type": "image", "src": "photo.jpg" }, "start": 0, "length": 4,
-  "transform": { "scale": 1.1, "position": { "x": "38%", "y": "48%" },
-                 "animateTo": { "scale": 1.32, "position": { "x": "62%", "y": "52%" } } } }
+"transform": {
+  "scale": 1.1,
+  "position": { "x": "38%", "y": "48%" },
+  "animateTo": { "scale": 1.32, "position": { "x": "62%", "y": "52%" } }
+}
 ```
 
 <Frame caption="Bring a still photo to life for slideshows and docs">
@@ -29,8 +31,7 @@ Each effect below is a field on a clip. The source is on the left, the `compose`
 Scale a clip down and position it on an overlay track to put a webcam over your content, for reactions and screen-shares.
 
 ```json
-{ "asset": { "type": "video", "src": "webcam.mp4" }, "start": 0, "length": 3,
-  "transform": { "scale": 0.3, "position": { "x": "80%", "y": "75%" } } }
+"transform": { "scale": 0.3, "position": { "x": "80%", "y": "75%" } }
 ```
 
 <Frame caption="Webcam over your content (picture-in-picture)">
@@ -42,7 +43,7 @@ Scale a clip down and position it on an overlay track to put a webcam over your 
 `speed` is a multiplier. Below `1` slows a clip down for a dramatic action beat, above `1` speeds a slow process into a timelapse.
 
 ```json
-{ "asset": { "type": "video", "src": "waves.mp4", "trim": { "from": 1, "to": 2.2 } }, "start": 0, "length": 3, "speed": 0.4 }
+"speed": 0.4
 ```
 
 <Frame caption="Dramatic slow-motion of an action beat (speed: 0.4)">
