@@ -33,13 +33,6 @@
             ]
           },
           {
-            "group": "Guides",
-            "pages": [
-              "guides/ffmpeg",
-              "guides/webhooks"
-            ]
-          },
-          {
             "group": "CLI",
             "pages": [
               "cli/overview",
@@ -54,11 +47,12 @@
             "group": "Concepts",
             "pages": [
               "concepts/job-lifecycle",
-              "concepts/job-output"
+              "concepts/job-output",
+              "guides/webhooks"
             ]
           },
           {
-            "group": "Reference",
+            "group": "Job types",
             "pages": [
               "job-types/ffmpeg",
               "job-types/captions-animate",
@@ -129,6 +123,10 @@
     {
       "source": "/guides/captions",
       "destination": "/job-types/captions-animate"
+    },
+    {
+      "source": "/guides/ffmpeg",
+      "destination": "/job-types/ffmpeg"
     },
     {
       "source": "/job-types/raw-ffmpeg",

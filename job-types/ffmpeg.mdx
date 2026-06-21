@@ -1,10 +1,10 @@
 ---
-title: "FFmpeg reference"
+title: "Run any FFmpeg command"
 sidebarTitle: "FFmpeg"
-description: "Execute a custom FFmpeg command via API with ~120 whitelisted flags, sandboxed execution, and signed output URL. Live on all plans, ~$0.05/min."
+description: "Run any FFmpeg command in the cloud with ~120 whitelisted flags, sandboxed execution, and a signed output URL. Live on all plans, ~$0.05/min."
 icon: "terminal"
 tag: "Live"
-keywords: ["ffmpeg api reference", "ffmpeg cloud", "ffmpeg sandboxed", "ffmpeg rest api", "ffmpeg command api"]
+keywords: ["ffmpeg api", "ffmpeg in cloud", "ffmpeg command api", "ffmpeg sandboxed execution", "ffmpeg flags whitelist", "ffmpeg rest api", "ffmpeg api reference"]
 canonical: "https://rendobar.com/docs/job-types/ffmpeg"
 ---
 
@@ -15,10 +15,10 @@ canonical: "https://rendobar.com/docs/job-types/ffmpeg"
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/job-types/ffmpeg/#article",
-      "headline": "FFmpeg reference",
-      "description": "Execute a custom FFmpeg command with whitelisted flags, sandboxed execution, and signed output URL. Live on all plans.",
+      "headline": "Run any FFmpeg command",
+      "description": "Run any FFmpeg command in the cloud. Whitelisted flags, sandboxed execution, signed download URL. Same FFmpeg syntax you already know.",
       "datePublished": "2026-03-20",
-      "dateModified": "2026-05-24",
+      "dateModified": "2026-06-21",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -30,15 +30,38 @@ canonical: "https://rendobar.com/docs/job-types/ffmpeg"
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Execute a custom FFmpeg command with whitelisted flags. The `inputs` map stages source files into the working directory by name. The command references them by bare name, and inline `-i` URLs also work.
+You write the FFmpeg command. Rendobar downloads inputs, runs the command in an isolated container, returns a signed download URL. Same syntax you would run locally.
+
+The `inputs` map stages source files into the working directory by name. The command references them by bare name, and inline `-i` URLs also work.
 
 <Info>
 **Timeout:** 900 s max (plan-capped) · **Accepts:** video, audio, image
 </Info>
 
+<Tip>
+From a shell? Use [the CLI](/cli/overview): `rb ffmpeg -i input.mp4 -vf scale=1280:720 out.mp4`. Local files upload automatically.
+</Tip>
+
 ## Request
 
 <CodeGroup>
+
+```ts SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.create({
+  type: "ffmpeg",
+  inputs: {},
+  params: {
+    command: "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
+  },
+});
+
+const result = await client.jobs.wait(job.id);
+console.log(outputUrl(result));
+```
 
 ```bash cURL
 curl -X POST https://api.rendobar.com/jobs \
@@ -88,6 +111,76 @@ res = requests.post(
 
 </CodeGroup>
 
+## How it runs
+
+1. **Validate**: command parsed against 8 security layers (flag whitelist, format/filter blocklists)
+2. **Download**: input URLs pulled to a sandboxed worker
+3. **Substitute**: URLs replaced with local paths in the FFmpeg command
+4. **Execute**: FFmpeg runs in an isolated container with network disabled
+5. **Upload**: output goes to R2
+6. **Return**: signed `output.file.url` available via `GET /jobs/{id}`
+
+## Input sources
+
+Most commands put the source URL straight in the command and skip `inputs` entirely. It is optional and defaults to an empty map:
+
+```json
+{
+  "type": "ffmpeg",
+  "params": {
+    "command": "ffmpeg -i https://example.com/clip.mp4 -vf scale=1280:720 output.mp4"
+  }
+}
+```
+
+Reach for the `inputs` map only when a file cannot go inline: a file a filter reads by name (see below), inline text you do not want to host, an already-uploaded asset, or when you need a stable filename. Each key is a filename staged under that exact name, and the command references it by bare name.
+
+A value can be one of three shapes:
+
+| Value | Use it for |
+|---|---|
+| `"https://..."` | A remote file. Shorthand for `{ "url": "..." }` |
+| `{ "url": "https://..." }` | A remote file, explicit form |
+| `{ "content": "...text..." }` | Inline text you do not want to host (≤64 KB) |
+
+A file you already uploaded is referenced by its **content URL**: the `url`
+returned by the uploads endpoint, like `https://api.rendobar.com/assets/asset_abc123/content`.
+Pass it like any other URL.
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {
+    "clip.mp4": "https://example.com/clip.mp4",
+    "logo.png": "https://api.rendobar.com/assets/asset_brandlogo/content"
+  },
+  "params": {
+    "command": "ffmpeg -i clip.mp4 -i logo.png -filter_complex overlay=10:10 output.mp4"
+  }
+}
+```
+
+### Auxiliary files read by a filter
+
+Some files are not passed as `-i` arguments. Filters like `subtitles=`, `lut3d=`, and `drawtext fontfile=`, and the lists read by the `concat` demuxer, read a file by name from the working directory. Provide those through `inputs` so they are staged before the command runs.
+
+This burns a subtitle track that lives only in the request, with no file to host:
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {
+    "video.mp4": "https://example.com/video.mp4",
+    "subs.srt": {
+      "content": "1\n00:00:01,000 --> 00:00:04,000\nRendered on Rendobar.\n"
+    }
+  },
+  "params": {
+    "command": "ffmpeg -i video.mp4 -vf subtitles=subs.srt -c:v libx264 -c:a copy output.mp4"
+  }
+}
+```
+
 ## Parameters
 
 <ParamField body="inputs" type="object" default="{}">
@@ -108,7 +201,7 @@ res = requests.post(
     </ResponseField>
   </Expandable>
 
-  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See the [FFmpeg guide](/guides/ffmpeg#input-sources).
+  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See [Input sources](#input-sources).
 </ParamField>
 
 <ParamField body="command" type="string" required>
@@ -126,55 +219,286 @@ res = requests.post(
 <ParamField body="compute" type="enum" default="auto">
   Which machine class runs the job. One of `auto`, `cpu`, `gpu`.
 
-  - `auto` (default): a command using an NVENC or CUDA encoder, like `h264_nvenc`, routes to a GPU. Everything else runs on CPU. You don't set anything.
+  - `auto` (default): a command using an NVENC or CUDA encoder, like `h264_nvenc`, routes to a GPU. Everything else runs on CPU. You do not set anything.
   - `gpu`: force a GPU machine.
   - `cpu`: force a CPU machine. A command that calls an NVENC encoder is rejected with `VALIDATION_ERROR`.
 
-  GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require the Pro plan**; a GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan.
+  GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require the Pro plan**. A GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan. See [GPU acceleration](#gpu-acceleration).
 </ParamField>
 
-## Response
+## Validate without executing
 
-```json
-{ "data": { "id": "job_abc123", "status": "dispatched" } }
+Free, no auth:
+
+```bash
+curl -X POST https://api.rendobar.com/ffmpeg/validate \
+  -H "Content-Type: application/json" \
+  -d '{ "command": "ffmpeg -i video.mp4 -vf scale=1280:720 output.mp4" }'
 ```
 
-Poll `GET /jobs/{id}` until `status: "complete"`. On success the job carries an `output` object. On failure it carries an `error` object. The filenames your command writes define the output.
+Returns `{ data: { valid: true, args: [...], inferredOutputFormat: "mp4" } }` or `{ data: { valid: false, error: "..." } }`.
 
-`output` is one shape for every job type, documented in full on [Job output](/concepts/job-output). FFmpeg jobs set `output.data` to `null` and return their files in `output.file` and `output.files`. Read `output.file.url` for the file to play or download, and `output.files` for the full list.
+## Allowed flags
 
-<ResponseField name="error" type="object">
-  Present when `status` is `failed`.
+~120 whitelisted flags. Common ones:
 
-  <Expandable title="error fields">
-    <ResponseField name="code" type="string">
-      Stable error code, e.g. `PROVIDER_ERROR`.
-    </ResponseField>
-    <ResponseField name="message" type="string">
-      Human-readable summary of what went wrong.
-    </ResponseField>
-    <ResponseField name="detail" type="string | null">
-      Extra context. For FFmpeg failures, the last ~2 KB of stderr. `null` when there is nothing to add.
-    </ResponseField>
-    <ResponseField name="retryable" type="boolean">
-      Whether re-running the same job could succeed.
-    </ResponseField>
-  </Expandable>
-</ResponseField>
+| Flag | Purpose |
+|---|---|
+| `-i` | Input file |
+| `-f` | Force format |
+| `-c:v`, `-c:a` | Video / audio codec (stream specifiers like `-c:v:0` work) |
+| `-vf`, `-af` | Video / audio filter |
+| `-filter_complex` | Complex filter graph |
+| `-map` | Stream mapping |
+| `-ss`, `-t` | Seek position, duration |
+| `-r`, `-s` | Frame rate, resolution |
+| `-b:v`, `-b:a` | Video / audio bitrate |
+| `-crf`, `-preset` | Quality + preset |
+| `-an`, `-vn` | Disable audio / video |
+| `-y` | Overwrite output |
+| `-movflags`, `-strict` | Container flags, strict standards |
 
-See [Job output](/concepts/job-output) for the full shape and the single-file, stream, and set patterns, and [output files](/guides/ffmpeg#output-files) in the guide for worked request and response examples.
+Unrecognised flags are rejected before dispatch with `VALIDATION_ERROR`.
+
+## GPU acceleration
+
+Your jobs run on CPU-powered or GPU-powered machines. `compute` defaults to `auto`, so a command that uses an NVENC encoder routes to a GPU on its own. You do not send anything.
+
+Switch one flag to move an encode to the hardware encoder. The GPU path runs `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, several times faster than software `libx264` at the same resolution.
+
+<CodeGroup>
+
+```bash CPU (libx264)
+ffmpeg -i input.mp4 -c:v libx264 -preset medium -crf 23 output.mp4
+```
+
+```bash GPU (h264_nvenc)
+ffmpeg -i input.mp4 -c:v h264_nvenc -preset p5 -cq 23 output.mp4
+```
+
+</CodeGroup>
+
+Set `compute` only to force a choice. `gpu` pins the job to a GPU. `cpu` pins it to CPU and rejects an NVENC command with `VALIDATION_ERROR`.
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {},
+  "params": {
+    "command": "ffmpeg -i https://example.com/video.mp4 -c:v h264_nvenc -preset p5 -cq 23 output.mp4",
+    "compute": "gpu"
+  }
+}
+```
+
+<Info>
+GPU jobs require the Pro plan and bill per second at GPU rates. A GPU job on the Free plan returns `403 PLAN_LIMIT`. CPU jobs run on every plan.
+</Info>
+
+## Security model
+
+Every command is validated before it runs, then executed in an isolated, network-restricted sandbox.
+
+- **Flag allowlist.** Only known-safe flags pass. Anything unrecognised is rejected with `VALIDATION_ERROR` before dispatch.
+- **No reads through filters.** Filters and formats that read from disk, fetch over the network, or run external code are blocked.
+- **Path containment.** Inputs are limited to the files you provide. Path traversal and access to system paths are rejected.
+- **Sandboxed execution.** Each job runs in an isolated container with a clean environment, restricted I/O, and no ambient network access.
+
+## Cost & timeout
+
+Priced per compute second from your [credit balance](/concepts/credits), the wall-clock time FFmpeg ran, excluding file transfer. Typical cost ~$0.05/min.
+
+Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `PROVIDER_TIMEOUT`, and no credits are charged.
+
+## Examples
+
+### Scale to 720p
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {},
+  "params": {
+    "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4"
+  }
+}
+```
+
+### Extract audio
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {},
+  "params": {
+    "command": "ffmpeg -i https://example.com/video.mp4 -vn -c:a aac -b:a 128k output.m4a"
+  }
+}
+```
+
+### Trim 30s starting at 1:00
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {},
+  "params": {
+    "command": "ffmpeg -i https://example.com/video.mp4 -ss 00:01:00 -t 00:00:30 -c:v libx264 -c:a aac output.mp4"
+  }
+}
+```
+
+### Merge video + audio tracks
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": {},
+  "params": {
+    "command": "ffmpeg -i https://example.com/video.mp4 -i https://example.com/narration.mp3 -c:v libx264 -c:a aac -map 0:v -map 1:a output.mp4"
+  }
+}
+```
+
+## Output files
+
+The filenames your command writes define the output. You get back every file it produced.
+
+Every completed job, FFmpeg or otherwise, returns the same `output` shape. [Job output](/concepts/job-output) documents it in full. The short version:
+
+- `output.data`: the computed answer (a probe result, a transcript). `null` for FFmpeg jobs, which only write files.
+- `output.file`: the headline result you play or download, one file or a stream manifest. `null` for pure file sets.
+- `output.files`: every file the job produced, the complete list.
+- `output.expiresAt`: Unix ms when the URLs expire, present when `files` is non-empty.
+
+Each file is `{ url, path, type, size, meta? }`. The `type` is an open enum: `video`, `image`, `audio`, `captions`, `playlist`, `data`, or `other`. Tolerate values you do not recognise.
+
+A command that writes one file sets `output.file` to that file, and `output.files` to a list of one:
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": {
+        "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+        "path": "output.mp4",
+        "type": "video",
+        "size": 4194304,
+        "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+      },
+      "files": [
+        {
+          "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+          "path": "output.mp4",
+          "type": "video",
+          "size": 4194304,
+          "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
+        }
+      ],
+      "expiresAt": 1735689600000
+    }
+  }
+}
+```
+
+A command that writes a stream (HLS or DASH) sets `output.file` to the manifest, typed `playlist`. Point a player at `output.file.url` directly. `output.files` carries the manifest plus every segment:
+
+```json
+{
+  "type": "ffmpeg",
+  "inputs": { "video.mp4": "https://example.com/video.mp4" },
+  "params": {
+    "command": "ffmpeg -i video.mp4 -c:v libx264 -c:a aac -f hls -hls_time 6 -hls_segment_filename seg_%03d.ts master.m3u8"
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": {
+        "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8",
+        "path": "master.m3u8",
+        "type": "playlist",
+        "size": 412
+      },
+      "files": [
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "path": "seg_001.ts", "type": "video", "size": 1041203 }
+      ],
+      "expiresAt": 1735689600000
+    }
+  }
+}
+```
+
+A command that writes an unordered set (image sequence, `-f segment`, a resolution ladder) has no single headline result. `output.file` is `null`. Read `output.files` for the list:
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": null,
+      "files": [
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120 },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_002.png", "path": "frame_002.png", "type": "image", "size": 203904 }
+      ],
+      "expiresAt": 1735689600000
+    }
+  }
+}
+```
+
+Consuming the result is the same every time. The answer is `output.data`. The thing you play or download is `output.file.url`. The full list is `output.files`. Two invariants hold: `output.file` is always one of `output.files` (or `null`), and `output.expiresAt` is present whenever `output.files` is non-empty.
+
+URLs expire at `output.expiresAt`. Re-fetch the job with `GET /jobs/{id}` to mint fresh ones.
+
+## Error handling
+
+A failed job carries an `error` object with `code`, `message`, `detail`, and `retryable`. When FFmpeg exits non-zero, `error.detail` holds the last ~2 KB of the real stderr. Fetch the job to see exactly why FFmpeg stopped.
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "status": "failed",
+    "error": {
+      "code": "PROVIDER_ERROR",
+      "message": "FFmpeg process exited with code 1",
+      "detail": "[in#0 @ 0x55…] Error opening input: Invalid data found when processing input\nError opening input file clip.mp4.\n",
+      "retryable": false
+    }
+  }
+}
+```
+
+A disallowed flag is rejected before dispatch. The request fails with the error envelope, so no job is created:
+
+```json
+{ "error": { "code": "VALIDATION_ERROR", "message": "Flag '-protocol_whitelist' is not allowed in FFmpeg commands" } }
+```
+
+Full error catalogue: [Error codes](/support/errors).
 
 ## See also
 
 - [Job output](/concepts/job-output): the output shape every job returns
-- [FFmpeg guide](/guides/ffmpeg): security model, allowed flags, examples
-- [CLI](/cli/overview): same job, terminal interface
-- [Job lifecycle](/concepts/job-lifecycle)
-
-## Related
-
-- [FFmpeg guide](/guides/ffmpeg): security layers, allowed flags, worked examples
-- [CLI overview](/cli/overview): the same job from your terminal with `rb ffmpeg`
+- [CLI](/cli/overview): run the same job from your terminal with `rb ffmpeg`
+- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
 - [Credits and billing](/concepts/credits): per-compute-second pricing detail
 - [Plan limits](/support/limits): file-size caps, timeouts, and concurrency per plan
-- [FFmpeg in the cloud](https://rendobar.com/ffmpeg/): every operation Rendobar supports
+- [Job lifecycle](/concepts/job-lifecycle): how a job moves from dispatched to complete
+
+For a full list of FFmpeg-based operations supported by the API, see [rendobar.com/ffmpeg/](https://rendobar.com/ffmpeg/).
