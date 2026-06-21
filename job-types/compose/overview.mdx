@@ -30,20 +30,11 @@ canonical: "https://rendobar.com/docs/job-types/compose/overview"
 **Beta.** Compose is rolling out. Parameters below are stable, the full field reference lands with general availability.
 </Note>
 
-`compose` renders a video from a JSON timeline. You describe an edit as tracks and clips, and Rendobar renders it to a single file. No FFmpeg filtergraphs, no local rendering.
+`compose` renders a video from a JSON timeline. Start with one clip, then layer up: more clips, transitions, overlays, and effects. This page builds from the smallest render to the full model. Each step adds one idea.
 
-## How it works
+## Your simplest render
 
-A timeline has two layers of structure:
-
-- **Tracks** stack on top of each other. The first track is the background, each later track composites over the ones below it (overlays, captions, picture-in-picture).
-- **Clips** sit on a track in time. Each clip has a `start` and `length` in seconds and wraps one asset (a video, image, text, or audio). Two clips on the same track are joined by a [transition](/job-types/compose/transitions).
-
-Every clip can also carry effects. They are grouped into [Motion and speed](/job-types/compose/motion), [Color and filters](/job-types/compose/color), and [Compositing and text](/job-types/compose/compositing-text).
-
-## Your first render
-
-The job's `params` is the timeline itself: `schemaVersion`, an `output`, and the `timeline` of tracks. This one plays two clips with a one-second crossfade between them.
+The smallest timeline is one track with one clip. This trims three seconds of a video and renders it to MP4. The whole API call:
 
 <CodeGroup>
 
@@ -60,13 +51,9 @@ const job = await client.jobs.create({
     output: { format: "mp4", resolution: { width: 1280, height: 720 }, fps: 30 },
     timeline: {
       tracks: [
-        {
-          clips: [
-            { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/a.mp4", trim: { from: 0, to: 3 } }, start: 0, length: 3 },
-            { type: "transition", transition: "crossfade", duration: 1 },
-            { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/b.mp4", trim: { from: 0, to: 3 } }, start: 2, length: 3 },
-          ],
-        },
+        { clips: [
+          { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/a.mp4", trim: { from: 0, to: 3 } }, start: 0, length: 3 },
+        ] },
       ],
     },
   },
@@ -88,13 +75,9 @@ curl -X POST https://api.rendobar.com/jobs \
       "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },
       "timeline": {
         "tracks": [
-          {
-            "clips": [
-              { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 },
-              { "type": "transition", "transition": "crossfade", "duration": 1 },
-              { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/b.mp4", "trim": { "from": 0, "to": 3 } }, "start": 2, "length": 3 }
-            ]
-          }
+          { "clips": [
+            { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 }
+          ] }
         ]
       }
     }
@@ -107,16 +90,84 @@ curl -X POST https://api.rendobar.com/jobs \
 **Assets:** video, image, text, audio · **Output:** mp4 / mov / webp / jpg / png · **Timeout:** 600 s
 </Info>
 
-## Output
+That is the shape of every render. Everything below is one more clip, one more track, or one more field.
 
-Set the canvas with `output`. Pick the `resolution` and `fps`, and Rendobar fits every clip to it.
+## Join two clips
+
+Put a second clip on the same track and a transition between them. The clips overlap by the transition's `duration`, so the second clip starts a little before the first ends.
 
 ```json
-"output": { "format": "mp4", "resolution": { "width": 1080, "height": 1920 }, "fps": 30, "videoCodec": "h264", "audioCodec": "aac" }
+"clips": [
+  { "asset": { "type": "video", "src": "a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 },
+  { "type": "transition", "transition": "crossfade", "duration": 1 },
+  { "asset": { "type": "video", "src": "b.mp4", "trim": { "from": 0, "to": 3 } }, "start": 2, "length": 3 }
+]
 ```
 
-A `9:16` canvas with a `crop` on the clip turns landscape footage into a vertical Reel that fills the frame, no black bars.
+Crossfade, fade, slide, and zoom are on the [Transitions](/job-types/compose/transitions) page.
+
+## How the timeline works
+
+Now the model, in two ideas:
+
+- **Tracks stack.** The first track is the background. Each later track composites on top of the ones below it: overlays, titles, picture-in-picture.
+- **Clips sit in time.** Each clip has a `start` and a `length` in seconds. Two clips on the same track are joined by a transition. A gap between them plays nothing.
+
+So a multi-track timeline is layers (tracks) of sequences (clips). That is the whole structure.
+
+## Add a layer
+
+A second track renders over the first. This lays an animated title over the video.
+
+```json
+"tracks": [
+  { "clips": [ { "asset": { "type": "video", "src": "a.mp4" }, "start": 0, "length": 5 } ] },
+  { "clips": [ {
+      "asset": { "type": "text", "text": "Coastal Escape",
+        "style": { "font": "Inter", "weight": 800, "size": 84, "color": "#FFFFFF",
+                   "position": { "x": "50%", "y": "40%" }, "animate": { "type": "slideUp", "duration": 0.7 } } },
+      "start": 0, "length": 5 } ] }
+]
+```
+
+Titles, lower-thirds, and chroma key are on [Compositing and text](/job-types/compose/compositing-text).
+
+## Style a clip
+
+Any clip takes effects as fields. Add `color` to grade it, `speed` to slow it down, `transform` to animate it, `chromaKey` to key out a background. One field at a time, on the clip it applies to.
+
+```json
+{ "asset": { "type": "video", "src": "a.mp4" }, "start": 0, "length": 5,
+  "color": { "contrast": 1.12, "saturation": 1.2, "temperature": 6800 } }
+```
+
+Each effect, with a before and after, lives on [Motion and speed](/job-types/compose/motion), [Color and filters](/job-types/compose/color), and [Compositing and text](/job-types/compose/compositing-text).
+
+## Set the canvas
+
+`output` controls the resolution, frame rate, and format. A `9:16` canvas with a `crop` on the clip turns landscape footage into a vertical Reel that fills the frame, no black bars.
+
+```json
+"output": { "format": "mp4", "resolution": { "width": 1080, "height": 1920 }, "fps": 30 }
+```
 
 <Frame caption="Landscape footage reframed to a vertical 9:16 Reel (crop)">
   <video src="https://cdn.rendobar.com/assets/showcase/fx/reframe.mp4" autoPlay loop muted playsInline style={{ maxWidth: "300px" }} />
 </Frame>
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Transitions" icon="arrow-right-arrow-left" href="/job-types/compose/transitions">
+    Crossfade, fade, slide, and zoom between two clips.
+  </Card>
+  <Card title="Motion & speed" icon="wand-magic-sparkles" href="/job-types/compose/motion">
+    Transform and Ken Burns, picture-in-picture, slow-motion, timelapse.
+  </Card>
+  <Card title="Color & filters" icon="palette" href="/job-types/compose/color">
+    Cinematic grades, lifting flat footage, dramatic black and white.
+  </Card>
+  <Card title="Compositing & text" icon="layer-group" href="/job-types/compose/compositing-text">
+    Chroma key, blend modes, opacity fades, blurred backdrops, titles.
+  </Card>
+</CardGroup>
