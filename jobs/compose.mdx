@@ -155,9 +155,9 @@ Put a second clip on the same track and a transition between them. The clips ove
 
 ```json
 "clips": [
-  { "asset": { "type": "video", "src": "a.mp4" }, "start": 0, "length": 3 },
+  { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sample.mp4" }, "start": 0, "length": 3 },
   { "type": "transition", "transition": "crossfade", "duration": 1 },
-  { "asset": { "type": "video", "src": "b.mp4" }, "start": 2, "length": 3 }
+  { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sample.mp4" }, "start": 2, "length": 3 }
 ]
 ```
 
@@ -201,7 +201,7 @@ A second track renders over the first. This lays an animated title over the vide
 ```json
 "tracks": [
   { "clips": [
-    { "asset": { "type": "video", "src": "a.mp4" }, "start": 0, "length": 5 }
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sample.mp4" }, "start": 0, "length": 5 }
   ] },
   { "clips": [
     { "asset": { "type": "text", "text": "Coastal Escape", "style": { "size": 84 } },
@@ -216,7 +216,7 @@ Effects are fields on a clip. Stack as many as you like on one clip. Each exampl
 
 ```json
 {
-  "asset": { "type": "video", "src": "a.mp4" },
+  "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sample.mp4" },
   "start": 0,
   "length": 5,
   "color": { "saturation": 1.2, "temperature": 6800 },
@@ -311,11 +311,11 @@ Tracks give you precise multi-track control. For a sequential edit, you can inst
 {
   "scenes": [
     { "duration": 4, "transition": { "transition": "crossfade", "duration": 0.6 },
-      "clips": [{ "asset": { "type": "video", "src": "a.mp4" } }] },
-    { "duration": 4, "clips": [{ "asset": { "type": "video", "src": "b.mp4" } }] }
+      "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sample.mp4" } }] },
+    { "duration": 4, "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sample.mp4" } }] }
   ],
   "overlays": [
-    { "asset": { "type": "image", "src": "logo.png" }, "start": 0, "length": 8,
+    { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" }, "start": 0, "length": 8,
       "transform": { "scale": 0.2, "position": { "x": "88%", "y": "12%" } } }
   ]
 }
