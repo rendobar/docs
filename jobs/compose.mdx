@@ -131,16 +131,16 @@ Put a second clip on the same track and a transition between them. The clips ove
 
 <Columns cols={2}>
   <Frame caption="crossfade">
-    <video src="https://cdn.rendobar.com/assets/showcase/transitions/crossfade.mp4" autoPlay loop muted playsInline />
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/crossfade.mp4" autoPlay loop muted playsInline controls />
   </Frame>
   <Frame caption="fade">
-    <video src="https://cdn.rendobar.com/assets/showcase/transitions/fade.mp4" autoPlay loop muted playsInline />
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/fade.mp4" autoPlay loop muted playsInline controls />
   </Frame>
   <Frame caption="slide (left)">
-    <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-left.mp4" autoPlay loop muted playsInline />
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-left.mp4" autoPlay loop muted playsInline controls />
   </Frame>
   <Frame caption="zoom">
-    <video src="https://cdn.rendobar.com/assets/showcase/transitions/zoom.mp4" autoPlay loop muted playsInline />
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/zoom.mp4" autoPlay loop muted playsInline controls />
   </Frame>
 </Columns>
 
@@ -171,93 +171,72 @@ A second track renders over the first. This lays an animated title over the vide
 
 ## Effects on a clip
 
-Any clip takes effects as fields. Add one field at a time, on the clip it applies to.
-
-### Color grade
-
-`color` grades a clip. Set `contrast`, `saturation`, `temperature`, `brightness`, and `gamma` to set a cinematic mood, or push them to lift flat, hazy footage.
+Effects are fields on a clip. Stack as many as you like on one clip. Each example below shows the source on the left and the rendered result on the right. Exact fields and ranges are in the [Reference](#clip-fields).
 
 ```json
-"color": { "contrast": 1.12, "saturation": 1.2, "temperature": 6800, "gamma": 0.95 }
-```
-
-<Frame caption="Cinematic color grade to set a mood">
-  <video src="https://cdn.rendobar.com/assets/showcase/fx/color-grade.mp4" autoPlay loop muted playsInline />
-</Frame>
-
-### Filters
-
-`filter` applies a one-shot look: `greyscale`, `negative`, `boost`, `muted`, `lighten`, `darken`, or `contrast`.
-
-```json
-"filter": "greyscale"
-```
-
-### Transform and Ken Burns
-
-`transform` positions and scales a clip. Add `animateTo` and it animates from the start values to the end values over the clip, the Ken Burns move that brings a still photo to life.
-
-```json
-"transform": {
-  "scale": 1.1,
-  "position": { "x": "38%", "y": "48%" },
-  "animateTo": { "scale": 1.32, "position": { "x": "62%", "y": "52%" } }
+{
+  "asset": { "type": "video", "src": "a.mp4" },
+  "start": 0,
+  "length": 5,
+  "color": { "saturation": 1.2, "temperature": 6800 },
+  "speed": 0.8,
+  "transform": { "scale": 1.1, "animateTo": { "scale": 1.3 } }
 }
 ```
 
-<Frame caption="Bring a still photo to life for slideshows and docs">
-  <video src="https://cdn.rendobar.com/assets/showcase/fx/kenburns.mp4" autoPlay loop muted playsInline />
-</Frame>
+### Color and filters
 
-### Picture-in-picture
+`color` grades a clip with `contrast`, `saturation`, `temperature`, `brightness`, `gamma`, and `hue`. `filter` applies a one-shot look like `greyscale` or `boost`.
 
-Scale a clip down and position it on an overlay track to put a webcam over your content, for reactions and screen-shares.
+<Columns cols={2}>
+  <Frame caption="Cinematic color grade for mood (color)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/color-grade.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Lift flat, hazy footage (color)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/social-pop.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Dramatic black and white (filter: greyscale)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/black-white.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
 
-```json
-"transform": { "scale": 0.3, "position": { "x": "80%", "y": "75%" } }
-```
+### Motion and speed
 
-### Speed
+`transform` positions, scales, and rotates a clip. Add `animateTo` for a Ken Burns move, or scale a clip down and place it on an overlay track for picture-in-picture. `speed` is a playback multiplier: below `1` for slow motion, above `1` for a timelapse.
 
-`speed` is a multiplier. Below `1` slows a clip down for a dramatic action beat, above `1` speeds a slow process into a timelapse.
+<Columns cols={2}>
+  <Frame caption="Ken Burns: bring a still photo to life (transform.animateTo)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/kenburns.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Picture-in-picture webcam (transform.scale)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/pip-webcam.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Slow motion (speed: 0.4)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/slowmo.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Timelapse (speed: 3)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/timelapse.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
 
-```json
-"speed": 0.4
-```
+### Compositing
 
-### Chroma key
+`chromaKey` keys out a solid background color so you can drop a presenter onto any scene. `blendMode` controls how an overlay blends with the track below. `opacity` (a number or keyframes) and `blur` handle fades and soft backdrops.
 
-`chromaKey` removes a solid background color so you can drop a presenter onto any scene. Put the keyed clip on an overlay track above the new background.
-
-```json
-"chromaKey": { "color": "#66DD09", "similarity": 0.28 }
-```
-
-<Frame caption="Put a presenter on any background (chroma key)">
-  <video src="https://cdn.rendobar.com/assets/showcase/fx/chroma.mp4" autoPlay loop muted playsInline />
-</Frame>
-
-### Blend modes
-
-`blendMode` controls how an overlay composites with the track below: `screen`, `multiply`, `overlay`, `add`, and more. A light-leak clip over your footage with `screen` adds a cinematic glow.
-
-```json
-"blendMode": "screen",
-"opacity": 0.7
-```
-
-### Opacity and blur
-
-`opacity` takes a number or keyframes. Keyframe it from `0` to `1` and back for a clean fade in and out. `blur` softens a clip, useful as a backdrop that keeps overlaid text readable.
-
-```json
-"opacity": [
-  { "time": 0, "value": 0 },
-  { "time": 0.6, "value": 1 },
-  { "time": 2.4, "value": 1 },
-  { "time": 3, "value": 0 }
-]
-```
+<Columns cols={2}>
+  <Frame caption="Chroma key onto any background (chromaKey)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/chroma.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Cinematic light-leak glow (blendMode: screen)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/light-leak.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Clean fade in and out (opacity keyframes)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/fade-in-out.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Blurred backdrop keeps text readable (blur)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/blur-text.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
 
 ## Text and titles
 
@@ -291,7 +270,7 @@ A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`
 ```
 
 <Frame caption="Landscape footage reframed to a vertical 9:16 Reel (crop)">
-  <video src="https://cdn.rendobar.com/assets/showcase/fx/reframe.mp4" autoPlay loop muted playsInline style={{ maxWidth: "300px" }} />
+  <video src="https://cdn.rendobar.com/assets/showcase/fx/reframe.mp4" autoPlay loop muted playsInline controls style={{ maxWidth: "300px" }} />
 </Frame>
 
 ## Scene-first authoring
