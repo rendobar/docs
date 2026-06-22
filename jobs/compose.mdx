@@ -1,7 +1,7 @@
 ---
 title: "Compose: render from a timeline"
 sidebarTitle: "Compose"
-description: "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects, in one API call."
+description: "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects."
 icon: "film"
 keywords: ["video compose api", "json timeline to video", "video transitions api", "video editing api", "compose"]
 canonical: "https://rendobar.com/docs/jobs/compose"
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/jobs/compose"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/jobs/compose/#article",
       "headline": "Compose: render from a timeline",
-      "description": "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects, in one API call.",
+      "description": "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects.",
       "datePublished": "2026-06-21",
       "dateModified": "2026-06-22",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
@@ -29,7 +29,7 @@ canonical: "https://rendobar.com/docs/jobs/compose"
 
 ## Your simplest render
 
-The smallest timeline is one track with one clip. This trims three seconds of a video and renders it to MP4. The whole API call:
+The smallest timeline is one track with one clip. This renders the first three seconds of a video to MP4. The whole API call:
 
 <CodeGroup>
 
@@ -54,8 +54,7 @@ const job = await client.jobs.create({
             {
               asset: {
                 type: "video",
-                src: "https://cdn.rendobar.com/assets/examples/a.mp4",
-                trim: { from: 0, to: 3 },
+                src: "https://cdn.rendobar.com/assets/examples/sample.mp4",
               },
               start: 0,
               length: 3,
@@ -93,8 +92,7 @@ res = requests.post(
                             {
                                 "asset": {
                                     "type": "video",
-                                    "src": "https://cdn.rendobar.com/assets/examples/a.mp4",
-                                    "trim": {"from": 0, "to": 3},
+                                    "src": "https://cdn.rendobar.com/assets/examples/sample.mp4",
                                 },
                                 "start": 0,
                                 "length": 3,
@@ -128,8 +126,7 @@ curl -X POST https://api.rendobar.com/jobs \
               {
                 "asset": {
                   "type": "video",
-                  "src": "https://cdn.rendobar.com/assets/examples/a.mp4",
-                  "trim": { "from": 0, "to": 3 }
+                  "src": "https://cdn.rendobar.com/assets/examples/sample.mp4"
                 },
                 "start": 0,
                 "length": 3
@@ -147,6 +144,8 @@ curl -X POST https://api.rendobar.com/jobs \
 <Info>
 **Assets:** video, image, text, audio, composition · **Output:** mp4 / webm / gif / mp3 (audio only) / jpg / png (still frame)
 </Info>
+
+Without `trim`, a clip plays its source from the start for `length` seconds. To use a specific segment instead, add `trim: { from, to }` (in source seconds) to the asset. `length` is always the timeline duration. `trim` only chooses which part of the source fills it.
 
 That is the shape of every render. Everything below is one more clip, one more track, or one more field.
 
