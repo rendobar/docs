@@ -48,17 +48,6 @@
                   "jobs/captions/animate",
                   "jobs/captions/burn"
                 ]
-              },
-              {
-                "group": "Compose",
-                "icon": "film",
-                "pages": [
-                  "jobs/compose/overview",
-                  "jobs/compose/transitions",
-                  "jobs/compose/motion",
-                  "jobs/compose/color",
-                  "jobs/compose/compositing-text"
-                ]
               }
             ]
           },
