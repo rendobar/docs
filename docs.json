@@ -34,7 +34,6 @@
             "group": "Concepts",
             "pages": [
               "concepts/job",
-              "concepts/job-output",
               "guides/webhooks"
             ]
           },
@@ -116,6 +115,10 @@
     {
       "source": "/concepts/job-lifecycle",
       "destination": "/concepts/job"
+    },
+    {
+      "source": "/concepts/job-output",
+      "destination": "/concepts/job#the-output"
     },
     {
       "source": "/authentication",

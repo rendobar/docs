@@ -333,7 +333,7 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 
 The filenames your command writes define the output. You get back every file it produced.
 
-Every completed job, FFmpeg or otherwise, returns the same `output` shape. [Job output](/concepts/job-output) documents it in full. The short version:
+Every completed job, FFmpeg or otherwise, returns the same `output` shape. [Job output](/concepts/job#the-output) documents it in full. The short version:
 
 - `output.data`: the computed answer (a probe result, a transcript). `null` for FFmpeg jobs, which only write files.
 - `output.file`: the headline result you play or download, one file or a stream manifest. `null` for pure file sets.
@@ -463,7 +463,7 @@ Full error catalogue: [Error codes](/support/errors).
 
 ## See also
 
-- [Job output](/concepts/job-output): the output shape every job returns
+- [Job output](/concepts/job#the-output): the output shape every job returns
 - [CLI](/cli): run the same job from your terminal with `rb ffmpeg`
 - [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
 - [Credits and billing](/concepts/credits): per-compute-second pricing detail

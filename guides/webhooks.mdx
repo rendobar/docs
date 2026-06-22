@@ -63,7 +63,7 @@ X-Rendobar-Delivery: del_x1y2z3
 X-Rendobar-Attempt: 1
 ```
 
-The webhook carries the same contract as [GET /jobs/{id}](/concepts/job-output). A `job.completed` payload includes the unified `output` object. The `data` field has the structured answer for analysis jobs, `file.url` is a signed, time-limited URL, and `files` lists every produced file. Read [Job output](/concepts/job-output) for the full shape, the File type, and the four output patterns.
+The webhook carries the same contract as [GET /jobs/{id}](/concepts/job#the-output). A `job.completed` payload includes the unified `output` object. The `data` field has the structured answer for analysis jobs, `file.url` is a signed, time-limited URL, and `files` lists every produced file. Read [Job output](/concepts/job#the-output) for the full shape, the File type, and the four output patterns.
 
 ```json
 {
@@ -98,9 +98,9 @@ The webhook carries the same contract as [GET /jobs/{id}](/concepts/job-output).
 }
 ```
 
-The `output` shape is identical for every job type. A data-only job (such as `extract.metadata`) carries its answer in `output.data` with `file` null and `files` empty. A stream job carries the manifest as `output.file` and every segment in `output.files`. See [Job output](/concepts/job-output) for each pattern.
+The `output` shape is identical for every job type. A data-only job (such as `extract.metadata`) carries its answer in `output.data` with `file` null and `files` empty. A stream job carries the manifest as `output.file` and every segment in `output.files`. See [Job output](/concepts/job#the-output) for each pattern.
 
-For `job.failed`, the payload carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job-output) error shape: `code`, `message`, `detail` (the provider stderr tail, or null), and `retryable`.
+For `job.failed`, the payload carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job#the-output) error shape: `code`, `message`, `detail` (the provider stderr tail, or null), and `retryable`.
 
 ```json
 {
@@ -194,7 +194,7 @@ curl https://api.rendobar.com/webhook-endpoints/YOUR_ENDPOINT_ID/deliveries \
 
 ## See also
 
-- [Job output](/concepts/job-output): the canonical `output` and `error` shape this payload carries
+- [Job output](/concepts/job#the-output): the canonical `output` and `error` shape this payload carries
 - [Job lifecycle](/concepts/job)
 - [FFmpeg](/jobs/ffmpeg)
 - [Error codes](/support/errors)
