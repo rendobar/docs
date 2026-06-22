@@ -1,0 +1,194 @@
+---
+title: "Use the TypeScript SDK"
+sidebarTitle: "SDK"
+description: "Install @rendobar/sdk, create a typed client, submit a job, wait for it, then read the output URL, with retries, errors, and webhooks."
+icon: "square-js"
+keywords: ["typescript sdk", "node sdk", "@rendobar/sdk", "javascript client", "createClient", "jobs.create", "jobs.wait", "outputUrl", "verifyWebhookSignature"]
+canonical: "https://rendobar.com/docs/sdk"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/sdk/#article",
+      "headline": "Use the TypeScript SDK",
+      "description": "Install @rendobar/sdk, create a typed client, submit a job, wait for it, then read the output URL, with retries, errors, and webhooks.",
+      "datePublished": "2026-06-22",
+      "dateModified": "2026-06-22",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+The official TypeScript client. Typed methods, automatic retries, response unwrapping. Ships ESM with types, runs on Node 18+, Deno, Bun, Workers, and the browser.
+
+## Quickstart
+
+```bash
+npm install @rendobar/sdk
+```
+
+```ts title="render.ts"
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const created = await client.jobs.create({
+  type: "ffmpeg",
+  params: {
+    command: "ffmpeg -i https://example.com/input.mp4 -c:v libx265 -crf 28 output.mp4",
+  },
+});
+
+const job = await client.jobs.wait(created.id);
+
+if (job.status === "complete") {
+  console.log(outputUrl(job)); // signed download URL
+}
+```
+
+`jobs.create` returns a `waiting` job. `jobs.wait` polls until a terminal status (`complete`, `failed`, `cancelled`) and returns it.
+
+## Jobs
+
+Every method takes an optional `{ signal }` to abort the request or a `wait` loop.
+
+### Create
+
+```ts
+const created = await client.jobs.create({
+  type: "ffmpeg",
+  params: { command: "ffmpeg -i https://example.com/in.mp4 -c:v libx265 out.mp4" },
+});
+```
+
+`type`, `inputs`, and `params` are per [job type](/jobs/ffmpeg). Pass `idempotencyKey` to make a retry return the original job instead of a duplicate.
+
+### Wait, get, list
+
+```ts
+const job  = await client.jobs.wait("job_abc", { timeout: 600_000, onProgress: (j) => console.log(j.status) });
+const one  = await client.jobs.get("job_abc");
+const page = await client.jobs.list({ status: "complete", limit: 20 }); // page.data, page.meta
+for await (const j of client.jobs.listAll({ status: "failed" })) console.log(j.id);
+```
+
+`wait` throws if it does not finish before `timeout` (default `300000`). `listAll` walks every page. Cancel a running job with `client.jobs.cancel("job_abc")`.
+
+### Read the output
+
+A job is a union on `status`. `output` exists only when `status === "complete"`, `error` only when `failed`. Narrow first.
+
+```ts
+type Output = {
+  data: unknown | null;        // job-type-specific JSON, or null for file jobs
+  file: OutputFile | null;     // headline file or .m3u8/.mpd manifest, null for sets
+  files: OutputFile[];         // every file the job produced
+  expiresAt: number | null;    // Unix ms URL expiry, set when files is non-empty
+};
+
+type OutputFile = {
+  url: string;                 // ready-to-fetch, time-limited URL
+  path: string;
+  type: "video" | "image" | "audio" | "captions" | "playlist" | "data" | "other";
+  size: number;                // bytes
+  meta?: { format?: string; width?: number; height?: number; durationMs?: number };
+};
+```
+
+- `outputUrl(job)` returns the headline URL: the one file, or the HLS/DASH manifest. It is `undefined` for data-only jobs, file sets, and non-complete jobs.
+- `output.files` is every file, for sequences, HLS segments, or a resolution ladder.
+- `jobData<T>(job)` reads `output.data` as `T | null` for probe, detection, and transcript jobs. Validate `T` yourself for untrusted input.
+- A `failed` job carries `JobError { code, message, detail, retryable }`.
+
+```ts
+import { outputUrl, jobData } from "@rendobar/sdk";
+
+const job = await client.jobs.wait("job_abc");
+if (job.status === "complete") console.log(outputUrl(job));
+else if (job.status === "failed") console.error(job.error.code, job.error.message);
+```
+
+`jobs.download(id)` returns the raw `Response`, `jobs.logs(id)` returns execution logs, `jobs.types()` lists the job types available to your org.
+
+## Other resources
+
+Each takes an optional `{ signal }`.
+
+**Uploads.** `uploads.create` runs the full asset flow and returns an `Asset`. Reference `asset.url` as a job input. Ephemeral for 24 hours unless `persist: true`.
+
+```ts
+const asset = await client.uploads.create(bytes, { filename: "clip.mp4", persist: true });
+await client.jobs.create({
+  type: "ffmpeg",
+  inputs: { source: asset.url },
+  params: { command: "ffmpeg -i {source} -c:v libx265 output.mp4" },
+});
+```
+
+**Batches.** `batches.create({ jobs: [...] })` submits many jobs at once and returns `batchId`, `jobCount`, and `jobIds`. Wait on each id.
+
+**Billing.** `billing.state()` for balance and plan, `billing.usage({ start, end })` for spend, `billing.transactions({ page, limit })` for the ledger.
+
+**Webhooks.** `webhooks.create({ name, url, subscribedEvents })` registers an endpoint. Verify every delivery with the zero-dependency `verifyWebhookSignature` from `@rendobar/sdk/webhooks` (reads the `X-Rendobar-Signature` header, returns `Promise<boolean>`).
+
+```ts
+import { verifyWebhookSignature } from "@rendobar/sdk/webhooks";
+
+const valid = await verifyWebhookSignature(body, req.headers.get("X-Rendobar-Signature") ?? "", secret);
+if (!valid) return new Response("invalid signature", { status: 401 });
+```
+
+**Realtime.** `realtime.subscribeJob(id, { onProgress, onStep, onComplete })` streams one job, `realtime.connect({...})` streams all org events.
+
+```ts
+const sub = client.realtime.subscribeJob("job_abc", { onProgress: (e) => console.log(e.progress) });
+```
+
+<Warning>
+  Realtime needs session-cookie auth, not API keys. API-key users poll with `jobs.wait`.
+</Warning>
+
+Every response and param type is exported from `@rendobar/sdk` as a named `type`.
+
+## Config and errors
+
+```ts
+const server  = createClient({ apiKey: "rb_YOUR_KEY" });    // server-side
+const browser = createClient({ credentials: "include" });   // first-party browser, sends the auth cookie
+```
+
+| Option | Default | Purpose |
+|---|---|---|
+| `apiKey` | — | `rb_` key. Required server-side. |
+| `baseUrl` | `https://api.rendobar.com` | API origin. Override for staging. |
+| `timeout` | `30000` | Per-request timeout in ms. |
+| `maxRetries` | `2` | Auto-retries for 429 and 5xx. |
+| `orgId` | — | Default org, sent as `X-Org-Id`. |
+| `debug` | `false` | Log request metadata. |
+
+Failed requests throw an `ApiError` with `code`, `statusCode`, `message`, and `retryAfter` (on `RATE_LIMITED`). Narrow with `isApiError`.
+
+```ts
+import { isApiError } from "@rendobar/sdk";
+
+try {
+  await client.jobs.create({ type: "ffmpeg", params: { command: "ffmpeg -i in.mp4 out.webm" } });
+} catch (err) {
+  if (isApiError(err)) console.log(err.code, err.statusCode, err.message);
+}
+```
+
+Codes: `UNAUTHORIZED`, `FORBIDDEN`, `VALIDATION_ERROR`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `NOT_FOUND`, `CONFLICT`, `INTERNAL_ERROR`. The client auto-retries 429 (respecting `Retry-After`) and 5xx with backoff. Other 4xx throw immediately.
+
+## See also
+
+- [Job types](/jobs/ffmpeg): the type, inputs, and params for every job
+- [Webhooks](/guides/webhooks): event payloads and delivery retries
+- [Job lifecycle](/concepts/job): the statuses a job moves through
+- [Credits and billing](/concepts/credits): how jobs debit your balance

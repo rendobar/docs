@@ -1,7 +1,7 @@
 ---
 title: "Credits and billing"
 sidebarTitle: "Credits"
-description: "Get per-job nanodollar billing from a prepaid balance. Free plan grants $5, Pro is $9/mo. Credits never expire. Every terminal job pays actual compute."
+description: "Get per-job nanodollar billing from a prepaid credit balance. Free includes a signup grant, Pro adds monthly credits, and credits never expire."
 icon: "coins"
 keywords: ["credit-based billing", "nanodollar pricing", "rendobar credits", "video api credits", "prepaid balance"]
 canonical: "https://rendobar.com/docs/concepts/credits"
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/concepts/credits"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/concepts/credits/#article",
       "headline": "Credits and billing",
-      "description": "Per-job nanodollar billing from a prepaid balance. Free plan ships with $5, Pro is $9/mo. Credits never expire. Every terminal job is charged for actual compute used.",
+      "description": "Get per-job nanodollar billing from a prepaid credit balance. Free includes a signup grant, Pro adds monthly credits, and credits never expire.",
       "datePublished": "2026-03-20",
       "dateModified": "2026-05-24",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
@@ -70,7 +70,7 @@ Because the submit gate checks `balance > 0` rather than an estimate, a single l
 
 ## Cost model
 
-`ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. Typical cost: ~$0.05/min. The same per-second rate applies whether the job completes successfully or fails partway through.
+`ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. The same per-second rate applies whether the job completes successfully or fails partway through.
 
 If your balance is at or below zero when you submit:
 
@@ -116,14 +116,14 @@ Returns daily usage by job type: count, amount charged, and compute seconds.
 
 ## See also
 
-- [Job lifecycle](/concepts/job-lifecycle): where the debit happens
+- [Job lifecycle](/concepts/job): where the debit happens
 - [Limits](/support/limits): full quota table
-- [FFmpeg reference](/job-types/ffmpeg): the live cost model
+- [FFmpeg reference](/jobs/ffmpeg): the live cost model
 
 ## Related
 
 - [Plan limits and quotas](/support/limits): exact rate, file, and storage caps per plan
-- [Job lifecycle](/concepts/job-lifecycle): when the debit lands and what statuses mean
+- [Job lifecycle](/concepts/job): when the debit lands and what statuses mean
 - [Error codes](/support/errors): `INSUFFICIENT_CREDITS`, `PLAN_LIMIT`, and friends
 - [Pricing](https://rendobar.com/pricing/): plan comparison and credit packs
 - [FAQ on cost](/support/faq): common pricing and billing questions

@@ -27,59 +27,45 @@
           {
             "group": "Getting Started",
             "pages": [
-              "quickstart",
-              "authentication",
-              "concepts/credits"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/ffmpeg",
-              "guides/webhooks"
-            ]
-          },
-          {
-            "group": "CLI",
-            "pages": [
-              "cli/overview",
-              "cli/installation",
-              "cli/authentication",
-              "cli/commands",
-              "cli/ci-cd",
-              "cli/troubleshooting"
+              "quickstart"
             ]
           },
           {
             "group": "Concepts",
             "pages": [
-              "concepts/job-lifecycle",
-              "concepts/job-output"
+              "concepts/job",
+              "guides/webhooks"
             ]
           },
           {
-            "group": "Reference",
+            "group": "Jobs",
             "pages": [
-              "job-types/ffmpeg",
-              "job-types/captions-animate",
-              "job-types/caption-burn"
+              "jobs/ffmpeg",
+              {
+                "group": "Captions",
+                "icon": "closed-captioning",
+                "pages": [
+                  "jobs/captions/animate",
+                  "jobs/captions/burn"
+                ]
+              }
             ]
           },
           {
-            "group": "MCP",
+            "group": "Integrations",
+            "icon": "puzzle-piece",
             "pages": [
-              "mcp/overview",
-              "mcp/installation",
-              "mcp/examples",
-              "mcp/tools",
-              "mcp/web-and-mobile",
-              "mcp/troubleshooting"
+              "sdk",
+              "cli",
+              "mcp",
+              "n8n"
             ]
           },
           {
             "group": "Support",
             "pages": [
               "support/faq",
+              "concepts/credits",
               "support/limits",
               "support/errors"
             ]
@@ -116,16 +102,68 @@
       "destination": "/concepts/credits"
     },
     {
-      "source": "/guides/captions",
-      "destination": "/job-types/captions-animate"
+      "source": "/concepts/job-lifecycle",
+      "destination": "/concepts/job"
     },
     {
-      "source": "/job-types/raw-ffmpeg",
-      "destination": "/job-types/ffmpeg"
+      "source": "/concepts/job-output",
+      "destination": "/concepts/job#the-output"
+    },
+    {
+      "source": "/authentication",
+      "destination": "/quickstart"
+    },
+    {
+      "source": "/guides/captions",
+      "destination": "/jobs/captions/animate"
+    },
+    {
+      "source": "/jobs/captions",
+      "destination": "/jobs/captions/animate"
+    },
+    {
+      "source": "/jobs/captions/overview",
+      "destination": "/jobs/captions/animate"
+    },
+    {
+      "source": "/jobs/captions-animate",
+      "destination": "/jobs/captions/animate"
+    },
+    {
+      "source": "/jobs/caption-burn",
+      "destination": "/jobs/captions/burn"
+    },
+    {
+      "source": "/cli/:slug*",
+      "destination": "/cli"
+    },
+    {
+      "source": "/mcp/:slug*",
+      "destination": "/mcp"
+    },
+    {
+      "source": "/sdk/:slug*",
+      "destination": "/sdk"
+    },
+    {
+      "source": "/n8n/:slug*",
+      "destination": "/n8n"
+    },
+    {
+      "source": "/guides/ffmpeg",
+      "destination": "/jobs/ffmpeg"
     },
     {
       "source": "/guides/raw-ffmpeg",
-      "destination": "/guides/ffmpeg"
+      "destination": "/jobs/ffmpeg"
+    },
+    {
+      "source": "/job-types/raw-ffmpeg",
+      "destination": "/jobs/ffmpeg"
+    },
+    {
+      "source": "/job-types/:slug*",
+      "destination": "/jobs/:slug*"
     }
   ],
   "navbar": {

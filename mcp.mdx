@@ -1,0 +1,185 @@
+---
+title: "Connect AI agents with the MCP server"
+sidebarTitle: "MCP"
+description: "Connect Claude Desktop, Cursor, claude.ai, or any MCP client to submit video jobs, upload files, and poll status without writing HTTP code."
+icon: "plug"
+keywords: ["mcp server", "model context protocol", "claude desktop mcp", "cursor mcp", "claude.ai connector", "chatgpt mcp", "ai agent video tools"]
+canonical: "https://rendobar.com/docs/mcp"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/mcp/#article",
+      "headline": "Connect AI agents with the MCP server",
+      "description": "Connect Claude Desktop, Cursor, claude.ai, or any MCP client to submit video jobs, upload files, and poll status without writing HTTP code.",
+      "datePublished": "2026-06-22",
+      "dateModified": "2026-06-22",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+`@rendobar/mcp` is a Model Context Protocol server that gives an AI agent the same operations as the REST API: submit jobs, upload local files, poll status. Run it locally with `npx`, or connect the remote HTTP server from a browser.
+
+## Connect a client
+
+Get an API key at [app.rendobar.com](https://app.rendobar.com) under Settings, API Keys. Copy the `rb_...` value. Then add Rendobar to your client.
+
+<Tabs>
+<Tab title="Claude Desktop">
+
+Edit the config file, then restart Claude Desktop.
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "rendobar": {
+      "command": "npx",
+      "args": ["-y", "@rendobar/mcp"],
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab title="Cursor">
+
+Edit `~/.cursor/mcp.json` (global) or `<project>/.cursor/mcp.json` (project).
+
+```json
+{
+  "mcpServers": {
+    "rendobar": {
+      "command": "npx",
+      "args": ["-y", "@rendobar/mcp"],
+      "env": { "RENDOBAR_API_KEY": "rb_..." }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab title="Claude Code">
+
+Run from a terminal:
+
+```bash
+claude mcp add rendobar -s user --env RENDOBAR_API_KEY=rb_... -- npx -y @rendobar/mcp
+```
+
+</Tab>
+<Tab title="VS Code">
+
+VS Code 1.101+ uses `servers` and prompts for the key on first use.
+
+```json
+{
+  "servers": {
+    "rendobar": {
+      "command": "npx",
+      "args": ["-y", "@rendobar/mcp"],
+      "env": { "RENDOBAR_API_KEY": "${input:rendobarKey}" }
+    }
+  },
+  "inputs": [
+    { "id": "rendobarKey", "type": "promptString", "password": true, "description": "Rendobar API Key" }
+  ]
+}
+```
+
+</Tab>
+<Tab title="Other clients">
+
+Cline, Windsurf, Zed, and Continue use the same `npx -y @rendobar/mcp` command with the `RENDOBAR_API_KEY` env var. The wrapper differs:
+
+- **Cline:** MCP panel, Configure, paste the Claude Desktop block.
+- **Windsurf:** `~/.codeium/windsurf/mcp_config.json`, same schema as Claude Desktop.
+- **Zed:** `~/.config/zed/settings.json`, top-level key is `context_servers` (not `mcpServers`) and add `"source": "custom"`.
+- **Continue:** `.continue/mcpServers/rendobar.yaml` with `type: stdio`.
+
+</Tab>
+</Tabs>
+
+To check it worked, ask your agent: "What's my Rendobar balance?" The agent calls `get_account` and reports your balance. If you see "No Rendobar API key found" in the client's MCP logs, the `env` block didn't reach the server. See [Common fixes](#common-fixes).
+
+<Info>Needs Node 20.10 or later. The server checks at startup and exits with a clear message if it's older.</Info>
+
+## Tools
+
+Both servers expose the same five job tools. The local server adds `upload_file` (reads a file off disk in one call). The remote server swaps in `upload_media`, which hands you a curl command to upload first.
+
+| Tool | Purpose | Returns |
+|---|---|---|
+| `submit_job` | Submit any active job type. `inputs` maps name to URL, `params` carries type-specific options. | `{ jobId, status, url? }` |
+| `get_job` | Poll one job by ID. Shape grows with status (`progress` while running, `cost` and `output` when complete). | `{ id, type, status, output?, ... }` |
+| `list_jobs` | Recent jobs, filterable by `status` and `type`. | `{ jobs[], total }` |
+| `cancel_job` | Cancel a `waiting` or `dispatched` job. `CONFLICT` once it's running. | `{ id, status: "cancelled" }` |
+| `get_account` | Balance, plan, and limits. No parameters. | `{ balance, plan, isPro, limits }` |
+| `upload_file` | Local only. Read a file from disk, upload to ephemeral storage. | `{ downloadUrl, sizeBytes }` |
+| `upload_media` | Remote only. Return an upload endpoint and curl command for the user to run. | `{ uploadEndpoint, instructions, ... }` |
+
+On a completed job, read `output.file.url` for the file to play or download, or `output.data` for a computed answer. The `output` shape is the same for every job type. Failures come back as `isError: true` with `{ error: { code, message } }`. Common codes: `UNAUTHORIZED`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `INVALID_JOB_TYPE`.
+
+`submit_job` enumerates current job types at server startup. `ffmpeg` is the only Live type today. See the [FFmpeg reference](/jobs/ffmpeg) for accepted commands.
+
+## Worked example: burn captions
+
+Hand Claude Desktop a local clip and an `.srt`, then say:
+
+> Burn the captions in `~/Videos/clip.srt` into `~/Videos/clip.mp4` and give me the result. Use Rendobar.
+
+The agent runs the flow in tool calls you can watch in the panel:
+
+1. `upload_file` for the `.mp4`, then for the `.srt`. Each returns a `downloadUrl`.
+2. `submit_job` with `type: "ffmpeg"`, both URLs as `inputs`, and a command using `-vf subtitles`.
+3. `get_job` every few seconds until `status: "complete"`, then `output.file.url`.
+
+A 30-second clip renders in about 20 to 40 seconds. Open the link to download. Source and output files live on `cdn.rendobar.com` for 24 hours, then auto-delete.
+
+## Remote server for web and mobile
+
+Browser and phone clients can't run a local stdio process. Point them at the remote HTTP server at `https://api.rendobar.com/mcp` instead. Job submission and polling are identical. The one difference: the remote server can't read your disk, so `upload_media` returns a curl command you run yourself, then paste the `downloadUrl` back into the chat.
+
+In **claude.ai**, open Settings, Connectors, Add custom connector. In **ChatGPT**, open Settings, Apps & Connectors, Custom. Both want:
+
+- **URL:** `https://api.rendobar.com/mcp`
+- **Authentication:** Bearer token, your `rb_...` key
+
+Any client supporting the Streamable HTTP transport works the same way. On desktop, prefer the local server. Uploads happen in one tool call instead of a manual curl round-trip.
+
+## Common fixes
+
+<AccordionGroup>
+<Accordion title="No Rendobar API key found">
+
+The `env` block in your client config didn't reach the server, or the key has the wrong prefix (it must start with `rb_`). Verify the config the client actually loaded. In Claude Desktop, Settings, Developer, Open MCP Log Folder shows the launch command and the env vars it received. The server reads credentials in order: `--api-key` flag, then `RENDOBAR_API_KEY`, then `~/.config/rendobar/credentials.json`.
+
+</Accordion>
+<Accordion title="Cursor or Windsurf on macOS can't find npx">
+
+A client launched from the macOS Dock inherits the GUI environment, not your shell PATH. If you installed Node via nvm or asdf, `npx` isn't on that PATH. Use the absolute path from `which npx` as the `command`. On Windows, if `npx` isn't recognized, set `"command": "npx.cmd"`.
+
+</Accordion>
+<Accordion title="Tool calls hang or the agent sees no tools">
+
+A hang almost always means the server crashed after the handshake. Read stderr in your client's MCP log (Claude Desktop: `mcp-server-rendobar.log`; Cursor and VS Code: Output panel, MCP) and look for `"level": "error"`. If the handshake succeeded but `tools/list` is empty, the package is likely corrupt: run `npm cache clean --force` then `npx -y @rendobar/mcp@latest --version`.
+
+</Accordion>
+</AccordionGroup>
+
+## See also
+
+- [FFmpeg reference](/jobs/ffmpeg): the main job type `submit_job` calls
+- [Authentication](/quickstart): the API key model for both transports
+- [Errors](/support/errors): full code list behind `isError` responses
+- [Plan limits](/support/limits): file-size caps and concurrency by plan

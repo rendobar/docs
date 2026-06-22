@@ -46,8 +46,8 @@ Check the HTTP status and `error.code` before reading `data`.
 | `RATE_LIMITED` | 429 | Back off per `Retry-After` header |
 | `NOT_FOUND` | 404 | Resource doesn't exist or isn't visible to your org |
 | `CONFLICT` | 409 | Request conflicts with current state (e.g. cancelling a complete job) |
-| `PROVIDER_ERROR` | 502 | Upstream provider failed. Check `error.message` for details |
-| `PROVIDER_TIMEOUT` | 504 | Provider didn't respond in time. No credits charged |
+| `RUNNER_ERROR` | 502 | Processing failed on the runner. Check `error.message` for details |
+| `RUNNER_TIMEOUT` | 504 | The job did not finish in time. No credits charged |
 | `ORG_SUSPENDED` | 403 | Contact `hello@rendobar.com` |
 | `INTERNAL_ERROR` | 500 | Server bug. Persist? Contact support with the request ID |
 
@@ -66,7 +66,6 @@ const res = await fetch("https://api.rendobar.com/jobs", {
   },
   body: JSON.stringify({
     type: "ffmpeg",
-    inputs: {},
     params: { command: "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 output.mp4" },
   }),
 });
@@ -96,7 +95,6 @@ res = requests.post(
     headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
         "type": "ffmpeg",
-        "inputs": {},
         "params": {"command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 output.mp4"},
     },
 )
@@ -110,13 +108,13 @@ if not res.ok:
 ## See also
 
 - [Limits](/support/limits)
-- [Job lifecycle](/concepts/job-lifecycle)
-- [Authentication](/authentication)
+- [Job lifecycle](/concepts/job)
+- [Authentication](/quickstart)
 
 ## Related
 
 - [Plan limits](/support/limits): caps behind `PLAN_LIMIT` and `RATE_LIMITED`
-- [Job lifecycle](/concepts/job-lifecycle): where `PROVIDER_ERROR` and `PROVIDER_TIMEOUT` surface
+- [Job lifecycle](/concepts/job): where `RUNNER_ERROR` and `RUNNER_TIMEOUT` surface
 - [Credits and billing](/concepts/credits): `INSUFFICIENT_CREDITS` and the prepaid model
 - [FAQ](/support/faq): common questions about failed jobs and refunds
 - [Pricing](https://rendobar.com/pricing/): plan that lifts your concurrency and rate caps
