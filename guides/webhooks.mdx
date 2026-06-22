@@ -122,6 +122,18 @@ The signature is HMAC-SHA256 over `{timestamp}.{body}` using your webhook secret
 
 <CodeGroup>
 
+```ts SDK
+import { verifyWebhookSignature } from "@rendobar/sdk/webhooks";
+
+// The signature covers `${timestamp}.${rawBody}` (raw string, not parsed JSON).
+const ok = await verifyWebhookSignature(
+  `${timestamp}.${rawBody}`,
+  signature,                 // X-Rendobar-Signature header
+  process.env.WEBHOOK_SECRET,
+);
+if (!ok) throw new Error("Invalid signature");
+```
+
 ```javascript Node.js
 import { createHmac, timingSafeEqual } from "crypto";
 

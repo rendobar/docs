@@ -57,6 +57,34 @@ The three you'll hit most: `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATION_E
 
 <CodeGroup>
 
+```ts SDK
+import { createClient, isApiError } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+try {
+  const job = await client.jobs.create({
+    type: "ffmpeg",
+    params: { command: "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 output.mp4" },
+  });
+} catch (err) {
+  if (!isApiError(err)) throw err;
+  switch (err.code) {
+    case "INSUFFICIENT_CREDITS":
+      // redirect to billing
+      break;
+    case "RATE_LIMITED":
+      // back off for err.retryAfter seconds
+      break;
+    case "VALIDATION_ERROR":
+      // fix the request
+      break;
+    default:
+      console.error(`API error: ${err.code} - ${err.message}`);
+  }
+}
+```
+
 ```javascript JavaScript
 const res = await fetch("https://api.rendobar.com/jobs", {
   method: "POST",

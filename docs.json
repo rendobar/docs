@@ -41,6 +41,7 @@
             "group": "Jobs",
             "pages": [
               "jobs/ffmpeg",
+              "jobs/compose",
               {
                 "group": "Captions",
                 "icon": "closed-captioning",
@@ -132,6 +133,14 @@
     {
       "source": "/jobs/caption-burn",
       "destination": "/jobs/captions/burn"
+    },
+    {
+      "source": "/jobs/compose/:slug*",
+      "destination": "/jobs/compose"
+    },
+    {
+      "source": "/job-types/compose",
+      "destination": "/jobs/compose"
     },
     {
       "source": "/cli/:slug*",
