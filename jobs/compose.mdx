@@ -316,7 +316,9 @@ A scene's clips can omit `start` and `length` to span the whole scene. Every cli
 
 ## Reference
 
-### `output`
+### Output
+
+The `output` object controls the render target.
 
 | Field | Values |
 | --- | --- |
@@ -327,7 +329,9 @@ A scene's clips can omit `start` and `length` to span the whole scene. Every cli
 | `audioCodec` | `aac`, `opus`, `mp3` (optional) |
 | `frameTime` | second of the timeline to capture for `jpg` / `png` (default `0`) |
 
-### Assets (`clip.asset`)
+### Assets
+
+A clip's `asset` is one of:
 
 | `type` | Fields |
 | --- | --- |
@@ -361,6 +365,8 @@ A track item `{ "type": "transition", "transition": <kind>, "duration": <seconds
 
 `crossfade`, `fade`, `slide` (`direction`: `left` / `right` / `up` / `down`), `zoom`, `none` (hard cut).
 
-### Text style (`text.style`)
+### Text style
+
+Fields on a text asset's `style`:
 
 `font`, `size`, `weight` (100..1000), `color`, `align` (`left` / `center` / `right`), `position {x,y}`, `stroke {color,width}`, `background`, `shadow {color,opacity,offsetX,offsetY}`, `animate {type: fade \| slideUp \| slideDown \| slideLeft \| slideRight, duration}`.
