@@ -44,7 +44,6 @@ const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
 const job = await client.jobs.create({
   type: "compose",
-  inputs: {},
   params: {
     schemaVersion: 1,
     output: { format: "mp4", resolution: { width: 1280, height: 720 }, fps: 30 },
@@ -68,7 +67,6 @@ curl -X POST https://api.rendobar.com/jobs \
   -H "Content-Type: application/json" \
   -d '{
     "type": "compose",
-    "inputs": {},
     "params": {
       "schemaVersion": 1,
       "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },

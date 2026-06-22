@@ -46,7 +46,6 @@ const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
 const created = await client.jobs.create({
   type: "ffmpeg",
-  inputs: {},
   params: {
     command: "ffmpeg -i https://example.com/input.mp4 -c:v libx265 -crf 28 output.mp4",
   },
@@ -72,7 +71,6 @@ The `jobs` resource is the core of the SDK. It creates jobs, polls them, reads t
 ```ts
 const created = await client.jobs.create({
   type: "ffmpeg",
-  inputs: {},
   params: {
     command: "ffmpeg -i https://example.com/in.mp4 -c:v libx265 output.mp4",
   },
@@ -86,7 +84,6 @@ console.log(created.id, created.status); // "job_abc123" "waiting"
 ```ts
 await client.jobs.create({
   type: "ffmpeg",
-  inputs: {},
   params: { command: "ffmpeg -i in.mp4 out.mp4" },
   idempotencyKey: "render-2026-06-22-batch-7",
 });
@@ -257,8 +254,8 @@ Uploads are ephemeral by default and auto-delete after 24 hours. Pass `persist: 
 ```ts
 const batch = await client.batches.create({
   jobs: [
-    { type: "ffmpeg", inputs: {}, params: { command: "ffmpeg -i a.mp4 a.webm" } },
-    { type: "ffmpeg", inputs: {}, params: { command: "ffmpeg -i b.mp4 b.webm" } },
+    { type: "ffmpeg", params: { command: "ffmpeg -i a.mp4 a.webm" } },
+    { type: "ffmpeg", params: { command: "ffmpeg -i b.mp4 b.webm" } },
   ],
 });
 
@@ -361,7 +358,7 @@ Every failed request throws an `ApiError`. Narrow with `isApiError` and switch o
 import { isApiError } from "@rendobar/sdk";
 
 try {
-  await client.jobs.create({ type: "ffmpeg", inputs: {}, params: {} });
+  await client.jobs.create({ type: "ffmpeg", params: { command: "ffmpeg -i in.mp4 out.webm" } });
 } catch (err) {
   if (isApiError(err)) {
     console.log(err.code, err.statusCode, err.message);

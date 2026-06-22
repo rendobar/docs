@@ -43,7 +43,6 @@ curl -X POST https://api.rendobar.com/jobs \
   -H "Content-Type: application/json" \
   -d '{
     "type": "ffmpeg",
-    "inputs": {},
     "params": {
       "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4"
     }
@@ -59,7 +58,6 @@ const res = await fetch("https://api.rendobar.com/jobs", {
   },
   body: JSON.stringify({
     type: "ffmpeg",
-    inputs: {},
     params: {
       command: "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4",
     },
@@ -77,7 +75,6 @@ res = requests.post(
     headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
         "type": "ffmpeg",
-        "inputs": {},
         "params": {
             "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4",
         },

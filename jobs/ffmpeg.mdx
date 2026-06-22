@@ -48,7 +48,6 @@ const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
 const job = await client.jobs.create({
   type: "ffmpeg",
-  inputs: {},
   params: {
     command: "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
   },
@@ -64,7 +63,6 @@ curl -X POST https://api.rendobar.com/jobs \
   -H "Content-Type: application/json" \
   -d '{
     "type": "ffmpeg",
-    "inputs": {},
     "params": {
       "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4"
     }
@@ -80,7 +78,6 @@ const res = await fetch("https://api.rendobar.com/jobs", {
   },
   body: JSON.stringify({
     type: "ffmpeg",
-    inputs: {},
     params: {
       command: "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
     },
@@ -96,7 +93,6 @@ res = requests.post(
     headers={"Authorization": "Bearer rb_YOUR_KEY"},
     json={
         "type": "ffmpeg",
-        "inputs": {},
         "params": {
             "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
         },
@@ -278,7 +274,6 @@ Set `compute` only to force a choice. `gpu` pins the job to a GPU. `cpu` pins it
 ```json
 {
   "type": "ffmpeg",
-  "inputs": {},
   "params": {
     "command": "ffmpeg -i https://example.com/video.mp4 -c:v h264_nvenc -preset p5 -cq 23 output.mp4",
     "compute": "gpu"
@@ -312,7 +307,6 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 ```json
 {
   "type": "ffmpeg",
-  "inputs": {},
   "params": {
     "command": "ffmpeg -i https://example.com/video.mp4 -vf scale=1280:720 -c:v libx264 -preset fast -crf 23 output.mp4"
   }
@@ -324,7 +318,6 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 ```json
 {
   "type": "ffmpeg",
-  "inputs": {},
   "params": {
     "command": "ffmpeg -i https://example.com/video.mp4 -vn -c:a aac -b:a 128k output.m4a"
   }
@@ -336,7 +329,6 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 ```json
 {
   "type": "ffmpeg",
-  "inputs": {},
   "params": {
     "command": "ffmpeg -i https://example.com/video.mp4 -ss 00:01:00 -t 00:00:30 -c:v libx264 -c:a aac output.mp4"
   }
@@ -348,7 +340,6 @@ Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) fo
 ```json
 {
   "type": "ffmpeg",
-  "inputs": {},
   "params": {
     "command": "ffmpeg -i https://example.com/video.mp4 -i https://example.com/narration.mp3 -c:v libx264 -c:a aac -map 0:v -map 1:a output.mp4"
   }
