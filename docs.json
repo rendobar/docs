@@ -33,17 +33,6 @@
             ]
           },
           {
-            "group": "CLI",
-            "pages": [
-              "cli/overview",
-              "cli/installation",
-              "cli/authentication",
-              "cli/commands",
-              "cli/ci-cd",
-              "cli/troubleshooting"
-            ]
-          },
-          {
             "group": "Concepts",
             "pages": [
               "concepts/job-lifecycle",
@@ -78,14 +67,13 @@
             ]
           },
           {
-            "group": "MCP",
+            "group": "Integrations",
+            "icon": "puzzle-piece",
             "pages": [
-              "mcp/overview",
-              "mcp/installation",
-              "mcp/examples",
-              "mcp/tools",
-              "mcp/web-and-mobile",
-              "mcp/troubleshooting"
+              "sdk",
+              "cli",
+              "mcp",
+              "n8n"
             ]
           },
           {
@@ -142,6 +130,22 @@
     {
       "source": "/jobs/caption-burn",
       "destination": "/jobs/captions/burn"
+    },
+    {
+      "source": "/cli/:slug*",
+      "destination": "/cli"
+    },
+    {
+      "source": "/mcp/:slug*",
+      "destination": "/mcp"
+    },
+    {
+      "source": "/sdk/:slug*",
+      "destination": "/sdk"
+    },
+    {
+      "source": "/n8n/:slug*",
+      "destination": "/n8n"
     },
     {
       "source": "/guides/ffmpeg",

@@ -1,0 +1,134 @@
+---
+title: "n8n community node"
+sidebarTitle: "n8n"
+description: "Install the Rendobar n8n community node, connect it with an API key, then submit, track, cancel, and upload from your workflows."
+icon: "circle-nodes"
+keywords: ["n8n", "n8n node", "rendobar n8n", "community node", "n8n integration", "video automation", "n8n workflow", "create job", "upload file", "rendobar trigger", "@rendobar/n8n-nodes-rendobar"]
+canonical: "https://rendobar.com/docs/n8n"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/n8n/#article",
+      "headline": "n8n community node",
+      "description": "Install the Rendobar n8n community node, connect it with an API key, then submit, track, cancel, and upload from your workflows.",
+      "datePublished": "2026-06-22",
+      "dateModified": "2026-06-22",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+The Rendobar n8n community node submits, tracks, and cancels video jobs from [n8n](https://n8n.io) workflows, and starts a workflow when a job finishes. The package ships two nodes: **Rendobar** runs operations against the API, and **Rendobar Trigger** fires on an event.
+
+## Install
+
+In n8n, open **Settings > Community Nodes** and install the package:
+
+```text
+@rendobar/n8n-nodes-rendobar
+```
+
+This follows n8n's standard flow. See [Install a community node](https://docs.n8n.io/integrations/community-nodes/installation/) for the full steps and the self-hosted environment variable that gates community-node installs.
+
+## Credentials
+
+The node authenticates with a Rendobar API key. Create one in the [dashboard](https://app.rendobar.com), then add a credential in n8n with two fields.
+
+<ParamField body="API Key" type="string" required>
+  Your Rendobar API key. It starts with `rb_`. n8n validates the key against your account when you save the credential, so a bad key fails fast.
+</ParamField>
+
+<ParamField body="Base URL" type="string" default="https://api.rendobar.com">
+  The Rendobar API host. Leave the default. Change it only to target another environment.
+</ParamField>
+
+## Operations
+
+The **Rendobar** action node has four operations.
+
+### Create Job
+
+Submit a job. The **Job Type** dropdown loads live from your account, and its parameter fields are discovered from the API, so new job types appear without updating the node.
+
+Each submission sends an idempotency key derived from the n8n execution, so a retried step never double-creates a job.
+
+Set **Wait for Completion** to poll until the job is done and return the result on the same item. This blocks the workflow, so it suits short jobs. The poll interval and a max-wait timeout are both configurable. For long jobs, use the trigger node instead.
+
+### Get Job
+
+Fetch a job by ID. The item carries the job status and, once complete, the result.
+
+Set **Download Output File** to fetch the headline result file (`file.url`) into a binary property for the next node. This applies only to completed jobs that produced a file.
+
+### Cancel Job
+
+Cancel a still-running job by ID.
+
+### Upload File
+
+Stream a binary file from a previous node to Rendobar and get back a `downloadUrl` to use as a job input. Uploaded files are ephemeral and auto-delete after 24 hours.
+
+## Rendobar Trigger
+
+The **Rendobar Trigger** node starts a workflow when a Rendobar event fires. Pick the events to listen for:
+
+- Job completed
+- Job failed
+- Job cancelled
+- Job created
+- Job started
+- Balance events
+
+On activation, the node registers its webhook URL with Rendobar. On deactivation, it removes it.
+
+<Warning>
+  Rendobar must reach the webhook URL over HTTPS, so the trigger needs n8n Cloud or a tunnelled or publicly hosted instance. A plain `localhost` n8n is not reachable. To test locally, run `n8n start --tunnel`.
+</Warning>
+
+## Job result
+
+The result shape is the same for every job type. When a job completes, Get Job and Create Job with Wait for Completion return the full job, and the node lifts the unified output onto the item so downstream nodes get clean fields no matter the job type.
+
+<ResponseField name="data" type="object | null">
+  The job-type-specific computed result, such as a probe report, moderation labels, or a transcript. `null` for jobs that only produce files.
+</ResponseField>
+
+<ResponseField name="file" type="object | null">
+  The headline result. A single output file or a stream manifest (`.m3u8` or `.mpd`). `null` for data-only jobs and pure file sets. Each file is `{ url, path, type, size, meta? }`.
+</ResponseField>
+
+<ResponseField name="files" type="array">
+  Every produced file, the complete list. `[]` for data-only jobs. Use it for sets or streams.
+</ResponseField>
+
+<ResponseField name="expiresAt" type="number | null">
+  Unix milliseconds when the file URLs expire, or `null` when the job produced no files.
+</ResponseField>
+
+The full job (`status`, `output`, `cost`, timings) stays on the same item, so nothing is lost. Each output file's `type` is one of:
+
+| `type` | Contents |
+|---|---|
+| `video` | A video file |
+| `image` | An image file |
+| `audio` | An audio file |
+| `captions` | A subtitle or caption file |
+| `playlist` | A stream manifest (`.m3u8` or `.mpd`) |
+| `data` | A data file such as a report |
+| `other` | Anything else |
+
+## Example workflow
+
+A common chain is three nodes. Upload File streams a binary from a previous node and returns a `downloadUrl`. Create Job references that `downloadUrl` in its inputs and runs the job. The next node reads the lifted `file` or `data` from the result and continues.
+
+## See also
+
+- [Job lifecycle](/concepts/job-lifecycle): the six statuses a job moves through
+- [Webhooks](/guides/webhooks): the events the trigger node subscribes to
