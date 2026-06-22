@@ -25,19 +25,13 @@ canonical: "https://rendobar.com/docs/sdk"
   }}
 />
 
-`@rendobar/sdk` is the official TypeScript client. It wraps the REST API with typed methods, automatic retries, and response unwrapping.
+The official TypeScript client. Typed methods, automatic retries, response unwrapping. Ships ESM with types, runs on Node 18+, Deno, Bun, Workers, and the browser.
 
-## Install
+## Quickstart
 
 ```bash
 npm install @rendobar/sdk
 ```
-
-The package ships ESM with full type declarations. It runs on Node 18+, Deno, Bun, Cloudflare Workers, and the browser.
-
-## Quickstart
-
-Create a client, submit a job, wait for it to finish, then read the output URL.
 
 ```ts title="render.ts"
 import { createClient, outputUrl } from "@rendobar/sdk";
@@ -58,95 +52,37 @@ if (job.status === "complete") {
 }
 ```
 
-`jobs.create` returns a `waiting` job. `jobs.wait` polls until the job reaches a terminal status (`complete`, `failed`, or `cancelled`) and returns it. The rest of this page covers the full job surface, the other resources, and client config.
+`jobs.create` returns a `waiting` job. `jobs.wait` polls until a terminal status (`complete`, `failed`, `cancelled`) and returns it.
 
 ## Jobs
 
-The `jobs` resource is the core of the SDK. It creates jobs, polls them, reads their output, and lists past runs. Every method takes an optional `{ signal }` for [cancellation](#config-errors-and-retries).
+Every method takes an optional `{ signal }` to abort the request or a `wait` loop.
 
-### Create a job
-
-`jobs.create` submits a job and returns the created job with `status: "waiting"`.
+### Create
 
 ```ts
 const created = await client.jobs.create({
   type: "ffmpeg",
-  params: {
-    command: "ffmpeg -i https://example.com/in.mp4 -c:v libx265 output.mp4",
-  },
-});
-
-console.log(created.id, created.status); // "job_abc123" "waiting"
-```
-
-`type`, `inputs`, and `params` are job-type-specific. See [Job types](/jobs/overview) for each schema. Pass `idempotencyKey` to make retries safe: replaying the same key returns the original job instead of creating a second.
-
-```ts
-await client.jobs.create({
-  type: "ffmpeg",
-  params: { command: "ffmpeg -i in.mp4 out.mp4" },
-  idempotencyKey: "render-2026-06-22-batch-7",
+  params: { command: "ffmpeg -i https://example.com/in.mp4 -c:v libx265 out.mp4" },
 });
 ```
 
-### Get, list, and paginate
+`type`, `inputs`, and `params` are per [job type](/jobs/ffmpeg). Pass `idempotencyKey` to make a retry return the original job instead of a duplicate.
 
-`jobs.get` fetches one job by id. `jobs.list` returns one page plus pagination meta, filtered by `status`, `type`, `limit`, and `page`. `jobs.listAll` is an async iterator that walks every page for you.
-
-```ts
-const job = await client.jobs.get("job_abc123");
-
-const page = await client.jobs.list({ status: "complete", limit: 20 });
-console.log(page.data);       // Job[]
-console.log(page.meta.total); // total matching jobs
-console.log(page.meta.page);  // current page
-
-for await (const job of client.jobs.listAll({ status: "failed" })) {
-  console.log(job.id, job.type);
-}
-```
-
-Use `list` for paginated UI. Use `listAll` for batch scripts that process the full history.
-
-### Wait for completion
-
-`jobs.wait` polls a job until it reaches a terminal status and returns it.
+### Wait, get, list
 
 ```ts
-const job = await client.jobs.wait("job_abc123", {
-  timeout: 600_000,  // give up after 10 min (default 300000)
-  interval: 2_000,   // poll every 2s (default 2000)
-  onProgress: (j) => console.log(j.status, "progress" in j ? j.progress : 0),
-  signal: controller.signal,
-});
+const job  = await client.jobs.wait("job_abc", { timeout: 600_000, onProgress: (j) => console.log(j.status) });
+const one  = await client.jobs.get("job_abc");
+const page = await client.jobs.list({ status: "complete", limit: 20 }); // page.data, page.meta
+for await (const j of client.jobs.listAll({ status: "failed" })) console.log(j.id);
 ```
 
-`onProgress` fires on every poll with the latest job. If the job does not finish before `timeout`, `wait` throws. Pass a `signal` to abort the loop early.
-
-### Cancel
-
-`jobs.cancel` stops a `waiting` or `dispatched` job server-side and returns the updated job.
-
-```ts
-const job = await client.jobs.cancel("job_abc123");
-console.log(job.status); // "cancelled"
-```
+`wait` throws if it does not finish before `timeout` (default `300000`). `listAll` walks every page. Cancel a running job with `client.jobs.cancel("job_abc")`.
 
 ### Read the output
 
-A job is a discriminated union on `status`. The `output` field exists only when `status === "complete"`, and `error` only when `status === "failed"`. Narrow on `status` before reading either.
-
-```ts
-const job = await client.jobs.wait("job_abc123");
-
-if (job.status === "complete") {
-  // job.output is available here
-} else if (job.status === "failed") {
-  console.error(job.error.code, job.error.message);
-}
-```
-
-The output and file types are:
+A job is a union on `status`. `output` exists only when `status === "complete"`, `error` only when `failed`. Narrow first.
 
 ```ts
 type Output = {
@@ -158,86 +94,36 @@ type Output = {
 
 type OutputFile = {
   url: string;                 // ready-to-fetch, time-limited URL
-  path: string;                // path within the job output
+  path: string;
   type: "video" | "image" | "audio" | "captions" | "playlist" | "data" | "other";
   size: number;                // bytes
   meta?: { format?: string; width?: number; height?: number; durationMs?: number };
 };
 ```
 
-**The headline URL.** `outputUrl` returns the single result URL: the one output file, or the playlist manifest for an HLS/DASH stream. It returns `undefined` for a data-only job, a pure file set, or any non-complete job.
+- `outputUrl(job)` returns the headline URL: the one file, or the HLS/DASH manifest. It is `undefined` for data-only jobs, file sets, and non-complete jobs.
+- `output.files` is every file, for sequences, HLS segments, or a resolution ladder.
+- `jobData<T>(job)` reads `output.data` as `T | null` for probe, detection, and transcript jobs. Validate `T` yourself for untrusted input.
+- A `failed` job carries `JobError { code, message, detail, retryable }`.
 
 ```ts
-import { outputUrl } from "@rendobar/sdk";
+import { outputUrl, jobData } from "@rendobar/sdk";
 
-const url = outputUrl(job);
-if (url) console.log(url);
+const job = await client.jobs.wait("job_abc");
+if (job.status === "complete") console.log(outputUrl(job));
+else if (job.status === "failed") console.error(job.error.code, job.error.message);
 ```
 
-**Every file.** For jobs that emit many files (image sequences, HLS segments, a resolution ladder), iterate `output.files`.
-
-```ts
-if (job.status === "complete") {
-  for (const f of job.output.files) {
-    console.log(f.type, f.path, f.size, f.url);
-  }
-}
-```
-
-**Structured data.** For jobs that compute JSON (probe results, detections, transcripts), read `output.data` with `jobData<T>`. It returns `T | null`. `T` is your claim about the shape, so validate it yourself if the input is untrusted.
-
-```ts
-import { jobData } from "@rendobar/sdk";
-
-type Metadata = { format: string; durationMs: number };
-
-const meta = jobData<Metadata>(job);
-if (meta) console.log(meta.durationMs);
-```
-
-**The failed-job shape.** A `failed` job carries `error`:
-
-```ts
-type JobError = {
-  code: string;        // machine-readable error code
-  message: string;     // human-readable message
-  detail: string | null; // provider stderr tail (e.g. ffmpeg), or null
-  retryable: boolean;  // true when retrying the same job may succeed
-};
-```
-
-### Download, logs, and types
-
-`jobs.download` returns the raw `Response` for the job's headline output, so you can stream it to a file or buffer it. `jobs.logs` returns the stored execution log entries. `jobs.types` lists the job types available to your org, with their schemas.
-
-```ts
-import { writeFile } from "node:fs/promises";
-
-const res = await client.jobs.download("job_abc123");
-await writeFile("output.mp4", Buffer.from(await res.arrayBuffer()));
-
-const logs = await client.jobs.logs("job_abc123");
-const types = await client.jobs.types();
-```
+`jobs.download(id)` returns the raw `Response`, `jobs.logs(id)` returns execution logs, `jobs.types()` lists the job types available to your org.
 
 ## Other resources
 
-Beyond jobs, the client exposes resources for uploads, batches, billing, webhooks, and realtime. Every method takes an optional `{ signal }`.
+Each takes an optional `{ signal }`.
 
-### Uploads
-
-`uploads.create` uploads file content and returns a ready `Asset`. It runs the full `/assets` flow (init, presigned PUT or parallel multipart, complete) in one call. Reference the returned `asset.url` as a job input, and the API resolves it to the file at dispatch.
+**Uploads.** `uploads.create` runs the full asset flow and returns an `Asset`. Reference `asset.url` as a job input. Ephemeral for 24 hours unless `persist: true`.
 
 ```ts
-import { readFile } from "node:fs/promises";
-
-const bytes = await readFile("clip.mp4");
-const asset = await client.uploads.create(bytes, {
-  filename: "clip.mp4",
-  persist: true,                              // keep past the 24h auto-delete
-  onProgress: (p) => console.log(`${p.loaded}/${p.total}`),
-});
-
+const asset = await client.uploads.create(bytes, { filename: "clip.mp4", persist: true });
 await client.jobs.create({
   type: "ffmpeg",
   inputs: { source: asset.url },
@@ -245,114 +131,48 @@ await client.jobs.create({
 });
 ```
 
-Uploads are ephemeral by default and auto-delete after 24 hours. Pass `persist: true` to keep an asset.
+**Batches.** `batches.create({ jobs: [...] })` submits many jobs at once and returns `batchId`, `jobCount`, and `jobIds`. Wait on each id.
 
-### Batches
+**Billing.** `billing.state()` for balance and plan, `billing.usage({ start, end })` for spend, `billing.transactions({ page, limit })` for the ledger.
 
-`batches.create` submits many jobs in one request. Each entry takes the same shape as `jobs.create`. It returns the batch id, the job count, and every job id. Wait on the individual `jobIds` with [`jobs.wait`](#wait-for-completion).
-
-```ts
-const batch = await client.batches.create({
-  jobs: [
-    { type: "ffmpeg", params: { command: "ffmpeg -i a.mp4 a.webm" } },
-    { type: "ffmpeg", params: { command: "ffmpeg -i b.mp4 b.webm" } },
-  ],
-});
-
-console.log(batch.batchId, batch.jobCount, batch.jobIds);
-```
-
-### Billing
-
-The `billing` resource reads your org's balance, usage, and transactions. `state` returns the current balance and plan, `usage` summarizes spend over a date range, and `transactions` is a paginated ledger.
+**Webhooks.** `webhooks.create({ name, url, subscribedEvents })` registers an endpoint. Verify every delivery with the zero-dependency `verifyWebhookSignature` from `@rendobar/sdk/webhooks` (reads the `X-Rendobar-Signature` header, returns `Promise<boolean>`).
 
 ```ts
-const state = await client.billing.state();
-const usage = await client.billing.usage({ start: "2026-06-01", end: "2026-06-30" });
-const txns = await client.billing.transactions({ page: 1, limit: 50 });
-```
-
-### Webhooks
-
-`webhooks.create` registers an endpoint that Rendobar calls when a job finishes.
-
-```ts
-const endpoint = await client.webhooks.create({
-  name: "prod-renders",
-  url: "https://example.com/hooks/rendobar",
-  subscribedEvents: ["job.completed", "job.failed"],
-});
-```
-
-Verify every incoming webhook before trusting it. `verifyWebhookSignature` is a standalone, zero-dependency export from `@rendobar/sdk/webhooks`. It runs in any runtime with Web Crypto (Node 18+, Deno, Workers, browser). Read the signature from the `X-Rendobar-Signature` header. The comparison is timing-safe, and it returns a `Promise<boolean>`.
-
-```ts title="handler.ts"
 import { verifyWebhookSignature } from "@rendobar/sdk/webhooks";
 
-export async function POST(req: Request): Promise<Response> {
-  const body = await req.text();
-  const signature = req.headers.get("X-Rendobar-Signature") ?? "";
-
-  const valid = await verifyWebhookSignature(body, signature, process.env.RB_WEBHOOK_SECRET!);
-  if (!valid) return new Response("invalid signature", { status: 401 });
-
-  const event = JSON.parse(body);
-  // handle event
-  return new Response("ok");
-}
+const valid = await verifyWebhookSignature(body, req.headers.get("X-Rendobar-Signature") ?? "", secret);
+if (!valid) return new Response("invalid signature", { status: 401 });
 ```
 
-### Realtime
-
-`realtime.connect` opens a WebSocket and streams org events. `realtime.subscribeJob` narrows the stream to one job. `connect` also takes `onLive` (replay finished, now live) and `onResync` (buffer overflowed, do a full refresh).
+**Realtime.** `realtime.subscribeJob(id, { onProgress, onStep, onComplete })` streams one job, `realtime.connect({...})` streams all org events.
 
 ```ts
-const sub = client.realtime.subscribeJob("job_abc123", {
-  onProgress: (e) => console.log(e.progress),
-  onStep: (e) => console.log(e.step),
-  onComplete: (e) => console.log("done", e.status),
-});
-
-sub.unsubscribe();
+const sub = client.realtime.subscribeJob("job_abc", { onProgress: (e) => console.log(e.progress) });
 ```
 
 <Warning>
-  Realtime needs session-cookie auth, not API keys. It works in first-party browser code where the auth cookie is present. API-key users poll with [`jobs.wait`](#wait-for-completion) instead.
+  Realtime needs session-cookie auth, not API keys. API-key users poll with `jobs.wait`.
 </Warning>
 
 Every response and param type is exported from `@rendobar/sdk` as a named `type`.
 
-```ts
-import type { Job, Output, OutputFile, BillingState, WebhookEndpoint, Asset } from "@rendobar/sdk";
-```
-
-## Config, errors, and retries
-
-`createClient` accepts these options. Only `apiKey` (or cookie auth) is required.
-
-| Option | Type | Default | Purpose |
-|---|---|---|---|
-| `apiKey` | `string` | — | API key prefixed `rb_`. Required for server-side use. |
-| `baseUrl` | `string` | `https://api.rendobar.com` | API origin. Override for a self-hosted or staging endpoint. |
-| `timeout` | `number` | `30000` | Per-request timeout in milliseconds. |
-| `maxRetries` | `number` | `2` | Max automatic retries for 429 and 5xx responses. |
-| `orgId` | `string` | — | Default org, sent as `X-Org-Id`. Use when a key spans multiple orgs. |
-| `debug` | `boolean` | `false` | Log request metadata to `console.debug`. |
-| `fetch` | `function` | — | Custom `fetch` for testing or a special runtime. |
-| `credentials` | `RequestCredentials` | — | Standard fetch credentials mode. Use `"include"` for cookie auth. |
-
-### Authentication
-
-Pass an API key for server-side use. For first-party browser code, set `credentials: "include"` and omit `apiKey` so the browser sends the auth cookie. API-key auth covers every REST method. Realtime needs cookie auth, so API-key users poll with `jobs.wait`.
+## Config and errors
 
 ```ts
-const server = createClient({ apiKey: "rb_YOUR_KEY" });
-const browser = createClient({ credentials: "include" });
+const server  = createClient({ apiKey: "rb_YOUR_KEY" });    // server-side
+const browser = createClient({ credentials: "include" });   // first-party browser, sends the auth cookie
 ```
 
-### Errors
+| Option | Default | Purpose |
+|---|---|---|
+| `apiKey` | — | `rb_` key. Required server-side. |
+| `baseUrl` | `https://api.rendobar.com` | API origin. Override for staging. |
+| `timeout` | `30000` | Per-request timeout in ms. |
+| `maxRetries` | `2` | Auto-retries for 429 and 5xx. |
+| `orgId` | — | Default org, sent as `X-Org-Id`. |
+| `debug` | `false` | Log request metadata. |
 
-Every failed request throws an `ApiError`. Narrow with `isApiError` and switch on `error.code`. `ApiError` carries `code`, `statusCode`, `message`, optional `details`, and `retryAfter` (set on `RATE_LIMITED`).
+Failed requests throw an `ApiError` with `code`, `statusCode`, `message`, and `retryAfter` (on `RATE_LIMITED`). Narrow with `isApiError`.
 
 ```ts
 import { isApiError } from "@rendobar/sdk";
@@ -360,41 +180,15 @@ import { isApiError } from "@rendobar/sdk";
 try {
   await client.jobs.create({ type: "ffmpeg", params: { command: "ffmpeg -i in.mp4 out.webm" } });
 } catch (err) {
-  if (isApiError(err)) {
-    console.log(err.code, err.statusCode, err.message);
-    if (err.code === "RATE_LIMITED") {
-      console.log(`retry after ${err.retryAfter}s`);
-    }
-  }
+  if (isApiError(err)) console.log(err.code, err.statusCode, err.message);
 }
 ```
 
-The `code` values are `UNAUTHORIZED`, `FORBIDDEN`, `VALIDATION_ERROR`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `NOT_FOUND`, `CONFLICT`, and `INTERNAL_ERROR`.
-
-A job that fails during execution is not an HTTP error. It returns a `failed` job with `job.error`, the four-field `JobError` shown under [Read the output](#read-the-output).
-
-### Retries and cancellation
-
-The client retries transient failures automatically, up to `maxRetries` (default 2) with exponential backoff (500ms, then 1s).
-
-| Response | Behavior |
-|---|---|
-| `429` | Retried, respecting the `Retry-After` header |
-| `500`, `502`, `503`, `504` | Retried with backoff |
-| Other 4xx | Thrown immediately, no retry |
-
-Every method takes an optional `signal` (an `AbortSignal`). Abort it to cancel an in-flight request or a `jobs.wait` poll loop. Aborting throws an `AbortError` and cancels the client request only. To cancel the job itself on the server, call [`jobs.cancel`](#cancel).
-
-```ts
-const controller = new AbortController();
-setTimeout(() => controller.abort(), 5000);
-
-const job = await client.jobs.wait(created.id, { signal: controller.signal });
-```
+Codes: `UNAUTHORIZED`, `FORBIDDEN`, `VALIDATION_ERROR`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `NOT_FOUND`, `CONFLICT`, `INTERNAL_ERROR`. The client auto-retries 429 (respecting `Retry-After`) and 5xx with backoff. Other 4xx throw immediately.
 
 ## See also
 
-- [Job types](/jobs/overview): the type, inputs, and params for every job
+- [Job types](/jobs/ffmpeg): the type, inputs, and params for every job
 - [Webhooks](/guides/webhooks): event payloads and delivery retries
 - [Job lifecycle](/concepts/job-lifecycle): the statuses a job moves through
 - [Credits and billing](/concepts/credits): how jobs debit your balance
