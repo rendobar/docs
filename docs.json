@@ -52,20 +52,20 @@
             ]
           },
           {
-            "group": "Job types",
+            "group": "Jobs",
             "pages": [
-              "job-types/ffmpeg",
-              "job-types/captions-animate",
-              "job-types/caption-burn",
+              "jobs/ffmpeg",
+              "jobs/captions-animate",
+              "jobs/caption-burn",
               {
                 "group": "Compose",
                 "icon": "film",
                 "pages": [
-                  "job-types/compose/overview",
-                  "job-types/compose/transitions",
-                  "job-types/compose/motion",
-                  "job-types/compose/color",
-                  "job-types/compose/compositing-text"
+                  "jobs/compose/overview",
+                  "jobs/compose/transitions",
+                  "jobs/compose/motion",
+                  "jobs/compose/color",
+                  "jobs/compose/compositing-text"
                 ]
               }
             ]
@@ -122,19 +122,23 @@
     },
     {
       "source": "/guides/captions",
-      "destination": "/job-types/captions-animate"
+      "destination": "/jobs/captions-animate"
     },
     {
       "source": "/guides/ffmpeg",
-      "destination": "/job-types/ffmpeg"
-    },
-    {
-      "source": "/job-types/raw-ffmpeg",
-      "destination": "/job-types/ffmpeg"
+      "destination": "/jobs/ffmpeg"
     },
     {
       "source": "/guides/raw-ffmpeg",
-      "destination": "/guides/ffmpeg"
+      "destination": "/jobs/ffmpeg"
+    },
+    {
+      "source": "/job-types/raw-ffmpeg",
+      "destination": "/jobs/ffmpeg"
+    },
+    {
+      "source": "/job-types/:slug*",
+      "destination": "/jobs/:slug*"
     }
   ],
   "navbar": {

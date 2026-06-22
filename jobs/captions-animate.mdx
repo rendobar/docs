@@ -1,10 +1,10 @@
 ---
 title: "captions.animate"
-description: "Burn animated word-level captions onto a video at $0.10/min. Pick a preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 min input cap."
+description: "Burn animated word-level captions onto a video. 11 style presets, bundled and custom fonts, flexible placement, entrance animations, and translation."
 icon: "captions"
 tag: "Live"
 keywords: ["animated captions", "burn subtitles", "auto captions", "tiktok captions", "subtitles", "captions.animate"]
-canonical: "https://rendobar.com/docs/job-types/captions-animate"
+canonical: "https://rendobar.com/docs/jobs/captions-animate"
 ---
 
 <script
@@ -13,11 +13,11 @@ canonical: "https://rendobar.com/docs/job-types/captions-animate"
     __html: JSON.stringify({
       "@context": "https://schema.org",
       "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/job-types/captions-animate/#article",
+      "@id": "https://rendobar.com/docs/jobs/captions-animate/#article",
       "headline": "captions.animate",
-      "description": "Burn animated word-level captions onto a video. Pick a preset (hormozi, mrbeast, tiktok, pill). Single speaker, 5 min input cap.",
+      "description": "Burn animated word-level captions onto a video. 11 style presets, bundled and custom fonts, flexible placement, entrance animations, and translation.",
       "datePublished": "2026-05-03",
-      "dateModified": "2026-05-24",
+      "dateModified": "2026-06-14",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -32,7 +32,7 @@ canonical: "https://rendobar.com/docs/job-types/captions-animate"
 Returns a video with word-level animated captions burned in. Speech is automatically transcribed, segmented into timed cues, and rendered as styled subtitles burned onto the source.
 
 <Info>
-**Timeout:** 600 s · **Accepts:** video · **Limits:** single speaker, 5 min input
+**Timeout:** 600 s · **Accepts:** video · **Limits:** single speaker, English at launch
 </Info>
 
 ## Request
@@ -99,7 +99,7 @@ res = requests.post(
 ## Parameters
 
 <ParamField body="preset" type="enum" default="hormozi">
-  Built-in caption style. One of: `hormozi`, `mrbeast`, `tiktok`, `pill`.
+  Built-in caption style. One of: `hormozi`, `mrbeast`, `tiktok`, `pill`, `karaoke`, `word-pop`, `minimal`, `subtitle-block`, `neon`, `gold`, `reveal`.
 </ParamField>
 
 <ParamField body="language" type="string">
@@ -112,6 +112,77 @@ res = requests.post(
   - `balanced`: `small.en`, default, ~5-7% WER
   - `accurate`: `large-v3-turbo`, ~3× slower, ~3-4% WER
 </ParamField>
+
+<ParamField body="style" type="object">
+  Style overrides layered on top of `preset`. Any field set here wins; unset fields fall through to the preset. Key fields:
+  - `font`: font family name. A [bundled family](#fonts) or the family name of a custom font you pass via the `font` input.
+  - `layout`: `phrase` (up to two balanced lines) or `word` (one word at a time).
+  - `position`: `top`, `center`, or `bottom`.
+  - `entrance`: `fade`, `pop`, or `bounce`. Each word reveals at its spoken moment.
+  - `highlight`: active-word treatment. `{ "mode": "color" | "box", "color": "#RRGGBB", "textColor": "#RRGGBB", "scale": 100-200 }`.
+  - `fill`, `stroke`, `shadow`, `bold`, `case`, `marginV`: colour, outline, and weight controls.
+</ParamField>
+
+<ParamField body="autoEmphasis" type="boolean" default="false">
+  Let an in-stack model mark the important words so they render in the accent colour (the "gold words" look).
+</ParamField>
+
+<ParamField body="translateTo" type="enum">
+  Translate captions before animating. One of `es`, `fr`, `de`, `pt`, `it`, `nl`. Omit to keep the original language.
+</ParamField>
+
+<ParamField body="captionData" type="boolean" default="false">
+  Also return the word-level transcript plus SRT and VTT on `output.data`.
+</ParamField>
+
+## Inputs
+
+<ParamField body="source" type="string" required>
+  URL of the source video. An uploaded asset's content URL works too.
+</ParamField>
+
+<ParamField body="subtitles" type="string">
+  URL of an SRT or VTT file. When provided, its text is animated and transcription is skipped.
+</ParamField>
+
+<ParamField body="font" type="string">
+  URL of a TTF or OTF font file. Set `style.font` to that font's family name to render captions in it. See [Fonts](#fonts).
+</ParamField>
+
+## Fonts
+
+Eleven presets ship with sensible default fonts. To pick a different one, set `style.font` to a bundled family. No upload needed.
+
+| Bundled family | Pass as `style.font` |
+| --- | --- |
+| Inter | `"Inter"` |
+| Bebas Neue | `"Bebas Neue"` |
+| Anton | `"Anton"` |
+| Montserrat | `"Montserrat"` |
+| Poppins | `"Poppins"` |
+| Roboto | `"Roboto"` |
+| Oswald | `"Oswald"` |
+
+To use your own font, pass two values together:
+
+1. The font file URL as the `font` input.
+2. The font's real family name as `style.font`.
+
+```json
+{
+  "type": "captions.animate",
+  "inputs": {
+    "source": "https://cdn.rendobar.com/assets/examples/sample.mp4",
+    "font": "https://example.com/MyBrand.ttf"
+  },
+  "params": {
+    "preset": "gold",
+    "style": { "font": "My Brand" }
+  }
+}
+```
+
+`style.font` must match the family name baked into the file, not the filename or URL. If it does not match, the renderer falls back to the preset font.
 
 ## Response
 
@@ -134,6 +205,6 @@ $0.10 per input minute. Billed against your [credit balance](/concepts/credits) 
 
 - [Job lifecycle](/concepts/job-lifecycle): the six statuses captioning jobs move through
 - [Credits and billing](/concepts/credits): how the per-minute charge debits your balance
-- [ffmpeg](/job-types/ffmpeg): the lower-level job for custom subtitle workflows
+- [ffmpeg](/jobs/ffmpeg): the lower-level job for custom subtitle workflows
 - [Webhooks](/guides/webhooks): get `job.completed` instead of polling captioning jobs
 - [Caption-styling features](https://rendobar.com/features/): every preset and visual option

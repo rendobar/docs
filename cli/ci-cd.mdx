@@ -160,7 +160,7 @@ sudo mv rb /usr/local/bin/rb
 
 ## Idempotency
 
-The CLI does not expose `--idempotency-key`. If a retried CI step shouldn't double-charge, submit via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/job-types/ffmpeg) directly with an `idempotencyKey` field.
+The CLI does not expose `--idempotency-key`. If a retried CI step shouldn't double-charge, submit via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/jobs/ffmpeg) directly with an `idempotencyKey` field.
 
 ## See also
 
@@ -174,5 +174,5 @@ The CLI does not expose `--idempotency-key`. If a retried CI step shouldn't doub
 - [CLI overview](/cli/overview): pick between CLI, SDK, and raw HTTP
 - [Authentication](/cli/authentication): `RENDOBAR_API_KEY` as the only CI-safe auth path
 - [Commands reference](/cli/commands): exit codes for boolean assertions
-- [FFmpeg reference](/job-types/ffmpeg): the API the CLI invokes per run
+- [FFmpeg reference](/jobs/ffmpeg): the API the CLI invokes per run
 - [Changelog](https://rendobar.com/changelog/): pin a release tag with confidence

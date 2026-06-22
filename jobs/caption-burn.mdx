@@ -4,14 +4,14 @@ sidebarTitle: "caption.burn"
 description: "Burn styled subtitles into a video from an SRT, VTT, or ASS file, or auto-transcribe in any language. Web-hex styling, deterministic sizing."
 icon: "closed-captioning"
 tag: "Live"
-canonical: "https://rendobar.com/docs/job-types/caption-burn"
+canonical: "https://rendobar.com/docs/jobs/caption-burn"
 ---
 
 <Check>
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Burn subtitles permanently into a video. Provide an SRT, VTT, or ASS file as the `subtitles` input, or omit it to auto-transcribe the audio. Style the text with web-hex colors, an outline, a background box, and a position. This is the static counterpart to [`captions.animate`](/job-types/captions-animate), which renders per-word animated captions.
+Burn subtitles permanently into a video. Provide an SRT, VTT, or ASS file as the `subtitles` input, or omit it to auto-transcribe the audio. Style the text with web-hex colors, an outline, a background box, and a position. This is the static counterpart to [`captions.animate`](/jobs/captions-animate), which renders per-word animated captions.
 
 <Info>
 **Timeout:** 600 s max (plan-capped) · **Accepts:** video
@@ -164,6 +164,6 @@ Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (s
 
 ## See also
 
-- [captions.animate](/job-types/captions-animate) — per-word animated captions
+- [captions.animate](/jobs/captions-animate) — per-word animated captions
 - [Job lifecycle](/concepts/job-lifecycle) — how a job moves from `dispatched` to `complete`
 - [Credits and billing](/concepts/credits) — how usage is charged
