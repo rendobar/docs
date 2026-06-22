@@ -342,21 +342,27 @@ Every clip has `asset`, `start`, `length`, plus any of:
 
 Place between two clips on a track: `{ "type": "transition", "transition": <kind>, "duration": <seconds>, "direction"?: <dir> }`.
 
-<Columns cols={2}>
-  <Card title="crossfade">A dissolves directly into B.</Card>
-  <Card title="fade">A dips through black, then B fades up.</Card>
-  <Card title="slide">B slides in from an edge. Set `direction`: left, right, up, or down.</Card>
-  <Card title="zoom">B grows in from the center.</Card>
-  <Card title="none">Hard cut, no blend.</Card>
-</Columns>
+| Transition | Effect |
+| --- | --- |
+| `crossfade` | A dissolves directly into B |
+| `fade` | A dips through black, then B fades up |
+| `slide` | B slides in from an edge (`direction`: left, right, up, down) |
+| `zoom` | B grows in from the center |
+| `none` | Hard cut, no blend |
 
 ### Text style
 
 Fields on a text asset's `style`:
 
-<Columns cols={2}>
-  <Card title="Type">`font`, `size`, `weight` (100..1000), `color`, `align` (left, center, right)</Card>
-  <Card title="Position">`position` as `{ x, y }` percent strings</Card>
-  <Card title="Decoration">`stroke {color,width}`, `background`, `shadow {color,opacity,offsetX,offsetY}`</Card>
-  <Card title="Entrance">`animate {type, duration}`, where `type` is fade, slideUp, slideDown, slideLeft, or slideRight</Card>
-</Columns>
+| Field | Notes |
+| --- | --- |
+| `font` | Font family name |
+| `size` | Point size |
+| `weight` | 100..1000 (default 400) |
+| `color` | Hex fill |
+| `align` | `left`, `center`, `right` |
+| `position` | `{ x, y }` as percent strings |
+| `stroke` | `{ color, width }` outline |
+| `background` | Hex fill behind the text |
+| `shadow` | `{ color, opacity, offsetX, offsetY }` |
+| `animate` | `{ type, duration }` (type: fade, slideUp, slideDown, slideLeft, slideRight) |
