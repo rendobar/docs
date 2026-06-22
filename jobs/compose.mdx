@@ -42,12 +42,26 @@ const job = await client.jobs.create({
   type: "compose",
   params: {
     schemaVersion: 1,
-    output: { format: "mp4", resolution: { width: 1280, height: 720 }, fps: 30 },
+    output: {
+      format: "mp4",
+      resolution: { width: 1280, height: 720 },
+      fps: 30,
+    },
     timeline: {
       tracks: [
-        { clips: [
-          { asset: { type: "video", src: "https://cdn.rendobar.com/assets/examples/a.mp4", trim: { from: 0, to: 3 } }, start: 0, length: 3 },
-        ] },
+        {
+          clips: [
+            {
+              asset: {
+                type: "video",
+                src: "https://cdn.rendobar.com/assets/examples/a.mp4",
+                trim: { from: 0, to: 3 },
+              },
+              start: 0,
+              length: 3,
+            },
+          ],
+        },
       ],
     },
   },
@@ -67,12 +81,26 @@ res = requests.post(
         "type": "compose",
         "params": {
             "schemaVersion": 1,
-            "output": {"format": "mp4", "resolution": {"width": 1280, "height": 720}, "fps": 30},
+            "output": {
+                "format": "mp4",
+                "resolution": {"width": 1280, "height": 720},
+                "fps": 30,
+            },
             "timeline": {
                 "tracks": [
-                    {"clips": [
-                        {"asset": {"type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": {"from": 0, "to": 3}}, "start": 0, "length": 3}
-                    ]}
+                    {
+                        "clips": [
+                            {
+                                "asset": {
+                                    "type": "video",
+                                    "src": "https://cdn.rendobar.com/assets/examples/a.mp4",
+                                    "trim": {"from": 0, "to": 3},
+                                },
+                                "start": 0,
+                                "length": 3,
+                            }
+                        ]
+                    }
                 ]
             },
         },
@@ -88,12 +116,26 @@ curl -X POST https://api.rendobar.com/jobs \
     "type": "compose",
     "params": {
       "schemaVersion": 1,
-      "output": { "format": "mp4", "resolution": { "width": 1280, "height": 720 }, "fps": 30 },
+      "output": {
+        "format": "mp4",
+        "resolution": { "width": 1280, "height": 720 },
+        "fps": 30
+      },
       "timeline": {
         "tracks": [
-          { "clips": [
-            { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/a.mp4", "trim": { "from": 0, "to": 3 } }, "start": 0, "length": 3 }
-          ] }
+          {
+            "clips": [
+              {
+                "asset": {
+                  "type": "video",
+                  "src": "https://cdn.rendobar.com/assets/examples/a.mp4",
+                  "trim": { "from": 0, "to": 3 }
+                },
+                "start": 0,
+                "length": 3
+              }
+            ]
+          }
         ]
       }
     }
