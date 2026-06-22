@@ -50,7 +50,7 @@ Manage endpoints (create, update, delete, test) via the API or the dashboard.
 |---|---|
 | `job.completed` | Job finished successfully. Carries the unified `output` and `cost` |
 | `job.failed` | Job failed. Carries the unified `error` (`code`, `message`, `detail`, `retryable`) |
-| `job.running` | Job started executing on a provider |
+| `job.running` | Job started executing on a worker |
 | `batch.completed` | Every job in a batch finished (success or fail) |
 
 ## Payload
@@ -100,7 +100,7 @@ The webhook carries the same contract as [GET /jobs/{id}](/concepts/job#the-outp
 
 The `output` shape is identical for every job type. A data-only job (such as `extract.metadata`) carries its answer in `output.data` with `file` null and `files` empty. A stream job carries the manifest as `output.file` and every segment in `output.files`. See [Job output](/concepts/job#the-output) for each pattern.
 
-For `job.failed`, the payload carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job#the-output) error shape: `code`, `message`, `detail` (the provider stderr tail, or null), and `retryable`.
+For `job.failed`, the payload carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job#the-output) error shape: `code`, `message`, `detail` (the process stderr tail, or null), and `retryable`.
 
 ```json
 {

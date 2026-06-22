@@ -46,8 +46,8 @@ Check the HTTP status and `error.code` before reading `data`.
 | `RATE_LIMITED` | 429 | Back off per `Retry-After` header |
 | `NOT_FOUND` | 404 | Resource doesn't exist or isn't visible to your org |
 | `CONFLICT` | 409 | Request conflicts with current state (e.g. cancelling a complete job) |
-| `PROVIDER_ERROR` | 502 | Upstream provider failed. Check `error.message` for details |
-| `PROVIDER_TIMEOUT` | 504 | Provider didn't respond in time. No credits charged |
+| `PROVIDER_ERROR` | 502 | Processing failed on the worker. Check `error.message` for details |
+| `PROVIDER_TIMEOUT` | 504 | The job did not finish in time. No credits charged |
 | `ORG_SUSPENDED` | 403 | Contact `hello@rendobar.com` |
 | `INTERNAL_ERROR` | 500 | Server bug. Persist? Contact support with the request ID |
 
