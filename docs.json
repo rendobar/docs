@@ -57,7 +57,7 @@
             "pages": [
               "sdk",
               "cli",
-              "mcp",
+              "mcp-server",
               "n8n"
             ]
           },
