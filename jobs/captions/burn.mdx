@@ -167,12 +167,6 @@ Omit `subtitles` to auto-transcribe. The spoken language is detected by default 
   Maximum characters per line on the auto-transcribe path. Range 10–80.
 </ParamField>
 
-## Response
-
-```json
-{ "data": { "id": "job_abc123", "status": "dispatched" } }
-```
-
-Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (signed, 1-hour TTL). The burned video is a single file, so `output.files` lists that one file.
+Like every job, this returns the standard response. See [Job output](/concepts/job-output) for the shape and how to read the result.
 
 For animated word-level captions instead, see [captions.animate](/jobs/captions/animate).
