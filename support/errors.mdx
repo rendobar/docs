@@ -46,8 +46,8 @@ Check the HTTP status and `error.code` before reading `data`.
 | `RATE_LIMITED` | 429 | Back off per `Retry-After` header |
 | `NOT_FOUND` | 404 | Resource doesn't exist or isn't visible to your org |
 | `CONFLICT` | 409 | Request conflicts with current state (e.g. cancelling a complete job) |
-| `PROVIDER_ERROR` | 502 | Processing failed on the worker. Check `error.message` for details |
-| `PROVIDER_TIMEOUT` | 504 | The job did not finish in time. No credits charged |
+| `RUNNER_ERROR` | 502 | Processing failed on the runner. Check `error.message` for details |
+| `RUNNER_TIMEOUT` | 504 | The job did not finish in time. No credits charged |
 | `ORG_SUSPENDED` | 403 | Contact `hello@rendobar.com` |
 | `INTERNAL_ERROR` | 500 | Server bug. Persist? Contact support with the request ID |
 
@@ -114,7 +114,7 @@ if not res.ok:
 ## Related
 
 - [Plan limits](/support/limits): caps behind `PLAN_LIMIT` and `RATE_LIMITED`
-- [Job lifecycle](/concepts/job): where `PROVIDER_ERROR` and `PROVIDER_TIMEOUT` surface
+- [Job lifecycle](/concepts/job): where `RUNNER_ERROR` and `RUNNER_TIMEOUT` surface
 - [Credits and billing](/concepts/credits): `INSUFFICIENT_CREDITS` and the prepaid model
 - [FAQ](/support/faq): common questions about failed jobs and refunds
 - [Pricing](https://rendobar.com/pricing/): plan that lifts your concurrency and rate caps

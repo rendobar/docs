@@ -50,7 +50,7 @@ Manage endpoints (create, update, delete, test) via the API or the dashboard.
 |---|---|
 | `job.completed` | Job finished successfully. Carries the unified `output` and `cost` |
 | `job.failed` | Job failed. Carries the unified `error` (`code`, `message`, `detail`, `retryable`) |
-| `job.running` | Job started executing on a worker |
+| `job.running` | Job started executing on a runner |
 | `batch.completed` | Every job in a batch finished (success or fail) |
 
 ## Payload
@@ -107,7 +107,7 @@ For `job.failed`, the payload carries `error` instead of `output`. The error mat
   "event": "job.failed",
   "jobId": "job_a1b2c3d4",
   "error": {
-    "code": "PROVIDER_ERROR",
+    "code": "RUNNER_ERROR",
     "message": "FFmpeg process exited with code 1",
     "detail": "Conversion failed: Invalid data found when processing input",
     "retryable": false

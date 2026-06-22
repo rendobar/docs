@@ -88,7 +88,7 @@ curl -X POST https://api.rendobar.com/jobs \
 ## How it runs
 
 1. **Validate**: command parsed against 8 security layers (flag whitelist, format/filter blocklists)
-2. **Download**: input URLs pulled to a sandboxed worker
+2. **Download**: input URLs pulled to a sandboxed runner
 3. **Substitute**: URLs replaced with local paths in the FFmpeg command
 4. **Execute**: FFmpeg runs in an isolated container with network disabled
 5. **Upload**: output goes to R2
@@ -281,7 +281,7 @@ Every command is validated before it runs, then executed in an isolated, network
 
 Priced per compute second from your [credit balance](/concepts/credits), the wall-clock time FFmpeg ran, excluding file transfer.
 
-Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `PROVIDER_TIMEOUT`, and no credits are charged.
+Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `RUNNER_TIMEOUT`, and no credits are charged.
 
 ## Examples
 
@@ -444,7 +444,7 @@ A failed job carries an `error` object with `code`, `message`, `detail`, and `re
     "id": "job_abc123",
     "status": "failed",
     "error": {
-      "code": "PROVIDER_ERROR",
+      "code": "RUNNER_ERROR",
       "message": "FFmpeg process exited with code 1",
       "detail": "[in#0 @ 0x55…] Error opening input: Invalid data found when processing input\nError opening input file clip.mp4.\n",
       "retryable": false

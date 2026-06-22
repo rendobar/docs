@@ -1,7 +1,7 @@
 ---
 title: "How a job works"
 sidebarTitle: "Job"
-description: "Run a job from a typed request, through async execution on our workers, to a signed output. The lifecycle, the statuses, and the output shape, in one place."
+description: "Run a job from a typed request, through async execution on our runners, to a signed output. The lifecycle, the statuses, and the output shape, in one place."
 icon: "gear"
 keywords: ["rendobar job", "how a job works", "job model", "job lifecycle", "job status", "job output", "output shape", "output.file", "async video processing"]
 canonical: "https://rendobar.com/docs/concepts/job"
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/concepts/job"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/concepts/job/#article",
       "headline": "How a job works",
-      "description": "Run a job from a typed request, through async execution on our workers, to a signed output. The lifecycle, the statuses, and the output shape, in one place.",
+      "description": "Run a job from a typed request, through async execution on our runners, to a signed output. The lifecycle, the statuses, and the output shape, in one place.",
       "datePublished": "2026-06-22",
       "dateModified": "2026-06-22",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
@@ -33,12 +33,12 @@ Here is the whole round trip:
 sequenceDiagram
     participant You
     participant API as Rendobar API
-    participant Worker
+    participant Runner
     You->>API: POST /jobs
     API-->>You: id, status waiting
-    API->>Worker: dispatch with signed URLs
-    Worker->>Worker: download, run, upload
-    Worker-->>API: result callback
+    API->>Runner: dispatch with signed URLs
+    Runner->>Runner: download, run, upload
+    Runner-->>API: result callback
     API-->>You: webhook job.completed
     You->>API: poll GET /jobs
     API-->>You: status complete, output
@@ -69,13 +69,13 @@ flowchart LR
 | Status | What it means |
 |---|---|
 | `waiting` | Saved and queued. The submit gate passed: auth, plan and rate limits, a balance check, and schema validation. |
-| `dispatched` | Sent to a worker with presigned URLs for download and upload. |
-| `running` | The worker is downloading inputs, running the work, and uploading the result. |
+| `dispatched` | Sent to a runner with presigned URLs for download and upload. |
+| `running` | The runner is downloading inputs, running the work, and uploading the result. |
 | `complete` | Finished. The `output` is ready. |
 | `failed` | Errored. Read `error.code` and `error.message`. |
 | `cancelled` | Stopped before it finished. |
 
-On any terminal status the job is billed for the compute it used, and a [webhook](/guides/webhooks) fires if you configured one. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its type's time limit fails with `PROVIDER_TIMEOUT` and is not charged.
+On any terminal status the job is billed for the compute it used, and a [webhook](/guides/webhooks) fires if you configured one. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its type's time limit fails with `RUNNER_TIMEOUT` and is not charged.
 
 ## The output
 
