@@ -340,12 +340,23 @@ Every clip has `asset`, `start`, `length`, plus any of:
 
 ### Transitions
 
-A track item `{ "type": "transition", "transition": <kind>, "duration": <seconds>, "direction"?: <dir> }`:
+Place between two clips on a track: `{ "type": "transition", "transition": <kind>, "duration": <seconds>, "direction"?: <dir> }`.
 
-`crossfade`, `fade`, `slide` (`direction`: `left` / `right` / `up` / `down`), `zoom`, `none` (hard cut).
+<Columns cols={2}>
+  <Card title="crossfade">A dissolves directly into B.</Card>
+  <Card title="fade">A dips through black, then B fades up.</Card>
+  <Card title="slide">B slides in from an edge. Set `direction`: left, right, up, or down.</Card>
+  <Card title="zoom">B grows in from the center.</Card>
+  <Card title="none">Hard cut, no blend.</Card>
+</Columns>
 
 ### Text style
 
 Fields on a text asset's `style`:
 
-`font`, `size`, `weight` (100..1000), `color`, `align` (`left` / `center` / `right`), `position {x,y}`, `stroke {color,width}`, `background`, `shadow {color,opacity,offsetX,offsetY}`, `animate {type: fade \| slideUp \| slideDown \| slideLeft \| slideRight, duration}`.
+<Columns cols={2}>
+  <Card title="Type">`font`, `size`, `weight` (100..1000), `color`, `align` (left, center, right)</Card>
+  <Card title="Position">`position` as `{ x, y }` percent strings</Card>
+  <Card title="Decoration">`stroke {color,width}`, `background`, `shadow {color,opacity,offsetX,offsetY}`</Card>
+  <Card title="Entrance">`animate {type, duration}`, where `type` is fade, slideUp, slideDown, slideLeft, or slideRight</Card>
+</Columns>
