@@ -57,35 +57,6 @@ const result = await client.jobs.wait(job.id);
 console.log(outputUrl(result));
 ```
 
-```bash cURL
-curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "ffmpeg",
-    "params": {
-      "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4"
-    }
-  }'
-```
-
-```javascript JavaScript
-const res = await fetch("https://api.rendobar.com/jobs", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer rb_YOUR_KEY",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    type: "ffmpeg",
-    params: {
-      command: "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4",
-    },
-  }),
-});
-const { data } = await res.json();
-```
-
 ```python Python
 import requests
 res = requests.post(
@@ -98,6 +69,18 @@ res = requests.post(
         },
     },
 )
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ffmpeg",
+    "params": {
+      "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 -preset fast output.mp4"
+    }
+  }'
 ```
 
 </CodeGroup>

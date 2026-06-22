@@ -35,7 +35,7 @@ The `caption.burn` job burns subtitles permanently into a video. Provide an SRT,
 
 <CodeGroup>
 
-```typescript @rendobar/sdk
+```ts SDK
 import { createClient, outputUrl } from "@rendobar/sdk";
 
 const client = createClient({ apiKey: "rb_YOUR_KEY" });
@@ -53,39 +53,6 @@ const result = await client.jobs.wait(job.id);
 console.log(outputUrl(result));
 ```
 
-```bash cURL
-curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_live_YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "caption.burn",
-    "inputs": {
-      "source": "https://cdn.rendobar.com/assets/examples/sample.mp4",
-      "subtitles": "https://cdn.rendobar.com/assets/examples/sample.srt"
-    },
-    "params": { "fontFamily": "Inter", "fontSize": 48, "boxEnabled": true }
-  }'
-```
-
-```javascript JavaScript
-const res = await fetch("https://api.rendobar.com/jobs", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer rb_live_YOUR_KEY",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    type: "caption.burn",
-    inputs: {
-      source: "https://cdn.rendobar.com/assets/examples/sample.mp4",
-      subtitles: "https://cdn.rendobar.com/assets/examples/sample.srt",
-    },
-    params: { fontFamily: "Inter", fontSize: 48, boxEnabled: true },
-  }),
-});
-const { data } = await res.json();
-```
-
 ```python Python
 import requests
 res = requests.post(
@@ -100,6 +67,20 @@ res = requests.post(
         "params": {"fontFamily": "Inter", "fontSize": 48, "boxEnabled": True},
     },
 )
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "caption.burn",
+    "inputs": {
+      "source": "https://cdn.rendobar.com/assets/examples/sample.mp4",
+      "subtitles": "https://cdn.rendobar.com/assets/examples/sample.srt"
+    },
+    "params": { "fontFamily": "Inter", "fontSize": 48, "boxEnabled": true }
+  }'
 ```
 
 </CodeGroup>

@@ -35,7 +35,7 @@ The `captions.animate` job returns a video with word-level animated captions bur
 
 <CodeGroup>
 
-```typescript @rendobar/sdk
+```ts SDK
 import { createClient, outputUrl } from "@rendobar/sdk";
 
 const client = createClient({ apiKey: "rb_YOUR_KEY" });
@@ -50,43 +50,6 @@ const job = await client.jobs.create({
 
 const result = await client.jobs.wait(job.id);
 console.log(outputUrl(result));
-```
-
-```bash cURL
-curl -X POST https://api.rendobar.com/jobs \
-  -H "Authorization: Bearer rb_YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "captions.animate",
-    "inputs": {
-      "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
-    },
-    "params": {
-      "preset": "hormozi",
-      "mode": "balanced"
-    }
-  }'
-```
-
-```javascript JavaScript
-const res = await fetch("https://api.rendobar.com/jobs", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer rb_YOUR_KEY",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    type: "captions.animate",
-    inputs: {
-      source: "https://cdn.rendobar.com/assets/examples/sample.mp4",
-    },
-    params: {
-      preset: "hormozi",
-      mode: "balanced",
-    },
-  }),
-});
-const { data } = await res.json();
 ```
 
 ```python Python
@@ -105,6 +68,22 @@ res = requests.post(
         },
     },
 )
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "captions.animate",
+    "inputs": {
+      "source": "https://cdn.rendobar.com/assets/examples/sample.mp4"
+    },
+    "params": {
+      "preset": "hormozi",
+      "mode": "balanced"
+    }
+  }'
 ```
 
 </CodeGroup>
