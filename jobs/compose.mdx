@@ -103,7 +103,7 @@ curl -X POST https://api.rendobar.com/jobs \
 </CodeGroup>
 
 <Info>
-**Assets:** video, image, text, audio · **Output:** mp4 / mov / webm / gif / jpg / png
+**Assets:** video, image, text, audio, composition · **Output:** mp4 / webm / gif / mp3 (audio only) / jpg / png (still frame)
 </Info>
 
 That is the shape of every render. Everything below is one more clip, one more track, or one more field.
@@ -293,3 +293,74 @@ A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`
 <Frame caption="Landscape footage reframed to a vertical 9:16 Reel (crop)">
   <video src="https://cdn.rendobar.com/assets/showcase/fx/reframe.mp4" autoPlay loop muted playsInline style={{ maxWidth: "300px" }} />
 </Frame>
+
+## Scene-first authoring
+
+Tracks give you precise multi-track control. For a sequential edit, you can instead describe a list of scenes. Each scene is a self-contained segment with its own clips and an optional transition into the next. `overlays` is a flat list of clips that sit over the whole composition, like a persistent logo or watermark.
+
+```json
+{
+  "scenes": [
+    { "duration": 4, "transition": { "transition": "crossfade", "duration": 0.6 },
+      "clips": [{ "asset": { "type": "video", "src": "a.mp4" } }] },
+    { "duration": 4, "clips": [{ "asset": { "type": "video", "src": "b.mp4" } }] }
+  ],
+  "overlays": [
+    { "asset": { "type": "image", "src": "logo.png" }, "start": 0, "length": 8,
+      "transform": { "scale": 0.2, "position": { "x": "88%", "y": "12%" } } }
+  ]
+}
+```
+
+A scene's clips can omit `start` and `length` to span the whole scene. Every clip field works the same as in tracks mode. `scenes` and `tracks` are mutually exclusive: a timeline uses one or the other.
+
+## Reference
+
+### `output`
+
+| Field | Values |
+| --- | --- |
+| `format` | `mp4` (default), `webm`, `gif` (no audio), `mp3` (audio only), `jpg`, `png` (still frame) |
+| `resolution` | `{ width, height }` (integer pixels) |
+| `fps` | number |
+| `videoCodec` | `h264`, `vp9` (optional; per-format default otherwise) |
+| `audioCodec` | `aac`, `opus`, `mp3` (optional) |
+| `frameTime` | second of the timeline to capture for `jpg` / `png` (default `0`) |
+
+### Assets (`clip.asset`)
+
+| `type` | Fields |
+| --- | --- |
+| `video` | `src`, `trim` `{ from, to }`, `volume` (default `1`) |
+| `image` | `src` |
+| `audio` | `src`, `trim`, `volume`, `fadeIn`, `fadeOut` (seconds) |
+| `text` | `text`, `style` |
+| `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip |
+
+### Clip fields
+
+Every clip has `asset`, `start`, `length`, plus any of:
+
+| Field | What it does |
+| --- | --- |
+| `opacity` | `0`..`1`, or keyframes `[{ time, value, easing: step \| linear \| smooth }]` |
+| `transform` | `position {x,y}`, `scale`, `rotate`, `anchor` (`center` \| `topLeft`), `fit` (`contain` \| `fill`), `animateTo` (Ken Burns end state) |
+| `crop` | `top` / `right` / `bottom` / `left`, each a percent string like `"10%"` |
+| `speed` | playback rate (`0.5` = slow motion, `2` = fast, and pitch shifts with speed) |
+| `color` | `brightness` (-1..1), `contrast` (0..4), `saturation` (0..3), `gamma` (0.1..10), `hue` (-180..180), `temperature` (1000..40000 K) |
+| `filter` | `greyscale`, `negative`, `boost`, `muted`, `lighten`, `darken`, `contrast` (mutually exclusive with `color`) |
+| `blur` / `sharpen` | gaussian blur strength / unsharp amount |
+| `chromaKey` | `color` (hex), `similarity` (0..1) |
+| `blendMode` | `normal`, `multiply`, `screen`, `overlay`, `darken`, `lighten`, `add`, `difference` |
+| `pan` | stereo balance, `-1` (left) to `1` (right) |
+| `flip` | `{ horizontal, vertical }` |
+
+### Transitions
+
+A track item `{ "type": "transition", "transition": <kind>, "duration": <seconds>, "direction"?: <dir> }`:
+
+`crossfade`, `fade`, `slide` (`direction`: `left` / `right` / `up` / `down`), `zoom`, `none` (hard cut).
+
+### Text style (`text.style`)
+
+`font`, `size`, `weight` (100..1000), `color`, `align` (`left` / `center` / `right`), `position {x,y}`, `stroke {color,width}`, `background`, `shadow {color,opacity,offsetX,offsetY}`, `animate {type: fade \| slideUp \| slideDown \| slideLeft \| slideRight, duration}`.
