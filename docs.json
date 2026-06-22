@@ -27,9 +27,7 @@
           {
             "group": "Getting Started",
             "pages": [
-              "quickstart",
-              "authentication",
-              "concepts/credits"
+              "quickstart"
             ]
           },
           {
@@ -46,11 +44,10 @@
               "jobs/ffmpeg",
               {
                 "group": "Captions",
-                "icon": "captions",
+                "icon": "closed-captioning",
                 "pages": [
-                  "jobs/captions/overview",
-                  "jobs/captions/burn",
-                  "jobs/captions/animate"
+                  "jobs/captions/animate",
+                  "jobs/captions/burn"
                 ]
               },
               {
@@ -80,6 +77,7 @@
             "group": "Support",
             "pages": [
               "support/faq",
+              "concepts/credits",
               "support/limits",
               "support/errors"
             ]
@@ -116,12 +114,20 @@
       "destination": "/concepts/credits"
     },
     {
+      "source": "/authentication",
+      "destination": "/quickstart"
+    },
+    {
       "source": "/guides/captions",
-      "destination": "/jobs/captions/overview"
+      "destination": "/jobs/captions/animate"
     },
     {
       "source": "/jobs/captions",
-      "destination": "/jobs/captions/overview"
+      "destination": "/jobs/captions/animate"
+    },
+    {
+      "source": "/jobs/captions/overview",
+      "destination": "/jobs/captions/animate"
     },
     {
       "source": "/jobs/captions-animate",

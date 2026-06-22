@@ -1,6 +1,6 @@
 ---
 title: "Burn captions into a video"
-sidebarTitle: "caption.burn"
+sidebarTitle: "Burn"
 description: "Burn subtitles into a video from an SRT, VTT, or ASS file, or auto-transcribe in any language, with full styling control."
 icon: "closed-captioning"
 keywords: ["caption.burn", "burn subtitles", "SRT", "VTT", "ASS", "hardcoded subtitles", "subtitle styling"]
@@ -175,4 +175,4 @@ Omit `subtitles` to auto-transcribe. The spoken language is detected by default 
 
 Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (signed, 1-hour TTL). The burned video is a single file, so `output.files` lists that one file.
 
-Priced at $0.10 per input minute. See [Captions overview](/jobs/captions/overview) for the other caption job and shared links.
+Priced at $0.10 per input minute. For animated word-level captions instead, see [captions.animate](/jobs/captions/animate).
