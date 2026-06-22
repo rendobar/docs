@@ -98,7 +98,7 @@ curl https://api.rendobar.com/jobs/job_abc123 \
   -H "Authorization: Bearer rb_YOUR_KEY"
 ```
 
-Statuses: `waiting → dispatched → running → complete | failed | cancelled`. See [job lifecycle](/concepts/job-lifecycle) for what each status means. Poll every 1–2 seconds.
+Statuses: `waiting → dispatched → running → complete | failed | cancelled`. See [job lifecycle](/concepts/job) for what each status means. Poll every 1–2 seconds.
 
 For push instead of poll, configure a [webhook](/guides/webhooks).
 
@@ -151,6 +151,6 @@ Need more credits? See [pricing](https://rendobar.com/pricing/) for plan and cre
 ## Related
 
 - [FFmpeg guide](/jobs/ffmpeg): security model, allowed flags, worked examples
-- [Job lifecycle](/concepts/job-lifecycle): the six statuses and what triggers each
+- [Job lifecycle](/concepts/job): the six statuses and what triggers each
 - [Pricing and plans](https://rendobar.com/pricing/): Free vs Pro and credit-pack pricing
 - [All supported FFmpeg operations](https://rendobar.com/features/): full feature index

@@ -33,7 +33,7 @@
           {
             "group": "Concepts",
             "pages": [
-              "concepts/job-lifecycle",
+              "concepts/job",
               "concepts/job-output",
               "guides/webhooks"
             ]
@@ -112,6 +112,10 @@
     {
       "source": "/credits",
       "destination": "/concepts/credits"
+    },
+    {
+      "source": "/concepts/job-lifecycle",
+      "destination": "/concepts/job"
     },
     {
       "source": "/authentication",

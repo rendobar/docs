@@ -1,0 +1,74 @@
+---
+title: "How a job works"
+sidebarTitle: "Job"
+description: "Run a job from a typed request, through async execution on a provider, to a signed output that is billed per compute second when it finishes."
+icon: "gear"
+keywords: ["rendobar job", "how a job works", "job model", "job status", "async video processing", "job lifecycle"]
+canonical: "https://rendobar.com/docs/concepts/job"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/concepts/job/#article",
+      "headline": "How a job works",
+      "description": "Run a job from a typed request, through async execution on a provider, to a signed output that is billed per compute second when it finishes.",
+      "datePublished": "2026-06-22",
+      "dateModified": "2026-06-22",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+A job is one unit of media work. You describe it, submit it, and it runs on its own while you poll or wait for a webhook. Everything on Rendobar is a job, whether that is an FFmpeg command or animated captions.
+
+## The shape of a job
+
+Every job is a `type` plus the `inputs` and `params` that type expects:
+
+```json
+{ "type": "ffmpeg", "inputs": { "source": "https://..." }, "params": { "command": "ffmpeg -i source out.mp4" } }
+```
+
+`type` picks the operation, `inputs` maps names to source URLs, and `params` carries the options for that type. `POST` it to `/jobs` and you get back an id and a `waiting` status. Each [job type](/jobs/ffmpeg) documents its own `inputs` and `params`.
+
+## What happens next
+
+A job moves through six statuses:
+
+```
+waiting → dispatched → running → complete
+                              → failed
+                   → cancelled
+```
+
+| Status | What it means |
+|---|---|
+| `waiting` | Saved and queued. The submit gate passed: auth, plan and rate limits, a balance check, and schema validation. |
+| `dispatched` | Handed to an execution provider with presigned URLs for download and upload. |
+| `running` | The provider is downloading inputs, running the work, and uploading the result. |
+| `complete` | Finished. The `output` is ready. |
+| `failed` | Errored. Read `error.code` and `error.message`. |
+| `cancelled` | Stopped before it finished. |
+
+On any terminal status (`complete`, `failed`, or `cancelled`) the job is billed for the compute it used, and a [webhook](/guides/webhooks) fires if you configured one. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its type's time limit fails with `PROVIDER_TIMEOUT` and is not charged.
+
+## Reading the result
+
+A `complete` job carries one `output`, the same shape for every type: a computed `data` answer, a headline `file`, and the full `files` list. The [Job output](/concepts/job-output) page covers the shape and how to read it.
+
+## Polling or webhooks
+
+Poll `GET /jobs/{id}` every second or two until the status is terminal, or skip polling entirely: register a [webhook](/guides/webhooks) and Rendobar pushes `job.completed` to your server when the job lands.
+
+## See also
+
+- [Job output](/concepts/job-output): the output shape and how to read the result
+- [Webhooks](/guides/webhooks): push status changes instead of polling
+- [Credits and billing](/concepts/credits): how the terminal debit works
+- [Error codes](/support/errors): every `error.code` a failed job returns

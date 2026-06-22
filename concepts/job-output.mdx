@@ -36,7 +36,7 @@ Every job returns the same `output` shape, no matter the type. A `complete` job 
 }
 ```
 
-`output` is present when `status` is `complete`. A `failed` job carries an `error` object instead. See [Job lifecycle](/concepts/job-lifecycle) for status transitions.
+`output` is present when `status` is `complete`. A `failed` job carries an `error` object instead. See [Job lifecycle](/concepts/job) for status transitions.
 
 ## Fields
 
@@ -285,7 +285,7 @@ The rule of thumb:
 
 ## See also
 
-- [Job lifecycle](/concepts/job-lifecycle): the statuses a job moves through before `output` exists
+- [Job lifecycle](/concepts/job): the statuses a job moves through before `output` exists
 - [FFmpeg reference](/jobs/ffmpeg): the response for a file-producing job
 - [POST /jobs](/quickstart): submit a job and read the result
 - [Error codes](/support/errors): the `error` shape a `failed` job returns instead
