@@ -2,6 +2,16 @@ Poll `GET /jobs/{id}` until `status` is `complete`. The response then contains `
 
 <CodeGroup>
 
+```ts SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_your_key" });
+
+// wait() polls until the job reaches a terminal status
+const job = await client.jobs.wait("job_abc123");
+console.log(job.status, outputUrl(job), job.cost?.formatted);
+```
+
 ```bash cURL
 curl https://api.rendobar.com/jobs/job_abc123 \
   -H "Authorization: Bearer rb_your_key"
