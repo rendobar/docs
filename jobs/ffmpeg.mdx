@@ -3,7 +3,6 @@ title: "Run any FFmpeg command"
 sidebarTitle: "FFmpeg"
 description: "Run any FFmpeg command in the cloud with ~120 whitelisted flags, sandboxed execution, and a signed output URL. Live on all plans, ~$0.05/min."
 icon: "terminal"
-tag: "Live"
 keywords: ["ffmpeg api", "ffmpeg in cloud", "ffmpeg command api", "ffmpeg sandboxed execution", "ffmpeg flags whitelist", "ffmpeg rest api", "ffmpeg api reference"]
 canonical: "https://rendobar.com/docs/jobs/ffmpeg"
 ---
@@ -26,16 +25,12 @@ canonical: "https://rendobar.com/docs/jobs/ffmpeg"
   }}
 />
 
-<Check>
-**Live.** Production-ready, available on all plans.
-</Check>
-
 You write the FFmpeg command. Rendobar downloads inputs, runs the command in an isolated container, returns a signed download URL. Same syntax you would run locally.
 
 The `inputs` map stages source files into the working directory by name. The command references them by bare name, and inline `-i` URLs also work.
 
 <Info>
-**Timeout:** 900 s max (plan-capped) · **Accepts:** video, audio, image
+**Accepts:** video, audio, image
 </Info>
 
 <Tip>
