@@ -55,8 +55,15 @@
             "group": "Jobs",
             "pages": [
               "jobs/ffmpeg",
-              "jobs/captions-animate",
-              "jobs/caption-burn",
+              {
+                "group": "Captions",
+                "icon": "captions",
+                "pages": [
+                  "jobs/captions/overview",
+                  "jobs/captions/burn",
+                  "jobs/captions/animate"
+                ]
+              },
               {
                 "group": "Compose",
                 "icon": "film",
@@ -122,7 +129,19 @@
     },
     {
       "source": "/guides/captions",
-      "destination": "/jobs/captions-animate"
+      "destination": "/jobs/captions/overview"
+    },
+    {
+      "source": "/jobs/captions",
+      "destination": "/jobs/captions/overview"
+    },
+    {
+      "source": "/jobs/captions-animate",
+      "destination": "/jobs/captions/animate"
+    },
+    {
+      "source": "/jobs/caption-burn",
+      "destination": "/jobs/captions/burn"
     },
     {
       "source": "/guides/ffmpeg",

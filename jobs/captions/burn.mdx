@@ -1,25 +1,62 @@
 ---
 title: "Burn captions into a video"
 sidebarTitle: "caption.burn"
-description: "Burn styled subtitles into a video from an SRT, VTT, or ASS file, or auto-transcribe in any language. Web-hex styling, deterministic sizing."
+description: "Burn subtitles into a video from an SRT, VTT, or ASS file, or auto-transcribe in any language, with full styling control."
 icon: "closed-captioning"
 tag: "Live"
-canonical: "https://rendobar.com/docs/jobs/caption-burn"
+keywords: ["caption.burn", "burn subtitles", "SRT", "VTT", "ASS", "hardcoded subtitles", "subtitle styling"]
+canonical: "https://rendobar.com/docs/jobs/captions/burn"
 ---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/jobs/captions/burn/#article",
+      "headline": "Burn captions into a video",
+      "description": "Burn subtitles into a video from an SRT, VTT, or ASS file, or auto-transcribe in any language, with full styling control.",
+      "datePublished": "2026-06-22",
+      "dateModified": "2026-06-22",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
 
 <Check>
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Burn subtitles permanently into a video. Provide an SRT, VTT, or ASS file as the `subtitles` input, or omit it to auto-transcribe the audio. Style the text with web-hex colors, an outline, a background box, and a position. This is the static counterpart to [`captions.animate`](/jobs/captions-animate), which renders per-word animated captions.
+The `caption.burn` job burns subtitles permanently into a video. Provide an SRT, VTT, or ASS file as the `subtitles` input, or omit it to auto-transcribe the audio. Style the text with web-hex colors, an outline, a background box, and a position.
 
 <Info>
-**Timeout:** 600 s max (plan-capped) · **Accepts:** video
+**Timeout:** 600 s max (plan-capped) · **Accepts:** video · **Type:** `caption.burn`
 </Info>
 
 ## Request
 
 <CodeGroup>
+
+```typescript @rendobar/sdk
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.create({
+  type: "caption.burn",
+  inputs: {
+    source: "https://cdn.rendobar.com/assets/examples/sample.mp4",
+    subtitles: "https://cdn.rendobar.com/assets/examples/sample.srt",
+  },
+  params: { fontFamily: "Inter", fontSize: 48, boxEnabled: true },
+});
+
+const result = await client.jobs.wait(job.id);
+console.log(outputUrl(result));
+```
 
 ```bash cURL
 curl -X POST https://api.rendobar.com/jobs \
@@ -72,7 +109,7 @@ res = requests.post(
 
 </CodeGroup>
 
-Omit `subtitles` to auto-transcribe. The spoken language is detected by default (`language: "auto"`); pass an ISO-639-1 code to skip detection.
+Omit `subtitles` to auto-transcribe. The spoken language is detected by default (`language: "auto"`). Pass an ISO-639-1 code to skip detection.
 
 ## Inputs
 
@@ -87,7 +124,7 @@ Omit `subtitles` to auto-transcribe. The spoken language is detected by default 
 ## Parameters
 
 <ParamField body="language" type="enum" default="auto">
-  Spoken language for the auto-transcribe path, as an ISO-639-1 code (e.g. `en`, `es`, `ja`) or `auto` to detect. English uses a faster model; everything else routes to multilingual transcription. Ignored when a subtitle file is provided.
+  Spoken language for the auto-transcribe path, as an ISO-639-1 code (e.g. `en`, `es`, `ja`) or `auto` to detect. English uses a faster model. Everything else routes to multilingual transcription. Ignored when a subtitle file is provided.
 </ParamField>
 
 <ParamField body="fontFamily" type="string" default="Inter">
@@ -162,8 +199,4 @@ Omit `subtitles` to auto-transcribe. The spoken language is detected by default 
 
 Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (signed, 1-hour TTL). The burned video is a single file, so `output.files` lists that one file.
 
-## See also
-
-- [captions.animate](/jobs/captions-animate) — per-word animated captions
-- [Job lifecycle](/concepts/job-lifecycle) — how a job moves from `dispatched` to `complete`
-- [Credits and billing](/concepts/credits) — how usage is charged
+Priced at $0.10 per input minute. See [Captions overview](/jobs/captions/overview) for the other caption job and shared links.

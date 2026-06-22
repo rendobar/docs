@@ -1,10 +1,11 @@
 ---
-title: "captions.animate"
-description: "Burn animated word-level captions onto a video. 11 style presets, bundled and custom fonts, flexible placement, entrance animations, and translation."
+title: "Animated word-level captions"
+sidebarTitle: "captions.animate"
+description: "Generate animated word-level captions from a video, with 11 style presets, custom fonts, auto-emphasis, and translation."
 icon: "captions"
 tag: "Live"
-keywords: ["animated captions", "burn subtitles", "auto captions", "tiktok captions", "subtitles", "captions.animate"]
-canonical: "https://rendobar.com/docs/jobs/captions-animate"
+keywords: ["captions.animate", "animated captions", "auto captions", "tiktok captions", "word-level captions", "hormozi captions"]
+canonical: "https://rendobar.com/docs/jobs/captions/animate"
 ---
 
 <script
@@ -13,11 +14,11 @@ canonical: "https://rendobar.com/docs/jobs/captions-animate"
     __html: JSON.stringify({
       "@context": "https://schema.org",
       "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/jobs/captions-animate/#article",
-      "headline": "captions.animate",
-      "description": "Burn animated word-level captions onto a video. 11 style presets, bundled and custom fonts, flexible placement, entrance animations, and translation.",
-      "datePublished": "2026-05-03",
-      "dateModified": "2026-06-14",
+      "@id": "https://rendobar.com/docs/jobs/captions/animate/#article",
+      "headline": "Animated word-level captions",
+      "description": "Generate animated word-level captions from a video, with 11 style presets, custom fonts, auto-emphasis, and translation.",
+      "datePublished": "2026-06-22",
+      "dateModified": "2026-06-22",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -29,15 +30,32 @@ canonical: "https://rendobar.com/docs/jobs/captions-animate"
 **Live.** Production-ready, available on all plans.
 </Check>
 
-Returns a video with word-level animated captions burned in. Speech is automatically transcribed, segmented into timed cues, and rendered as styled subtitles burned onto the source.
+The `captions.animate` job returns a video with word-level animated captions burned in. Speech is automatically transcribed, segmented into timed cues, and rendered as styled subtitles burned onto the source.
 
 <Info>
-**Timeout:** 600 s · **Accepts:** video · **Limits:** single speaker, English at launch
+**Timeout:** 600 s · **Accepts:** video · **Type:** `captions.animate`
 </Info>
 
 ## Request
 
 <CodeGroup>
+
+```typescript @rendobar/sdk
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.create({
+  type: "captions.animate",
+  inputs: {
+    source: "https://cdn.rendobar.com/assets/examples/sample.mp4",
+  },
+  params: { preset: "hormozi", mode: "balanced" },
+});
+
+const result = await client.jobs.wait(job.id);
+console.log(outputUrl(result));
+```
 
 ```bash cURL
 curl -X POST https://api.rendobar.com/jobs \
@@ -114,7 +132,7 @@ res = requests.post(
 </ParamField>
 
 <ParamField body="style" type="object">
-  Style overrides layered on top of `preset`. Any field set here wins; unset fields fall through to the preset. Key fields:
+  Style overrides layered on top of `preset`. Any field set here wins. Unset fields fall through to the preset. Key fields:
   - `font`: font family name. A [bundled family](#fonts) or the family name of a custom font you pass via the `font` input.
   - `layout`: `phrase` (up to two balanced lines) or `word` (one word at a time).
   - `position`: `top`, `center`, or `bottom`.
@@ -192,19 +210,4 @@ To use your own font, pass two values together:
 
 Poll `GET /jobs/{id}` until `status: "complete"`, then read `output.file.url` (signed, 1-hour TTL). The captioned video is a single file, so `output.files` lists that one file.
 
-## Pricing
-
-$0.10 per input minute. Billed against your [credit balance](/concepts/credits) on completion.
-
-## See also
-
-- [Job lifecycle](/concepts/job-lifecycle)
-- [Credits and billing](/concepts/credits)
-
-## Related
-
-- [Job lifecycle](/concepts/job-lifecycle): the six statuses captioning jobs move through
-- [Credits and billing](/concepts/credits): how the per-minute charge debits your balance
-- [ffmpeg](/jobs/ffmpeg): the lower-level job for custom subtitle workflows
-- [Webhooks](/guides/webhooks): get `job.completed` instead of polling captioning jobs
-- [Caption-styling features](https://rendobar.com/features/): every preset and visual option
+Priced at $0.10 per input minute. See [Captions overview](/jobs/captions/overview) for the other caption job and shared links.
