@@ -133,7 +133,7 @@ await client.jobs.create({
 
 **Batches.** `batches.create({ jobs: [...] })` submits many jobs at once and returns `batchId`, `jobCount`, and `jobIds`. Wait on each id.
 
-**Billing.** `billing.state()` for balance and plan, `billing.usage({ start, end })` for spend, `billing.transactions({ page, limit })` for the ledger.
+**Billing.** `billing.state()` for balance and plan, `billing.usage({ start, end })` for spend, `billing.usageByClient({ days })` for spend grouped by the client that ran each job (dashboard, sdk, cli, mcp, n8n, or api), `billing.transactions({ page, limit })` for the ledger.
 
 **Webhooks.** `webhooks.create({ name, url, subscribedEvents })` registers an endpoint. Verify every delivery with the zero-dependency `verifyWebhookSignature` from `@rendobar/sdk/webhooks` (reads the `X-Rendobar-Signature` header, returns `Promise<boolean>`).
 
