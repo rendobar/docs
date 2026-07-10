@@ -41,7 +41,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 | Max batch size | 10 | 100 |
 | Max job timeout | 5 min | 15 min |
 | Output retention | 7 days | 30 days |
-| Total R2 storage | 5 GB | 250 GB |
+| Total object storage | 5 GB | 250 GB |
 | Priority queue | No | Yes |
 
 `ffmpeg`, MCP, and webhooks are on both plans.
@@ -49,7 +49,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 ## Output URLs
 
 - **Signed download URL** (`output.file.url`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
-- **Output retention**: 7 days (Free) or 30 days (Pro). After that, R2 deletes the file; the job record stays but the file URLs return 404.
+- **Output retention**: 7 days (Free) or 30 days (Pro). After that, the file is deleted; the job record stays but the file URLs return 404.
 - **Storage quota** caps total bytes across all your outputs. Delete old outputs or upgrade if you hit it.
 - **No separate per-output size limit**. Bounded by input cap and storage quota.
 
