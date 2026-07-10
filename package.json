@@ -1,6 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "validate:frontmatter": "node scripts/validate-frontmatter.mjs"
+    "validate:frontmatter": "node scripts/validate-frontmatter.mjs",
+    "validate:plan-limits": "node scripts/check-plan-limits.mjs"
   }
 }
