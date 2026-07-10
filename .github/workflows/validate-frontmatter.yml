@@ -6,11 +6,13 @@ on:
     paths:
       - "**/*.mdx"
       - "scripts/validate-frontmatter.mjs"
+      - "scripts/check-plan-limits.mjs"
       - "package.json"
   pull_request:
     paths:
       - "**/*.mdx"
       - "scripts/validate-frontmatter.mjs"
+      - "scripts/check-plan-limits.mjs"
       - "package.json"
 
 jobs:
@@ -24,3 +26,5 @@ jobs:
           node-version: "20"
       - name: Run frontmatter validator
         run: node scripts/validate-frontmatter.mjs
+      - name: Check plan-limit tables match the source of truth
+        run: node scripts/check-plan-limits.mjs
