@@ -35,9 +35,10 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. Every t
 | Signup credits | $5 (one-time) | - |
 | Monthly credits included | - | $5 |
 | Credit-purchase bonus | - | +20% |
-| Concurrent jobs | 1 | 25 |
-| API requests/min | 30 | 300 |
-| Max input file | 100 MB | 2 GB |
+| Concurrent jobs | 1 | 20 |
+| Queued backlog | 50 | 1000 |
+| API requests/min | 120 | 600 |
+| Max input file | 500 MB | 10 GB |
 | Job timeout | 5 min | 15 min |
 | Output retention | 7 days | 30 days |
 | Priority queue | No | Yes |
@@ -59,7 +60,7 @@ Every job is billed in nanodollars (one-billionth of a US dollar) drawn from you
 
 ## Credit lifecycle
 
-1. **Submit gate.** Submit is atomic. If your balance is greater than zero and you are under your concurrent-job limit, the job runs. We do not estimate cost up front. Insufficient balance returns `402 INSUFFICIENT_CREDITS`.
+1. **Submit gate.** Submit is atomic and does not reject on concurrency. If your balance is greater than zero the job is accepted. Jobs run at your plan's concurrency and any extra wait in a queue, starting in order as slots free. We do not estimate cost up front. A zero balance returns `402 INSUFFICIENT_CREDITS`, and a full queue returns `429 QUEUE_FULL`.
 2. **Execution.** Job runs. Balance untouched.
 3. **Debit on terminal status.** Every terminal job (`complete`, `failed`, or `cancelled`) is charged for the compute it consumed. The debit is atomic with the status update.
 4. **No auto-refund.** Failed jobs are still charged for the compute they consumed. If you believe a job failed due to a platform bug, contact support. Refunds are issued at our discretion via the dispute process.
