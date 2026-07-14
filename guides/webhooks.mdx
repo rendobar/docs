@@ -55,8 +55,6 @@ Subscribe to any of these when you create an endpoint.
 | `job.completed` | Job finished successfully. Carries the unified `output` and `cost` |
 | `job.failed` | Job failed. Carries the unified `error` (`code`, `message`, `detail`, `retryable`) |
 | `job.cancelled` | Job was cancelled |
-| `batch.completed` | Every job in a batch finished, none failed |
-| `batch.failed` | A batch finished with at least one failed job. Carries `failedJobIds` |
 | `balance.low` | Credit balance crossed the low threshold |
 | `balance.depleted` | Credit balance reached zero |
 
