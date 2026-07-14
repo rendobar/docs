@@ -1,6 +1,6 @@
 ---
 title: "Webhooks for job events"
-description: "Receive job status events via signed HMAC POST. Setup, payload format, signature verification, 3-attempt retry policy."
+description: "Receive job and account events via signed HMAC POST. Setup, payload format, signature verification, automatic retries with backoff."
 sidebarTitle: "Webhooks"
 icon: "bell"
 keywords: ["webhooks", "hmac signature", "job status webhook", "rendobar webhook setup", "signed webhook"]
@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/guides/webhooks"
       "headline": "Webhooks for job events",
       "description": "Receive job status events via signed HMAC POST. Setup, payload format, signature verification, retry policy.",
       "datePublished": "2026-03-20",
-      "dateModified": "2026-05-24",
+      "dateModified": "2026-07-14",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -30,7 +30,7 @@ Rendobar POSTs JSON to your endpoint when a [job](/concepts/job) changes status.
 ## Set up a webhook
 
 ```bash
-curl -X POST https://api.rendobar.com/webhook-endpoints \
+curl -X POST https://api.rendobar.com/webhooks/endpoints \
   -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -46,12 +46,19 @@ Manage endpoints (create, update, delete, test) via the API or the dashboard.
 
 ## Events
 
+Subscribe to any of these when you create an endpoint.
+
 | Event | When |
 |---|---|
+| `job.created` | Job accepted and queued |
+| `job.started` | Job started executing on a runner |
 | `job.completed` | Job finished successfully. Carries the unified `output` and `cost` |
 | `job.failed` | Job failed. Carries the unified `error` (`code`, `message`, `detail`, `retryable`) |
-| `job.running` | Job started executing on a runner |
-| `batch.completed` | Every job in a batch finished (success or fail) |
+| `job.cancelled` | Job was cancelled |
+| `batch.completed` | Every job in a batch finished, none failed |
+| `batch.failed` | A batch finished with at least one failed job. Carries `failedJobIds` |
+| `balance.low` | Credit balance crossed the low threshold |
+| `balance.depleted` | Credit balance reached zero |
 
 ## Payload
 
@@ -63,56 +70,83 @@ X-Rendobar-Delivery: del_x1y2z3
 X-Rendobar-Attempt: 1
 ```
 
-The webhook carries the same contract as [GET /jobs/{id}](/concepts/job#the-output). A `job.completed` payload includes the unified `output` object. The `data` field has the structured answer for analysis jobs, `file.url` is a signed, time-limited URL, and `files` lists every produced file. Read [Job output](/concepts/job#the-output) for the full shape, the File type, and the four output patterns.
+Every delivery is a versioned envelope. The envelope fields identify the event and delivery. The event-specific payload lives under `data`. For job events, `data` carries the same contract as [GET /jobs/{id}](/concepts/job#the-output).
+
+| Envelope field | Meaning |
+|---|---|
+| `version` | Envelope schema version (currently `"1"`) |
+| `event` | The event name (see the table above) |
+| `deliveryId` | Unique per delivery. Use it to deduplicate |
+| `timestamp` | When the envelope was built (unix ms) |
+| `orgId` | Your organization ID |
+| `data` | Event-specific payload |
+
+A `job.completed` delivery. `data.output` is the unified job output. `file.url` is a signed, time-limited URL, and `files` lists every produced file. Read [Job output](/concepts/job#the-output) for the full shape and the four output patterns.
 
 ```json
 {
+  "version": "1",
   "event": "job.completed",
-  "jobId": "job_a1b2c3d4",
-  "output": {
-    "data": null,
-    "file": {
-      "url": "https://api.rendobar.com/dl/job_a1b2c3d4?token=...",
-      "path": "output.mp4",
-      "type": "video",
-      "size": 15234567,
-      "meta": { "format": "mp4", "width": 1920, "height": 1080, "durationMs": 127500 }
-    },
-    "files": [
-      {
+  "deliveryId": "whd_x1y2z3",
+  "timestamp": 1707436815000,
+  "orgId": "org_abc123",
+  "data": {
+    "jobId": "job_a1b2c3d4",
+    "jobType": "ffmpeg",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": {
         "url": "https://api.rendobar.com/dl/job_a1b2c3d4?token=...",
         "path": "output.mp4",
         "type": "video",
         "size": 15234567,
         "meta": { "format": "mp4", "width": 1920, "height": 1080, "durationMs": 127500 }
-      }
-    ],
-    "expiresAt": 1707440415000
-  },
-  "cost": { "amount": 50000000, "currency": "USD", "formatted": "$0.05" },
-  "timing": {
-    "createdAt": 1707436800000,
-    "startedAt": 1707436805000,
-    "completedAt": 1707436815000
+      },
+      "files": [
+        {
+          "url": "https://api.rendobar.com/dl/job_a1b2c3d4?token=...",
+          "path": "output.mp4",
+          "type": "video",
+          "size": 15234567,
+          "meta": { "format": "mp4", "width": 1920, "height": 1080, "durationMs": 127500 }
+        }
+      ],
+      "expiresAt": 1707440415000
+    },
+    "cost": { "amount": 50000000, "currency": "USD", "formatted": "$0.05" },
+    "timing": {
+      "createdAt": 1707436800000,
+      "startedAt": 1707436805000,
+      "completedAt": 1707436815000
+    }
   }
 }
 ```
 
 The `output` shape is identical for every job type. A data-only job (such as `extract.metadata`) carries its answer in `output.data` with `file` null and `files` empty. A stream job carries the manifest as `output.file` and every segment in `output.files`. See [Job output](/concepts/job#the-output) for each pattern.
 
-For `job.failed`, the payload carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job#the-output) error shape: `code`, `message`, `detail` (the process stderr tail, or null), and `retryable`.
+For `job.failed`, `data` carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job#the-output) error shape: `code`, `message`, `detail` (the process stderr tail, or null), and `retryable`.
 
 ```json
 {
+  "version": "1",
   "event": "job.failed",
-  "jobId": "job_a1b2c3d4",
-  "error": {
-    "code": "RUNNER_ERROR",
-    "message": "FFmpeg process exited with code 1",
-    "detail": "Conversion failed: Invalid data found when processing input",
-    "retryable": false
-  },
-  "timing": { "createdAt": 1707436800000, "startedAt": 1707436805000, "completedAt": 1707436810000 }
+  "deliveryId": "whd_a4b5c6",
+  "timestamp": 1707436810000,
+  "orgId": "org_abc123",
+  "data": {
+    "jobId": "job_a1b2c3d4",
+    "jobType": "ffmpeg",
+    "status": "failed",
+    "error": {
+      "code": "RUNNER_ERROR",
+      "message": "FFmpeg process exited with code 1",
+      "detail": "Conversion failed: Invalid data found when processing input",
+      "retryable": false
+    },
+    "timing": { "createdAt": 1707436800000, "startedAt": 1707436805000, "failedAt": 1707436810000 }
+  }
 }
 ```
 
@@ -123,14 +157,12 @@ The signature is HMAC-SHA256 over `{timestamp}.{body}` using your webhook secret
 <CodeGroup>
 
 ```ts SDK
-import { verifyWebhookSignature } from "@rendobar/sdk/webhooks";
+import { verifyWebhook } from "@rendobar/sdk/webhooks";
 
-// The signature covers `${timestamp}.${rawBody}` (raw string, not parsed JSON).
-const ok = await verifyWebhookSignature(
-  `${timestamp}.${rawBody}`,
-  signature,                 // X-Rendobar-Signature header
-  process.env.WEBHOOK_SECRET,
-);
+// Pass the raw body (not parsed JSON) and the request headers. verifyWebhook
+// reads the signature and timestamp, rebuilds the signed string, checks the
+// timestamp is recent (replay protection), and handles secret rotation.
+const ok = await verifyWebhook(rawBody, req.headers, process.env.WEBHOOK_SECRET);
 if (!ok) throw new Error("Invalid signature");
 ```
 
@@ -183,20 +215,24 @@ URLs must be HTTPS. Delivery to private/reserved ranges (`10.x`, `172.16-31.x`, 
 
 ## Retries
 
-If your endpoint doesn't return `2xx` within 10 seconds, Rendobar retries:
+If your endpoint doesn't return `2xx` within 10 seconds, Rendobar retries up to 5 times with exponential backoff. The delay doubles each attempt and caps at 5 minutes.
 
-| Attempt | Delay |
+| Retry | Delay before it |
 |---|---|
-| 1st | 5 s |
-| 2nd | 25 s |
-| 3rd | 125 s |
+| 1st | 10 s |
+| 2nd | 20 s |
+| 3rd | 40 s |
+| 4th | 80 s |
+| 5th | 160 s |
 
-After three failures the delivery is marked failed. Inspect history:
+After the retries are exhausted the delivery is marked `failed`. A delivery whose status is `failed` or `cancelled` can be re-sent from the dashboard or the API. Inspect history:
 
 ```bash
-curl https://api.rendobar.com/webhook-endpoints/YOUR_ENDPOINT_ID/deliveries \
+curl "https://api.rendobar.com/webhooks/deliveries?endpointId=YOUR_ENDPOINT_ID" \
   -H "Authorization: Bearer rb_YOUR_KEY"
 ```
+
+An endpoint that fails 10 deliveries in a row is disabled automatically. Update or re-enable it to reset the counter.
 
 ## Best practices
 

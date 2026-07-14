@@ -135,12 +135,12 @@ await client.jobs.create({
 
 **Billing.** `billing.state()` for balance and plan, `billing.usage({ start, end })` for spend, `billing.usageByClient({ days })` for spend grouped by the client that ran each job (dashboard, sdk, cli, mcp, n8n, or api), `billing.transactions({ page, limit })` for the ledger.
 
-**Webhooks.** `webhooks.create({ name, url, subscribedEvents })` registers an endpoint. Verify every delivery with the zero-dependency `verifyWebhookSignature` from `@rendobar/sdk/webhooks` (reads the `X-Rendobar-Signature` header, returns `Promise<boolean>`).
+**Webhooks.** `webhooks.create({ name, url, subscribedEvents })` registers an endpoint. Verify every delivery with the zero-dependency `verifyWebhook` from `@rendobar/sdk/webhooks`. Pass the raw body and the request headers. It checks the signature, timestamp freshness, and secret rotation, and returns `Promise<boolean>`.
 
 ```ts
-import { verifyWebhookSignature } from "@rendobar/sdk/webhooks";
+import { verifyWebhook } from "@rendobar/sdk/webhooks";
 
-const valid = await verifyWebhookSignature(body, req.headers.get("X-Rendobar-Signature") ?? "", secret);
+const valid = await verifyWebhook(rawBody, req.headers, secret);
 if (!valid) return new Response("invalid signature", { status: 401 });
 ```
 
