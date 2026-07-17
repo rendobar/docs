@@ -28,7 +28,7 @@ tag: "Live"
 
 You give a URL. Rendobar runs `ffprobe` on it and returns two things: a normalized `summary` you branch on directly, and the full raw ffprobe `format`, `streams`, and `chapters` for anything the summary leaves out.
 
-Probes are fast. Most finish in one to three seconds, so a request with `?wait=` returns the result inline instead of making you poll.
+Probes are fast. Most finish in one to three seconds. Submit the job, then wait for the result.
 
 <Check>
 **Live.** Accepts video, audio, and image URLs.
@@ -43,43 +43,53 @@ import { createClient } from "@rendobar/sdk";
 
 const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
-// wait: true holds the request until the probe finishes, then returns the job.
 const job = await client.jobs.create({
   type: "ffprobe",
   inputs: { source: "https://cdn.rendobar.com/assets/examples/sample.mp4" },
-  wait: true,
 });
 
-console.log(job.output.data.summary);
+const result = await client.jobs.wait(job.id);
+console.log(result.output.data.summary);
 ```
 
 ```python Python
-import requests
+import requests, time
 
-res = requests.post(
-    "https://api.rendobar.com/jobs?wait=30",
-    headers={"Authorization": "Bearer rb_YOUR_KEY"},
+base = "https://api.rendobar.com"
+headers = {"Authorization": "Bearer rb_YOUR_KEY"}
+
+job = requests.post(
+    f"{base}/jobs",
+    headers=headers,
     json={
         "type": "ffprobe",
         "inputs": {"source": "https://cdn.rendobar.com/assets/examples/sample.mp4"},
     },
-)
-print(res.json()["data"]["output"]["data"]["summary"])
+).json()["data"]
+
+while job["status"] not in ("complete", "failed", "cancelled"):
+    time.sleep(1)
+    job = requests.get(f"{base}/jobs/{job['id']}", headers=headers).json()["data"]
+
+print(job["output"]["data"]["summary"])
 ```
 
 ```bash cURL
-curl -X POST "https://api.rendobar.com/jobs?wait=30" \
+# Create the job, then poll GET /jobs/{id} until status is "complete".
+curl -X POST "https://api.rendobar.com/jobs" \
   -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "ffprobe",
     "inputs": { "source": "https://cdn.rendobar.com/assets/examples/sample.mp4" }
-  }' | jq '.data.output.data.summary'
+  }'
+# Returns { "data": { "id": "job_...", "status": "waiting" } }.
+# Poll GET /jobs/{id} until "status": "complete", then read output.data.
 ```
 
 </CodeGroup>
 
-The answer lands in `output.data`. The `summary` is the part you branch on. The raw `format`, `streams`, and `chapters` sit next to it for the fields the summary does not lift out.
+The job returns an id, and the answer lands in its `output.data` once it completes. The `summary` is the part you branch on. The raw `format`, `streams`, and `chapters` sit next to it for the fields the summary does not lift out.
 
 ## The summary
 
@@ -163,22 +173,23 @@ Every parameter is optional. An empty `params` returns the summary plus raw `for
   Max execution time in seconds. Plan caps apply (Free 5 min, Pro 15 min). A header probe never approaches this; a `keyframes` scan of a long file can.
 </ParamField>
 
-## Get the result inline
+## Get the result
 
-Probes are short, so the fastest path is to let the request hold open and return the finished job. Add `?wait=<seconds>` to the request, or `wait: true` in the SDK.
+`POST /jobs` returns `201` right away with a job id and `status: "waiting"`. The probe runs, and the answer appears in `output.data` once `status` reaches `complete`.
 
-The server holds the connection until the job finishes, then returns `200` with the full job. If the job outlives the wait budget (plan-clamped, Free 30s, Pro 60s), you get `202` with the job id and poll from there. It never errors on timeout.
+The SDK's `jobs.wait` polls for you and resolves with the finished job:
 
 ```ts
-// Holds server-side, then falls back to polling if the budget is exceeded.
 const job = await client.jobs.create({
   type: "ffprobe",
   inputs: { source: "https://example.com/video.mp4" },
-  wait: true,
 });
+
+const result = await client.jobs.wait(job.id);
+console.log(result.output.data.summary);
 ```
 
-Without `wait`, the request returns `201` immediately with a job id. Poll it with `client.jobs.wait(id)` or subscribe with [webhooks](/guides/webhooks). Reach for that on the rare slow probe (a `keyframes` scan of a multi-hour file), where holding an HTTP connection is the wrong tool.
+Over raw HTTP, poll `GET /jobs/{id}` until `status` is `complete`, or subscribe with [webhooks](/guides/webhooks) to skip polling. Most probes finish in one to three seconds.
 
 ## Probe many files
 
@@ -189,12 +200,9 @@ const urls = ["a.mp4", "b.mov", "c.webm"];
 
 const summaries = await Promise.all(
   urls.map(async (url) => {
-    const job = await client.jobs.create({
-      type: "ffprobe",
-      inputs: { source: url },
-      wait: true,
-    });
-    return job.output.data.summary;
+    const job = await client.jobs.create({ type: "ffprobe", inputs: { source: url } });
+    const result = await client.jobs.wait(job.id);
+    return result.output.data.summary;
   }),
 );
 ```
