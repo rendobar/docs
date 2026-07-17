@@ -153,10 +153,6 @@ Every `summary` field name is stable. Write your checks against `summary.video.w
 
 Every parameter is optional. An empty `params` returns the summary plus raw `format`, `streams`, and `chapters`.
 
-<ParamField body="keyframes" type="boolean" default="false">
-  Add a keyframe index to the result. Runs a packet scan for the presentation timestamp of every keyframe, useful for accurate trims, sprite sheets, and chapter thumbnails. This reads the whole file, so it is slower than a header probe. See [Keyframe index](#keyframe-index).
-</ParamField>
-
 <ParamField body="includeStreams" type="boolean" default="true">
   Include the raw `streams` array. Set `false` to drop it when you only need the `summary`, which trims the response for token-sensitive callers like an AI agent.
 </ParamField>
@@ -170,7 +166,7 @@ Every parameter is optional. An empty `params` returns the summary plus raw `for
 </ParamField>
 
 <ParamField body="timeout" type="integer" default="plan maximum">
-  Max execution time in seconds. Plan caps apply (Free 5 min, Pro 15 min). A header probe never approaches this; a `keyframes` scan of a long file can.
+  Max execution time in seconds. Plan caps apply (Free 5 min, Pro 15 min). A header probe never approaches this.
 </ParamField>
 
 ## Get the result
@@ -206,32 +202,6 @@ const summaries = await Promise.all(
   }),
 );
 ```
-
-## Keyframe index
-
-Set `keyframes: true` to add a list of keyframe timestamps. Each entry is the presentation time in seconds. Use it to pick exact seek points for trims or thumbnails.
-
-```json
-{
-  "type": "ffprobe",
-  "inputs": { "source": "https://example.com/video.mp4" },
-  "params": { "keyframes": true }
-}
-```
-
-The result gains a `keyframes` object:
-
-```json
-{
-  "keyframes": {
-    "times": [0, 2.002, 4.004, 6.006],
-    "count": 4,
-    "truncated": false
-  }
-}
-```
-
-`count` is the total number of keyframes. `times` is capped at 10,000 entries; `truncated` is `true` when a file has more (an hour of all-keyframe footage runs past six figures). A keyframe scan reads the whole file, so it costs more time than a header probe. Request it only when you need the index.
 
 ## How it runs
 
@@ -274,7 +244,7 @@ Every job returns the same `output` object. [Job output](/concepts/job#the-outpu
 
 ### Warnings
 
-`probe.warnings` carries machine-readable notes about a probe that succeeded with a caveat. Each is `{ code, message }`. A file that probes but lacks a duration reports `DURATION_UNKNOWN`, a common sign of truncation. Requesting `keyframes` on an audio-only file reports `KEYFRAMES_UNAVAILABLE`. Branch on `code`, not the message text.
+`probe.warnings` carries machine-readable notes about a probe that succeeded with a caveat. Each is `{ code, message }`. A file that probes but lacks a duration reports `DURATION_UNKNOWN`, a common sign of truncation. Branch on `code`, not the message text.
 
 ## Error handling
 
