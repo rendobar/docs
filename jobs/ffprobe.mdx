@@ -1,9 +1,9 @@
 ---
 title: "Probe media metadata"
 sidebarTitle: "ffprobe"
-description: "Extract normalized media metadata and raw ffprobe output from any video, audio, or image URL. Codec, resolution, duration, fps, rotation, HDR, and audio."
+description: "Run ffprobe on a video, audio, or image URL and get a normalized summary plus the full raw report: codec, resolution, duration, fps, rotation, HDR, audio."
 icon: "magnifying-glass"
-keywords: ["ffprobe api", "media metadata api", "video metadata api", "probe video url", "ffprobe json api", "get video resolution api", "detect video rotation api", "hdr detection api"]
+keywords: ["ffprobe api", "media metadata api", "video metadata api", "probe video url", "ffprobe json api", "get video resolution api", "detect video rotation api", "hdr detection api", "raw ffprobe command"]
 canonical: "https://rendobar.com/docs/jobs/ffprobe"
 tag: "Live"
 ---
@@ -16,9 +16,9 @@ tag: "Live"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/jobs/ffprobe/#article",
       "headline": "Probe media metadata",
-      "description": "Extract normalized media metadata and raw ffprobe output from any video, audio, or image URL. Codec, resolution, duration, fps, rotation, HDR, and audio.",
+      "description": "Run ffprobe on a video, audio, or image URL and get a normalized summary plus the full raw report: codec, resolution, duration, fps, rotation, HDR, audio.",
       "datePublished": "2026-07-17",
-      "dateModified": "2026-07-17",
+      "dateModified": "2026-07-19",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -26,9 +26,7 @@ tag: "Live"
   }}
 />
 
-You give a URL. Rendobar runs `ffprobe` on it and returns two things: a normalized `summary` you branch on directly, and the full raw ffprobe `format`, `streams`, and `chapters` for anything the summary leaves out.
-
-Probes are fast. Most finish in one to three seconds. Submit the job, then wait for the result.
+You send a `command`: the input media URL, optionally with extra ffprobe flags on top. Rendobar runs `ffprobe` and returns a normalized `summary` you branch on directly, plus the full raw `format`, `streams`, and `chapters` for anything the summary leaves out.
 
 <Check>
 **Live.** Accepts video, audio, and image URLs.
@@ -45,11 +43,11 @@ const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
 const job = await client.jobs.create({
   type: "ffprobe",
-  inputs: { source: "https://cdn.rendobar.com/assets/examples/sample.mp4" },
+  params: { command: "https://cdn.rendobar.com/assets/examples/sample.mp4" },
 });
 
-const result = await client.jobs.wait(job.id);
-console.log(result.output.data.summary);
+const done = await client.jobs.wait(job.id);
+console.log(done.output.data.summary.kind); // "video"
 ```
 
 ```python Python
@@ -63,7 +61,7 @@ job = requests.post(
     headers=headers,
     json={
         "type": "ffprobe",
-        "inputs": {"source": "https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"},
     },
 ).json()["data"]
 
@@ -71,17 +69,16 @@ while job["status"] not in ("complete", "failed", "cancelled"):
     time.sleep(1)
     job = requests.get(f"{base}/jobs/{job['id']}", headers=headers).json()["data"]
 
-print(job["output"]["data"]["summary"])
+print(job["output"]["data"]["summary"]["kind"])
 ```
 
 ```bash cURL
-# Create the job, then poll GET /jobs/{id} until status is "complete".
 curl -X POST "https://api.rendobar.com/jobs" \
   -H "Authorization: Bearer rb_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "ffprobe",
-    "inputs": { "source": "https://cdn.rendobar.com/assets/examples/sample.mp4" }
+    "params": { "command": "https://cdn.rendobar.com/assets/examples/sample.mp4" }
   }'
 # Returns { "data": { "id": "job_...", "status": "waiting" } }.
 # Poll GET /jobs/{id} until "status": "complete", then read output.data.
@@ -91,6 +88,35 @@ curl -X POST "https://api.rendobar.com/jobs" \
 
 The job returns an id, and the answer lands in its `output.data` once it completes. The `summary` is the part you branch on. The raw `format`, `streams`, and `chapters` sit next to it for the fields the summary does not lift out.
 
+<Tip>
+An MCP client reaches the same job through the generic `submit_job` tool with `type: "ffprobe"`. See the [MCP server](/mcp-server).
+</Tip>
+
+## The command
+
+`command` is additive, not a full ffprobe invocation. The runner always injects the core sections and JSON output for you (`-show_format -show_streams -show_chapters -of json`), so the minimal `command` is just the URL:
+
+```
+https://cdn.rendobar.com/assets/examples/sample.mp4
+```
+
+Anything you add stacks on top of that guaranteed core. Add `-show_frames` to get per-frame data for a bounded range:
+
+```
+-show_frames -read_intervals %+#5 https://cdn.rendobar.com/assets/examples/sample.mp4
+```
+
+This adds a `frames` array (the first 5 frames) to `output.data`, next to the `summary`, `format`, `streams`, and `chapters` you always get. A leading `ffprobe` token is fine either way.
+
+Two categories of flag get normalized instead of rejected, because they would fight the additive model:
+
+- **Writer flags** (`-of`, `-print_format`, `-output_format`) are stripped. The result is always JSON.
+- **Restricting flags** (`-select_streams`, `-show_entries`) are stripped. You already get the full structured result back, so filter it client-side instead of asking ffprobe to narrow it.
+
+Each strip adds a `WRITER_NORMALIZED` or `QUERY_NORMALIZED` entry to `output.data.warnings` rather than failing the job.
+
+`-protocol_whitelist`, `-protocol_blacklist`, and shell control characters (`>`, `|`, `;`) are rejected outright with `VALIDATION_ERROR` before the job is created. ffprobe's output is always returned to you, never written to a file.
+
 ## The summary
 
 `summary` normalizes the parts of ffprobe that are awkward to read raw: rotation buried in side data, fractional frame rates, HDR spread across three color fields, cover art masquerading as a video stream.
@@ -99,26 +125,31 @@ The job returns an id, and the answer lands in its `output.data` once it complet
 {
   "kind": "video",
   "container": "mp4",
+  "formatLongName": "QuickTime / MOV",
   "durationSec": 12.48,
-  "sizeBytes": 1234567,
-  "bitrateBps": 4200000,
-  "displayAspectRatio": "16:9",
-  "videoStreamCount": 1,
-  "audioStreamCount": 1,
+  "sizeBytes": 4271822,
+  "bitrateBps": 4213000,
+  "startTimeSec": 0,
+  "streamCounts": { "video": 1, "audio": 1, "subtitle": 0, "data": 0, "attachment": 0 },
+  "tags": { "encoder": "Lavf60.16.100" },
   "video": {
     "codec": "h264",
     "profile": "High",
     "width": 1920,
     "height": 1080,
+    "displayAspectRatio": "16:9",
+    "pixelFormat": "yuv420p",
+    "bitDepth": 8,
     "fps": 29.97,
-    "isVfr": false,
+    "isVariableFrameRate": false,
     "rotation": 0,
     "isHdr": false,
-    "pixelFormat": "yuv420p",
-    "bitDepth": 8
+    "bitrateBps": 4085000,
+    "language": null
   },
   "audio": {
     "codec": "aac",
+    "profile": "LC",
     "channels": 2,
     "channelLayout": "stereo",
     "sampleRate": 48000,
@@ -128,22 +159,23 @@ The job returns an id, and the answer lands in its `output.data` once it complet
 }
 ```
 
-`kind` is the field to switch on first. It tells you what you are holding before you read anything else:
+`kind` is the field to switch on first. It tells you what block to read next:
 
-| `kind` | `video` | `audio` | `durationSec` / `fps` |
-|---|---|---|---|
-| `"video"` | the primary video stream | first audio stream, or `null` | set |
-| `"audio"` | `null` | the audio stream | `durationSec` set, `fps` n/a |
-| `"image"` | the image stream | `null` | both `null` |
+| `kind` | Extra field | What it means |
+|---|---|---|
+| `"video"` | `video` (never `null`), `audio` (primary audio stream, or `null`) | A real, non-cover-art video stream is present |
+| `"audio"` | `audio` (never `null`) | No video stream, at least one audio stream |
+| `"image"` | `image` (never `null`) | A still image: an image container, or a zero-duration file with no audio |
+| `"other"` | none | Subtitle-only, data-only, or an attached-pic-only file with no audio track |
 
 A few things the summary gets right that raw ffprobe does not:
 
-- **Rotation is normalized.** `rotation` is `0`, `90`, `180`, or `270`, read from the display matrix side data (with a fallback to the legacy `rotate` tag). `width` and `height` are the stored dimensions before rotation, so a portrait phone clip reads `1920×1080` with `rotation: 90`. Apply the rotation to get display dimensions.
-- **Cover art is not a video stream.** An MP3 with embedded art reads `kind: "audio"`, `video: null`. The `attached_pic` stream is excluded from `videoStreamCount` and from `summary.video`.
-- **HDR is one boolean.** `isHdr` is `true` for PQ (`smpte2084`), HLG (`arib-std-b67`), or BT.2020 primaries. The exact color fields stay in the raw stream.
-- **Variable frame rate is flagged.** `fps` is the average frame rate as a float. `isVfr` is `true` when the source is variable, so you know the single number is an average.
+- **Rotation is normalized.** `video.rotation` is `0`, `90`, `180`, or `270`, read from the display matrix side data (with a fallback to the legacy `rotate` tag). `width` and `height` are the stored dimensions before rotation, so a portrait phone clip reads `1920×1080` with `rotation: 90`. Apply the rotation to get display dimensions.
+- **Cover art is not a video stream.** An MP3 with embedded art reads `kind: "audio"`. The `attached_pic` stream is excluded from `streamCounts.video` and from `summary.video`.
+- **HDR is one boolean.** `video.isHdr` is `true` for PQ (`smpte2084`), HLG (`arib-std-b67`), or BT.2020 primaries. The exact color fields stay in the raw stream.
+- **Variable frame rate is flagged.** `video.fps` is the average frame rate as a float. `video.isVariableFrameRate` is `true` when the source is variable, so you know the single number is an average.
 
-Fields are `null`, never absent, when a value does not apply or ffprobe could not read it. `sizeBytes` is `null` when a remote server does not report length. `bitrateBps` is `null` when ffprobe reports it as unknown.
+Fields are `null`, never absent, when a value does not apply or ffprobe could not read it. `sizeBytes` is `null` when a remote server does not report length. `tags` is `{}`, never absent, when the container carries none.
 
 <Tip>
 Every `summary` field name is stable. Write your checks against `summary.video.width` and `summary.kind` directly.
@@ -151,22 +183,12 @@ Every `summary` field name is stable. Write your checks against `summary.video.w
 
 ## Parameters
 
-Every parameter is optional. An empty `params` returns the summary plus raw `format`, `streams`, and `chapters`.
-
-<ParamField body="includeStreams" type="boolean" default="true">
-  Include the raw `streams` array. Set `false` to drop it when you only need the `summary`, which trims the response for token-sensitive callers like an AI agent.
-</ParamField>
-
-<ParamField body="includeFormat" type="boolean" default="true">
-  Include the raw `format` object.
-</ParamField>
-
-<ParamField body="includeChapters" type="boolean" default="true">
-  Include the raw `chapters` array. Present for files that carry chapters, like some MP4s and audiobooks. An empty array otherwise.
+<ParamField body="command" type="string" required>
+  The input media URL, optionally prefixed with additive ffprobe flags. See [The command](#the-command).
 </ParamField>
 
 <ParamField body="timeout" type="integer" default="plan maximum">
-  Max execution time in seconds. Plan caps apply (Free 5 min, Pro 15 min). A header probe never approaches this.
+  Max execution time in seconds. Plan caps apply, same as [FFmpeg](/jobs/ffmpeg#parameters). A probe rarely approaches it.
 </ParamField>
 
 ## Get the result
@@ -178,11 +200,11 @@ The SDK's `jobs.wait` polls for you and resolves with the finished job:
 ```ts
 const job = await client.jobs.create({
   type: "ffprobe",
-  inputs: { source: "https://example.com/video.mp4" },
+  params: { command: "https://example.com/video.mp4" },
 });
 
-const result = await client.jobs.wait(job.id);
-console.log(result.output.data.summary);
+const done = await client.jobs.wait(job.id);
+console.log(done.output.data.summary);
 ```
 
 Over raw HTTP, poll `GET /jobs/{id}` until `status` is `complete`, or subscribe with [webhooks](/guides/webhooks) to skip polling. Most probes finish in one to three seconds.
@@ -196,9 +218,9 @@ const urls = ["a.mp4", "b.mov", "c.webm"];
 
 const summaries = await Promise.all(
   urls.map(async (url) => {
-    const job = await client.jobs.create({ type: "ffprobe", inputs: { source: url } });
-    const result = await client.jobs.wait(job.id);
-    return result.output.data.summary;
+    const job = await client.jobs.create({ type: "ffprobe", params: { command: url } });
+    const done = await client.jobs.wait(job.id);
+    return done.output.data.summary;
   }),
 );
 ```
@@ -207,9 +229,7 @@ const summaries = await Promise.all(
 
 1. **Probe remote.** `ffprobe` reads the URL directly over HTTPS. A faststart MP4 needs only its header, so nothing downloads, and a file larger than your plan's input limit still probes.
 2. **Fall back to download.** When a server does not support range requests, or the `moov` atom sits at the end of a non-faststart MP4, the runner downloads the file, then probes it. Your plan's input-size limit applies to this path.
-3. **Normalize.** The raw ffprobe JSON becomes the `summary`, and the raw `format`, `streams`, and `chapters` pass through untouched.
-
-`output.data.probe.method` tells you which path ran, `"remote"` or `"downloaded"`.
+3. **Normalize.** The raw ffprobe JSON becomes the `summary`, and the raw `format`, `streams`, and `chapters` pass through untouched with ffprobe's own field names.
 
 ## The output shape
 
@@ -220,6 +240,8 @@ Every job returns the same `output` object. [Job output](/concepts/job#the-outpu
 - `output.files`: `[]`.
 - `output.expiresAt`: `null`.
 
+`output.data` guarantees `summary`, `format`, `streams`, `chapters`, and `warnings` on every response, consume them with no optional chaining. `programs`, `stream_groups`, `frames`, `packets`, `reportUrl`, and `stderr` are honest optionals: present only when your `command` asked for that section, or when there's something worth surfacing.
+
 ```json
 {
   "data": {
@@ -229,10 +251,40 @@ Every job returns the same `output` object. [Job output](/concepts/job#the-outpu
     "output": {
       "data": {
         "summary": { "kind": "video", "container": "mp4", "durationSec": 12.48, "...": "..." },
-        "format": { "...": "raw ffprobe format" },
-        "streams": [ { "...": "raw ffprobe streams" } ],
+        "format": {
+          "filename": "https://cdn.rendobar.com/assets/examples/sample.mp4",
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "12.480000",
+          "size": "4271822",
+          "bit_rate": "4213000",
+          "tags": { "encoder": "Lavf60.16.100" }
+        },
+        "streams": [
+          {
+            "index": 0,
+            "codec_type": "video",
+            "codec_name": "h264",
+            "profile": "High",
+            "width": 1920,
+            "height": 1080,
+            "pix_fmt": "yuv420p",
+            "avg_frame_rate": "30000/1001",
+            "bit_rate": "4085000"
+          },
+          {
+            "index": 1,
+            "codec_type": "audio",
+            "codec_name": "aac",
+            "sample_rate": "48000",
+            "channels": 2,
+            "bit_rate": "128000",
+            "tags": { "language": "eng" }
+          }
+        ],
         "chapters": [],
-        "probe": { "method": "remote", "warnings": [] }
+        "warnings": []
       },
       "file": null,
       "files": [],
@@ -244,11 +296,18 @@ Every job returns the same `output` object. [Job output](/concepts/job#the-outpu
 
 ### Warnings
 
-`probe.warnings` carries machine-readable notes about a probe that succeeded with a caveat. Each is `{ code, message }`. A file that probes but lacks a duration reports `DURATION_UNKNOWN`, a common sign of truncation. Branch on `code`, not the message text.
+`output.data.warnings` carries machine-readable notes about a probe that succeeded with a caveat. Each entry is `{ code, message }`. Branch on `code`, not the message text.
+
+| `code` | Meaning |
+|---|---|
+| `DURATION_UNKNOWN` | The container has no duration, a common sign of truncation |
+| `WRITER_NORMALIZED` | A writer flag (`-of`, `-print_format`) was stripped from your command |
+| `QUERY_NORMALIZED` | A restricting flag (`-select_streams`, `-show_entries`) was stripped from your command |
+| `REPORT_SPILLED` | `frames`/`packets` were too large to return inline and were dropped; re-run with a narrower `-read_intervals` |
 
 ## Error handling
 
-A failed probe carries an `error` object with `code`, `message`, `detail`, and `retryable`. The two you handle:
+A malformed `command` (no URL, a blocked flag, a shell redirect) is rejected with `VALIDATION_ERROR` before the job is even created. Once the job runs, a failed probe carries an `error` object with `code`, `message`, `detail`, and `retryable`. The two you handle:
 
 | `code` | `retryable` | Meaning |
 |---|---|---|
@@ -281,6 +340,7 @@ Full error catalogue: [Error codes](/support/errors).
 - **Route portrait and landscape.** Branch on `summary.video.rotation` and the display dimensions.
 - **Skip silent renditions.** `summary.audio === null` tells you there is no audio track.
 - **Meter by duration.** `summary.durationSec` for billing or limits, without downloading the file.
+- **Inspect a bounded frame range.** Add `-show_frames -read_intervals %+#5` to check keyframe placement on the first 5 seconds without pulling the whole file.
 
 ## See also
 
