@@ -28,6 +28,14 @@ tag: "Live"
 
 You write the `command`. Rendobar runs `ffprobe` essentially as written, the same model as [FFmpeg](/jobs/ffmpeg), auto-filling only the defaults you didn't specify. The result is a normalized `summary` you branch on directly, plus the full raw `format`, `streams`, and `chapters` for anything the summary leaves out.
 
+`command` is a real `ffprobe` invocation. Pass the media URL alone and Rendobar fills in `-v error`, `-print_format json`, and `-show_format -show_streams -show_chapters`. Write the full `ffprobe …` command, any flags you need, when you want more control; the prefix is optional either way:
+
+- **Minimal:** `"https://cdn.rendobar.com/assets/examples/sample.mp4"`
+- **Explicit:** `"ffprobe -v quiet -print_format json -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4"`
+- **Advanced:** `"ffprobe -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -of default=nw=1 https://cdn.rendobar.com/assets/examples/sample.mp4"`, a non-JSON writer, so the result lands as raw text in `output.data.stdout`
+
+See [The command](#the-command) for the full auto-fill table.
+
 <Check>
 **Live.** Accepts video, audio, and image URLs.
 </Check>
@@ -215,7 +223,9 @@ The SDK's `jobs.wait` polls for you and resolves with the finished job:
 ```ts
 const job = await client.jobs.create({
   type: "ffprobe",
-  params: { command: "https://example.com/video.mp4" },
+  params: {
+    command: "ffprobe -show_format -show_streams https://example.com/video.mp4",
+  },
 });
 
 const done = await client.jobs.wait(job.id);
