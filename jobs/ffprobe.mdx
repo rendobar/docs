@@ -26,15 +26,7 @@ tag: "Live"
   }}
 />
 
-You write the `command`. Rendobar runs `ffprobe` essentially as written, the same model as [FFmpeg](/jobs/ffmpeg), auto-filling only the defaults you didn't specify. The result is a normalized `summary` you branch on directly, plus the full raw `format`, `streams`, and `chapters` for anything the summary leaves out.
-
-`command` is a real `ffprobe` invocation. Pass the media URL alone and Rendobar fills in `-v error`, `-print_format json`, and `-show_format -show_streams -show_chapters`. Write the full `ffprobe …` command, any flags you need, when you want more control; the prefix is optional either way:
-
-- **Minimal:** `"https://cdn.rendobar.com/assets/examples/sample.mp4"`
-- **Explicit:** `"ffprobe -v quiet -print_format json -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4"`
-- **Advanced:** `"ffprobe -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -of default=nw=1 https://cdn.rendobar.com/assets/examples/sample.mp4"`, a non-JSON writer, so the result lands as raw text in `output.data.stdout`
-
-See [The command](#the-command) for the full auto-fill table.
+You write the `command` and Rendobar runs `ffprobe` essentially as written, the same model as [FFmpeg](/jobs/ffmpeg). Pass a media URL on its own and the defaults are filled in. Write a full `ffprobe …` command when you want more control, and every flag you pass is honored. Either way you get back a normalized `summary` to branch on, next to the raw `format`, `streams`, and `chapters`. See [The command](#the-command) for what auto-fill adds.
 
 <Check>
 **Live.** Accepts video, audio, and image URLs.
@@ -55,7 +47,7 @@ const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
 const job = await client.jobs.create({
   type: "ffprobe",
-  params: { command: "https://cdn.rendobar.com/assets/examples/sample.mp4" },
+  params: { command: "ffprobe -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4" },
 });
 
 const done = await client.jobs.wait(job.id);
@@ -73,7 +65,7 @@ job = requests.post(
     headers=headers,
     json={
         "type": "ffprobe",
-        "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"command": "ffprobe -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4"},
     },
 ).json()["data"]
 
@@ -90,7 +82,7 @@ curl -X POST "https://api.rendobar.com/jobs" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "ffprobe",
-    "params": { "command": "https://cdn.rendobar.com/assets/examples/sample.mp4" }
+    "params": { "command": "ffprobe -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4" }
   }'
 # Returns { "data": { "id": "job_...", "status": "waiting" } }.
 # Poll GET /jobs/{id} until "status": "complete", then read output.data.
@@ -98,7 +90,7 @@ curl -X POST "https://api.rendobar.com/jobs" \
 
 </CodeGroup>
 
-The job returns an id, and the answer lands in its `output.data` once it completes. The command above is just a URL, so Rendobar auto-fills `-v error`, `-print_format json`, and `-show_format -show_streams -show_chapters` on top of it. The full structured result comes back even though you asked for nothing extra. See [The command](#the-command). The `summary` is the part you branch on. The raw `format`, `streams`, and `chapters` sit next to it for the fields the summary does not lift out.
+The job returns an id, and the answer lands in `output.data` once it completes, usually in one to three seconds. `-show_format -show_streams` gives Rendobar the JSON it normalizes, so you get the full `summary` plus the raw `format` and `streams`. The SDK's `jobs.wait` polls for you. Over raw HTTP, poll `GET /jobs/{id}` or subscribe with [webhooks](/guides/webhooks). The `summary` is the part you branch on.
 
 <Tip>
 An MCP client reaches the same job through the generic `submit_job` tool with `type: "ffprobe"`. See the [MCP server](/mcp-server).
@@ -116,19 +108,13 @@ Rendobar auto-fills only what you didn't specify:
 | A writer flag (`-of`, `-print_format`, `-output_format`) | `-print_format json` |
 | Any `-show_*` flag | `-show_format -show_streams -show_chapters` |
 
-So the minimal command is just the URL, and auto-fill still returns the full structured report:
+The bare URL returns the full structured report. Any flag you add is honored, not stripped. This picks the primary video stream and reads four fields off it:
 
 ```
-https://cdn.rendobar.com/assets/examples/sample.mp4
+ffprobe -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -print_format json https://cdn.rendobar.com/assets/examples/sample.mp4
 ```
 
-Write a full command and every flag you pass is honored, not stripped or normalized away:
-
-```
-ffprobe -v quiet -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -print_format json https://cdn.rendobar.com/assets/examples/sample.mp4
-```
-
-This picks the primary video stream, reads 4 fields off it, and returns exactly that instead of the full report. `-select_streams`, `-show_entries`, `-show_frames`, your own `-v`/`-loglevel`, and any writer you choose (`-print_format csv`, `xml`, `flat`) all pass through untouched. See [The output shape](#the-output-shape) for what comes back for each writer.
+`-select_streams`, `-show_entries`, `-show_frames`, your own `-v`/`-loglevel`, and any writer (`-print_format csv`, `xml`, `flat`) all pass through. See [The output shape](#the-output-shape) for what each writer returns.
 
 <Warning>
 Auto-fill checks by category, not by flag. Pass any `-show_*` flag yourself and the whole auto-filled trio is suppressed, not just the one you named. `-show_frames -read_intervals %+#5` alone returns only `frames`, no `summary`. Add `-show_format -show_streams` yourself to keep both:
@@ -214,26 +200,6 @@ Every `summary` field name is stable. Write your checks against `summary.video.w
   Max execution time in seconds. Plan caps apply, same as [FFmpeg](/jobs/ffmpeg#parameters). A probe rarely approaches it.
 </ParamField>
 
-## Get the result
-
-`POST /jobs` returns `201` right away with a job id and `status: "waiting"`. The probe runs, and the answer appears in `output.data` once `status` reaches `complete`.
-
-The SDK's `jobs.wait` polls for you and resolves with the finished job:
-
-```ts
-const job = await client.jobs.create({
-  type: "ffprobe",
-  params: {
-    command: "ffprobe -show_format -show_streams https://example.com/video.mp4",
-  },
-});
-
-const done = await client.jobs.wait(job.id);
-console.log(done.output.data.summary);
-```
-
-Over raw HTTP, poll `GET /jobs/{id}` until `status` is `complete`, or subscribe with [webhooks](/guides/webhooks) to skip polling. Most probes finish in one to three seconds.
-
 ## Probe many files
 
 One job probes one file. To probe a set, submit one job per file and let them run together. Probe jobs do not count against your concurrency limit, so a batch of them dispatches at once instead of queueing behind your other work.
@@ -294,26 +260,8 @@ The default command (just a URL, everything auto-filled) returns the JSON shape:
           "tags": { "encoder": "Lavf60.16.100" }
         },
         "streams": [
-          {
-            "index": 0,
-            "codec_type": "video",
-            "codec_name": "h264",
-            "profile": "High",
-            "width": 1920,
-            "height": 1080,
-            "pix_fmt": "yuv420p",
-            "avg_frame_rate": "30000/1001",
-            "bit_rate": "4085000"
-          },
-          {
-            "index": 1,
-            "codec_type": "audio",
-            "codec_name": "aac",
-            "sample_rate": "48000",
-            "channels": 2,
-            "bit_rate": "128000",
-            "tags": { "language": "eng" }
-          }
+          { "index": 0, "codec_type": "video", "codec_name": "h264", "width": 1920, "height": 1080, "avg_frame_rate": "30000/1001", "...": "..." },
+          { "index": 1, "codec_type": "audio", "codec_name": "aac", "sample_rate": "48000", "channels": 2, "...": "..." }
         ],
         "chapters": [],
         "warnings": []
@@ -390,7 +338,6 @@ Full error catalogue: [Error codes](/support/errors).
 - **Route portrait and landscape.** Branch on `summary.video.rotation` and the display dimensions.
 - **Skip silent renditions.** `summary.audio === null` tells you there is no audio track.
 - **Meter by duration.** `summary.durationSec` for billing or limits, without downloading the file.
-- **Inspect a bounded frame range.** `-show_frames -read_intervals %+#5` checks keyframe placement on the first 5 seconds without pulling the whole file. Add `-show_format -show_streams` too if you also want the `summary`.
 
 ## See also
 
