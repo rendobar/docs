@@ -41,6 +41,7 @@
             "group": "Jobs",
             "pages": [
               "jobs/ffmpeg",
+              "jobs/ffprobe",
               "jobs/compose",
               {
                 "group": "Captions",
