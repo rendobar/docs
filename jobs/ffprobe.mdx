@@ -26,11 +26,15 @@ tag: "Live"
   }}
 />
 
-You send a `command`: the input media URL, optionally with extra ffprobe flags on top. Rendobar runs `ffprobe` and returns a normalized `summary` you branch on directly, plus the full raw `format`, `streams`, and `chapters` for anything the summary leaves out.
+You write the `command`. Rendobar runs `ffprobe` essentially as written, the same model as [FFmpeg](/jobs/ffmpeg), auto-filling only the defaults you didn't specify. The result is a normalized `summary` you branch on directly, plus the full raw `format`, `streams`, and `chapters` for anything the summary leaves out.
 
 <Check>
 **Live.** Accepts video, audio, and image URLs.
 </Check>
+
+<Tip>
+From a shell? Use [the CLI](/cli): `rb ffprobe https://example.com/video.mp4`. Local files upload automatically.
+</Tip>
 
 ## Probe a file
 
@@ -86,7 +90,7 @@ curl -X POST "https://api.rendobar.com/jobs" \
 
 </CodeGroup>
 
-The job returns an id, and the answer lands in its `output.data` once it completes. The `summary` is the part you branch on. The raw `format`, `streams`, and `chapters` sit next to it for the fields the summary does not lift out.
+The job returns an id, and the answer lands in its `output.data` once it completes. The command above is just a URL, so Rendobar auto-fills `-v error`, `-print_format json`, and `-show_format -show_streams -show_chapters` on top of it. The full structured result comes back even though you asked for nothing extra. See [The command](#the-command). The `summary` is the part you branch on. The raw `format`, `streams`, and `chapters` sit next to it for the fields the summary does not lift out.
 
 <Tip>
 An MCP client reaches the same job through the generic `submit_job` tool with `type: "ffprobe"`. See the [MCP server](/mcp-server).
@@ -94,32 +98,43 @@ An MCP client reaches the same job through the generic `submit_job` tool with `t
 
 ## The command
 
-`command` is additive, not a full ffprobe invocation. The runner always injects the core sections and JSON output for you (`-show_format -show_streams -show_chapters -of json`), so the minimal `command` is just the URL:
+Your `command` runs essentially as written, honored flag-for-flag, the same model as [FFmpeg's `command`](/jobs/ffmpeg#request). A leading `ffprobe` token is fine either way.
+
+Rendobar auto-fills only what you didn't specify:
+
+| You didn't pass | Rendobar adds |
+|---|---|
+| `-v` or `-loglevel` | `-v error` |
+| A writer flag (`-of`, `-print_format`, `-output_format`) | `-print_format json` |
+| Any `-show_*` flag | `-show_format -show_streams -show_chapters` |
+
+So the minimal command is just the URL, and auto-fill still returns the full structured report:
 
 ```
 https://cdn.rendobar.com/assets/examples/sample.mp4
 ```
 
-Anything you add stacks on top of that guaranteed core. Add `-show_frames` to get per-frame data for a bounded range:
+Write a full command and every flag you pass is honored, not stripped or normalized away:
 
 ```
--show_frames -read_intervals %+#5 https://cdn.rendobar.com/assets/examples/sample.mp4
+ffprobe -v quiet -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -print_format json https://cdn.rendobar.com/assets/examples/sample.mp4
 ```
 
-This adds a `frames` array (the first 5 frames) to `output.data`, next to the `summary`, `format`, `streams`, and `chapters` you always get. A leading `ffprobe` token is fine either way.
+This picks the primary video stream, reads 4 fields off it, and returns exactly that instead of the full report. `-select_streams`, `-show_entries`, `-show_frames`, your own `-v`/`-loglevel`, and any writer you choose (`-print_format csv`, `xml`, `flat`) all pass through untouched. See [The output shape](#the-output-shape) for what comes back for each writer.
 
-Two categories of flag get normalized instead of rejected, because they would fight the additive model:
+<Warning>
+Auto-fill checks by category, not by flag. Pass any `-show_*` flag yourself and the whole auto-filled trio is suppressed, not just the one you named. `-show_frames -read_intervals %+#5` alone returns only `frames`, no `summary`. Add `-show_format -show_streams` yourself to keep both:
 
-- **Writer flags** (`-of`, `-print_format`, `-output_format`) are stripped. The result is always JSON.
-- **Restricting flags** (`-select_streams`, `-show_entries`) are stripped. You already get the full structured result back, so filter it client-side instead of asking ffprobe to narrow it.
+```
+-show_frames -show_format -show_streams -read_intervals %+#5 https://cdn.rendobar.com/assets/examples/sample.mp4
+```
+</Warning>
 
-Each strip adds a `WRITER_NORMALIZED` or `QUERY_NORMALIZED` entry to `output.data.warnings` rather than failing the job.
-
-`-protocol_whitelist`, `-protocol_blacklist`, and shell control characters (`>`, `|`, `;`) are rejected outright with `VALIDATION_ERROR` before the job is created. ffprobe's output is always returned to you, never written to a file.
+The security floor is unchanged: `-protocol_whitelist`, `-protocol_blacklist`, shell control characters (`>`, `|`, `;`), and `-o`/`-output_file` are rejected outright with `VALIDATION_ERROR` before the job is created. ffprobe's output is always returned to you, never written to a file.
 
 ## The summary
 
-`summary` normalizes the parts of ffprobe that are awkward to read raw: rotation buried in side data, fractional frame rates, HDR spread across three color fields, cover art masquerading as a video stream.
+`summary` normalizes the parts of ffprobe that are awkward to read raw: rotation buried in side data, fractional frame rates, HDR spread across three color fields, cover art masquerading as a video stream. It's best-effort: present only when your run produced both `format` and `streams`, whether by auto-fill or your own `-show_format -show_streams`. A command that asks for something else, like `-show_frames` alone or a non-JSON writer, omits it.
 
 ```json
 {
@@ -184,7 +199,7 @@ Every `summary` field name is stable. Write your checks against `summary.video.w
 ## Parameters
 
 <ParamField body="command" type="string" required>
-  The input media URL, optionally prefixed with additive ffprobe flags. See [The command](#the-command).
+  A raw ffprobe command, run essentially as written. Minimal form is just the input media URL. The `ffprobe` prefix is optional. See [The command](#the-command).
 </ParamField>
 
 <ParamField body="timeout" type="integer" default="plan maximum">
@@ -229,7 +244,7 @@ const summaries = await Promise.all(
 
 1. **Probe remote.** `ffprobe` reads the URL directly over HTTPS. A faststart MP4 needs only its header, so nothing downloads, and a file larger than your plan's input limit still probes.
 2. **Fall back to download.** When a server does not support range requests, or the `moov` atom sits at the end of a non-faststart MP4, the runner downloads the file, then probes it. Your plan's input-size limit applies to this path.
-3. **Normalize.** The raw ffprobe JSON becomes the `summary`, and the raw `format`, `streams`, and `chapters` pass through untouched with ffprobe's own field names.
+3. **Normalize.** For a JSON run (the default, or an explicit `-print_format json`), the raw ffprobe JSON becomes the `summary`, and the raw `format`, `streams`, and `chapters` pass through untouched with ffprobe's own field names. For any other writer you chose, ffprobe's raw text output returns as-is in `output.data.stdout`.
 
 ## The output shape
 
@@ -240,7 +255,14 @@ Every job returns the same `output` object. [Job output](/concepts/job#the-outpu
 - `output.files`: `[]`.
 - `output.expiresAt`: `null`.
 
-`output.data` guarantees `summary`, `format`, `streams`, `chapters`, and `warnings` on every response, consume them with no optional chaining. `programs`, `stream_groups`, `frames`, `packets`, `reportUrl`, and `stderr` are honest optionals: present only when your `command` asked for that section, or when there's something worth surfacing.
+`output.data`'s fields depend on which writer your command ends up using, the same JSON-or-not split [The command](#the-command) auto-fills around:
+
+- **JSON writer** (no writer flag, or an explicit `-print_format json`/`-of json`): `format`, `streams`, `chapters`, and any other section ffprobe produced (`programs`, `stream_groups`, `frames`, `packets`) come back parsed, present exactly when ffprobe emitted them. `summary` is best-effort, present only when the run has both `format` and `streams`. Nothing here needs optional chaining beyond a plain `?` check for whether the field exists.
+- **Non-JSON writer** (`-print_format csv`/`xml`/`flat`, or ffprobe's own default text), a writer you chose explicitly: nothing is parsed. `output.data.stdout` carries ffprobe's raw text output verbatim, and `summary` is omitted.
+
+`warnings` and `stderr` can appear on either shape, present only when there's something worth surfacing.
+
+The default command (just a URL, everything auto-filled) returns the JSON shape:
 
 ```json
 {
@@ -294,6 +316,26 @@ Every job returns the same `output` object. [Job output](/concepts/job#the-outpu
 }
 ```
 
+A command that picks a non-JSON writer, like `-print_format csv`, returns raw text instead. No `summary`, no parsed sections:
+
+```json
+{
+  "data": {
+    "id": "job_abc123",
+    "type": "ffprobe",
+    "status": "complete",
+    "output": {
+      "data": {
+        "stdout": "format|mp4,QuickTime / MOV,12.480000,4271822,4213000\nstream|0,video,h264,1920,1080\nstream|1,audio,aac,48000,2\n"
+      },
+      "file": null,
+      "files": [],
+      "expiresAt": null
+    }
+  }
+}
+```
+
 ### Warnings
 
 `output.data.warnings` carries machine-readable notes about a probe that succeeded with a caveat. Each entry is `{ code, message }`. Branch on `code`, not the message text.
@@ -301,9 +343,7 @@ Every job returns the same `output` object. [Job output](/concepts/job#the-outpu
 | `code` | Meaning |
 |---|---|
 | `DURATION_UNKNOWN` | The container has no duration, a common sign of truncation |
-| `WRITER_NORMALIZED` | A writer flag (`-of`, `-print_format`) was stripped from your command |
-| `QUERY_NORMALIZED` | A restricting flag (`-select_streams`, `-show_entries`) was stripped from your command |
-| `REPORT_SPILLED` | `frames`/`packets` were too large to return inline and were dropped; re-run with a narrower `-read_intervals` |
+| `REPORT_SPILLED` | The report was too large to return inline. On a JSON writer, `frames`/`packets` were dropped; on a non-JSON writer, `stdout` was truncated. Re-run with a narrower `-read_intervals` |
 
 ## Error handling
 
@@ -340,7 +380,7 @@ Full error catalogue: [Error codes](/support/errors).
 - **Route portrait and landscape.** Branch on `summary.video.rotation` and the display dimensions.
 - **Skip silent renditions.** `summary.audio === null` tells you there is no audio track.
 - **Meter by duration.** `summary.durationSec` for billing or limits, without downloading the file.
-- **Inspect a bounded frame range.** Add `-show_frames -read_intervals %+#5` to check keyframe placement on the first 5 seconds without pulling the whole file.
+- **Inspect a bounded frame range.** `-show_frames -read_intervals %+#5` checks keyframe placement on the first 5 seconds without pulling the whole file. Add `-show_format -show_streams` too if you also want the `summary`.
 
 ## See also
 
