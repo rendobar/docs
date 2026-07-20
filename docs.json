@@ -271,6 +271,13 @@
       "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
     }
   },
+  "integrations": {
+    "posthog": {
+      "apiKey": "phc_pf4JwZ5WGtDcWDG6kYEkDZtEAy7dbunkNHthLj8JRa9v",
+      "apiHost": "https://e.rendobar.com",
+      "sessionRecording": false
+    }
+  },
   "search": {
     "prompt": "Search docs..."
   },
