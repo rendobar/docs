@@ -273,7 +273,7 @@
   },
   "integrations": {
     "posthog": {
-      "apiKey": "phc_REPLACE_WITH_RENDOBAR_PROJECT_TOKEN",
+      "apiKey": "phc_pf4JwZ5WGtDcWDG6kYEkDZtEAy7dbunkNHthLj8JRa9v",
       "apiHost": "https://e.rendobar.com",
       "sessionRecording": false
     }
