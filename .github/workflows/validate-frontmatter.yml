@@ -4,14 +4,23 @@ on:
   push:
     branches: [main]
     paths:
+      # `.md` and docs.json are listed alongside `.mdx` because the two bugs
+      # validate-nav-and-redirects.mjs exists to catch (an orphan ANALYTICS.md,
+      # a redirect into a dead page) both live in files the old filter ignored.
       - "**/*.mdx"
+      - "**/*.md"
+      - "docs.json"
       - "scripts/validate-frontmatter.mjs"
+      - "scripts/validate-nav-and-redirects.mjs"
       - "scripts/check-plan-limits.mjs"
       - "package.json"
   pull_request:
     paths:
       - "**/*.mdx"
+      - "**/*.md"
+      - "docs.json"
       - "scripts/validate-frontmatter.mjs"
+      - "scripts/validate-nav-and-redirects.mjs"
       - "scripts/check-plan-limits.mjs"
       - "package.json"
 
@@ -26,5 +35,7 @@ jobs:
           node-version: "20"
       - name: Run frontmatter validator
         run: node scripts/validate-frontmatter.mjs
+      - name: Check nav, orphan pages, and redirect destinations
+        run: node scripts/validate-nav-and-redirects.mjs
       - name: Check plan-limit tables match the source of truth
         run: node scripts/check-plan-limits.mjs
