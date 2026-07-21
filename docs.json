@@ -144,12 +144,20 @@
       "destination": "/jobs/compose"
     },
     {
+      "source": "/job-types/caption-burn",
+      "destination": "/jobs/captions/burn"
+    },
+    {
       "source": "/cli/:slug*",
       "destination": "/cli"
     },
     {
+      "source": "/mcp",
+      "destination": "/mcp-server"
+    },
+    {
       "source": "/mcp/:slug*",
-      "destination": "/mcp"
+      "destination": "/mcp-server"
     },
     {
       "source": "/sdk/:slug*",
