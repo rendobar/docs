@@ -152,10 +152,6 @@
       "destination": "/cli"
     },
     {
-      "source": "/mcp",
-      "destination": "/mcp-server"
-    },
-    {
       "source": "/mcp/:slug*",
       "destination": "/mcp-server"
     },
