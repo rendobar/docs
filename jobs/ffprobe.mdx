@@ -47,7 +47,7 @@ const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
 const job = await client.jobs.create({
   type: "ffprobe",
-  params: { command: "https://cdn.rendobar.com/assets/examples/sample.mp4" },
+  params: { command: "ffprobe -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4" },
 });
 
 const done = await client.jobs.wait(job.id);
@@ -65,7 +65,7 @@ job = requests.post(
     headers=headers,
     json={
         "type": "ffprobe",
-        "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"command": "ffprobe -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4"},
     },
 ).json()["data"]
 
@@ -82,7 +82,7 @@ curl -X POST "https://api.rendobar.com/jobs" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "ffprobe",
-    "params": { "command": "https://cdn.rendobar.com/assets/examples/sample.mp4" }
+    "params": { "command": "ffprobe -show_format -show_streams https://cdn.rendobar.com/assets/examples/sample.mp4" }
   }'
 # Returns { "data": { "id": "job_...", "status": "waiting" } }.
 # Poll GET /jobs/{id} until "status": "complete", then read output.data.
@@ -94,18 +94,7 @@ A probe is a data job. The answer lands in `output.data`, and `output.file` is `
 
 ## What comes back
 
-What you ask for decides what you get. Say nothing and Rendobar fills in the defaults; name your own sections or your own writer and it steps aside.
-
-```mermaid
-flowchart TD
-    cmd["your command"] --> writer{"writer flag?"}
-    writer -->|none, or json| shows{"any -show_ flag?"}
-    writer -->|csv, xml, flat| raw["output.data.stdout, raw text"]
-    shows -->|none| auto["format + streams + chapters, plus summary"]
-    shows -->|your own| picked["only the sections you named, no summary"]
-```
-
-Auto-fill adds only what your command left out:
+Your flags are honored. Rendobar fills in only what you left out:
 
 | You didn't pass | Rendobar adds |
 |---|---|
@@ -113,19 +102,7 @@ Auto-fill adds only what your command left out:
 | A writer flag (`-of`, `-print_format`, `-output_format`) | `-print_format json` |
 | Any `-show_*` flag | `-show_format -show_streams -show_chapters` |
 
-<Warning>
-Auto-fill works by category, not by flag. One `-show_*` of your own suppresses the whole trio, so `-show_frames -read_intervals %+#5` returns `frames` and nothing else. Ask for what you want alongside it:
-
-```
--show_frames -show_format -show_streams -read_intervals %+#5 https://cdn.rendobar.com/assets/examples/sample.mp4
-```
-</Warning>
-
-Everything else passes through untouched. This picks the primary video stream and reads four fields off it:
-
-```
-ffprobe -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -print_format json https://cdn.rendobar.com/assets/examples/sample.mp4
-```
+So a bare URL returns `summary`, `format`, `streams`, and `chapters`. Name one `-show_*` yourself and it replaces the whole trio, so `-show_frames -read_intervals %+#5` comes back with `frames` and no `summary`. Pick a writer other than JSON and nothing is parsed at all: ffprobe's text lands in `output.data.stdout`.
 
 Four things are rejected with `VALIDATION_ERROR` before the job is created: `-protocol_whitelist`, `-protocol_blacklist`, shell control characters (`>`, `|`, `;`), and `-o`/`-output_file`. Output always comes back to you and is never written to a file.
 
