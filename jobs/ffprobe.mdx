@@ -200,26 +200,6 @@ Every `summary` field name is stable. Write your checks against `summary.kind` a
   Max execution time in seconds. Plan caps apply, same as [FFmpeg](/jobs/ffmpeg#parameters). A probe rarely approaches it.
 </ParamField>
 
-## Probe many files
-
-One job probes one file. Submit one job per file and let them run together: probes are exempt from your concurrency limit, so they dispatch at once instead of queueing behind your other work.
-
-```ts
-const urls = [
-  "https://cdn.rendobar.com/assets/examples/sample.mp4",
-  "https://example.com/clip.mov",
-  "https://example.com/promo.webm",
-];
-
-const summaries = await Promise.all(
-  urls.map(async (url) => {
-    const job = await client.jobs.create({ type: "ffprobe", params: { command: url } });
-    const done = await client.jobs.wait(job.id);
-    return done.output.data.summary;
-  }),
-);
-```
-
 ## Reading the result
 
 On a JSON run, `output.data` carries `summary` plus every section ffprobe emitted, under ffprobe's own field names:
