@@ -275,7 +275,7 @@
     "posthog": {
       "apiKey": "phc_pf4JwZ5WGtDcWDG6kYEkDZtEAy7dbunkNHthLj8JRa9v",
       "apiHost": "https://e.rendobar.com",
-      "sessionRecording": false
+      "sessionRecording": true
     }
   },
   "search": {
