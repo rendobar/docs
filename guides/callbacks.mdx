@@ -1,0 +1,177 @@
+---
+title: "Per-job completion callbacks"
+description: "Add a completion callback to a single job, POST the result to a per-job URL, and resume a Cloudflare Workflow without polling."
+sidebarTitle: "Callbacks"
+icon: "reply"
+keywords: ["callbacks", "job callback", "per-job callback", "cloudflare workflows", "waitForEvent", "sendEvent", "verifyCallback", "callback signature"]
+canonical: "https://rendobar.com/docs/guides/callbacks"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/guides/callbacks/#article",
+      "headline": "Per-job completion callbacks",
+      "description": "Attach a per-job completion callback that POSTs the job result to a URL you choose, and resume a Cloudflare Workflow without polling.",
+      "datePublished": "2026-07-25",
+      "dateModified": "2026-07-25",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+A callback attaches a completion hook to one [job](/concepts/job). You pass `callback.url` when you create the job, and the moment that job reaches a terminal state Rendobar POSTs the result there. The body is byte-identical to the [webhook](/guides/webhooks) envelope, so the same receiver code handles both. The correlation lives in the URL you chose, so the receiver stays stateless and never polls `GET /jobs/{id}`.
+
+## Attach a callback
+
+Add a `callback` object to `client.jobs.create(...)`. The only required field is `url`.
+
+```ts
+import { createClient } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: process.env.RENDOBAR_API_KEY });
+
+await client.jobs.create({
+  type: "ffmpeg",
+  params: { command: "ffmpeg -i input.mp4 -t 1 output.mp4" },
+  callback: { url: "https://your-app.example.com/rb/job_a1b2c3d4" },
+});
+```
+
+| Field | Type | Purpose |
+|---|---|---|
+| `callback.url` | string, HTTPS | Where Rendobar POSTs the job envelope on any terminal state (`complete`, `failed`, `cancelled`). SSRF-validated, HTTPS only. |
+| `callback.headers` | object, optional | Extra request headers on the POST, for example `{ Authorization: "Bearer ..." }`, so the callback can hit an authenticated target directly. |
+| `callback.verify` | boolean, optional | Sign the POST with `X-Rendobar-Signature`. Default `false`. |
+| `callback.events` | string[], optional | Opt into extra non-terminal events. The only value today is `"job.started"`. |
+
+<Note>
+Terminal events (`complete`, `failed`, `cancelled`) always fire and cannot be filtered out, so a step waiting on a callback can never hang. `callback.events` only adds non-terminal pings on top. The one available today is `"job.started"`, a progress signal sent when the job begins running.
+</Note>
+
+Custom headers let the POST reach an authenticated endpoint with no receiver of your own. Framing headers and any `X-Rendobar-*` header are reserved. If you set one, the platform's value wins.
+
+<Warning>
+Rendobar never returns `callback.url` or `callback.headers` in any API response. Both are secrets. `GET /jobs/{id}` reports only `callback.status`.
+</Warning>
+
+## Resume a Cloudflare Workflow
+
+Callbacks were built for this pattern. A Cloudflare Workflow dispatches a job and suspends until it finishes, with no polling in between. There are two shapes.
+
+### Shape A: receiver Worker with sendEvent
+
+The Workflow's own `fetch` handler is the receiver. The callback URL carries `event.instanceId`, the receiver route turns the POST into `instance.sendEvent(...)`, and that resumes the suspended `waitForEvent`. This exact suspend and resume loop was verified end to end.
+
+```ts
+import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
+import { createClient } from "@rendobar/sdk";
+
+export class RenderJob extends WorkflowEntrypoint<Env, { source: string }> {
+  async run(event: WorkflowEvent<{ source: string }>, step: WorkflowStep) {
+    await step.do("submit rendobar job", async () => {
+      const client = createClient({ apiKey: this.env.RENDOBAR_API_KEY });
+      await client.jobs.create({
+        type: "ffmpeg",
+        params: { command: `ffmpeg -i ${event.payload.source} -t 1 output.mp4` },
+        // The instance id in the path is how the callback finds this exact run.
+        callback: { url: `https://your-worker.example.com/rb/${event.instanceId}` },
+      });
+    });
+
+    // Suspend the whole workflow until Rendobar calls back. No polling.
+    const done = await step.waitForEvent<any>("await rendobar callback", {
+      type: "rb-job",
+      timeout: "10 minutes",
+    });
+
+    return { url: done.payload?.data?.output?.file?.url };
+  }
+}
+
+export default {
+  async fetch(req: Request, env: Env): Promise<Response> {
+    const url = new URL(req.url);
+    const m = url.pathname.match(/^\/rb\/(.+)$/);
+    if (req.method === "POST" && m) {
+      const instance = await env.RENDER_JOB.get(m[1]);
+      await instance.sendEvent({ type: "rb-job", payload: await req.json() });
+      return new Response("ok");
+    }
+    return new Response("not found", { status: 404 });
+  },
+};
+```
+
+### Shape B: no receiver Worker
+
+Point `callback.url` straight at Cloudflare's Workflows "send event" REST endpoint for the instance, and put your Cloudflare API token in `callback.headers`. Rendobar POSTs the job result directly to Cloudflare, so there is no shim to deploy. This is the zero-infrastructure option. The caller authenticates the callback itself through the header, so signing is usually unnecessary here.
+
+```ts
+await client.jobs.create({
+  type: "ffmpeg",
+  params: { command: `ffmpeg -i ${source} -t 1 output.mp4` },
+  callback: {
+    url: `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workflows/render-job/instances/${instanceId}/events/rb-job`,
+    headers: { Authorization: `Bearer ${CF_API_TOKEN}` },
+  },
+});
+```
+
+The waiting Workflow is the same as Shape A. It calls `waitForEvent({ type: "rb-job" })` and resumes when Cloudflare delivers the event.
+
+## Secure it
+
+Callbacks are unsigned by default because the URL itself is the capability. Set `callback.verify: true` to sign the POST, then check it on your receiver. The signature is the same HMAC-SHA256 scheme as webhooks, over `${timestamp}.${body}`, and the SDK ships the same verifier.
+
+```ts
+import { verifyCallback } from "@rendobar/sdk/webhooks";
+
+// Raw body (a string, not parsed JSON) plus the request headers.
+const ok = await verifyCallback(rawBody, req.headers, process.env.CALLBACK_SECRET);
+if (!ok) throw new Error("invalid signature");
+```
+
+`verifyCallback` is the same function as `verifyWebhook`. Fetch the organization callback signing secret once and store it in your secret manager.
+
+```ts
+// GET /orgs/current/callback-secret -> { data: { secret: "cbsec_..." } }
+const { data } = await client.orgs.getCallbackSecret();
+```
+
+Rotate the secret with `POST /orgs/current/callback-secret/rotate`. Reach for signing when the callback lands on an endpoint you own and you want to prove the POST came from Rendobar. For Shape B, where you already authenticate to Cloudflare through `callback.headers`, signing usually adds nothing.
+
+## Watch delivery
+
+Once a job carries a callback, `GET /jobs/{id}` reports its delivery state under `callback.status`.
+
+| Status | Meaning |
+|---|---|
+| `pending` | The job is not terminal yet, or the callback is queued for delivery |
+| `delivered` | The receiver returned `2xx` |
+| `failed` | Delivery exhausted its retries and moved to the dead-letter path |
+
+The dashboard job detail view shows the same status. Delivery is at-least-once, with retries and a dead-letter path, so the same event can arrive more than once. Deduplicate on the `X-Rendobar-Delivery` header, a `whd_...` id that is unique per delivery. Every POST carries these headers.
+
+```
+X-Rendobar-Event: job.completed
+X-Rendobar-Delivery: whd_x1y2z3
+X-Rendobar-Timestamp: 1707436815
+X-Rendobar-Attempt: 1
+```
+
+## How it compares to org webhooks
+
+[Webhooks](/guides/webhooks) and callbacks carry the identical envelope and verify with the same code. The difference is scope. A webhook is one static URL registered in the dashboard that receives events for every job in the organization. A callback is a per-job URL, set at create time, that receives events for exactly one job. Webhooks fit a central event pipeline. Callbacks fit an orchestrator that dispatches a job and waits on that one job, such as the Cloudflare Workflow above.
+
+## Related
+
+- [Webhooks for job events](/guides/webhooks): the shared envelope, signature scheme, and retry behavior
+- [Job output](/concepts/job#the-output): the `output` and `error` shape a callback carries
+- [Job lifecycle](/concepts/job): what each terminal state means
+- [Changelog](https://rendobar.com/changelog/): callback and webhook payload changes
