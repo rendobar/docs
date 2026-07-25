@@ -34,7 +34,8 @@
             "group": "Concepts",
             "pages": [
               "concepts/job",
-              "guides/webhooks"
+              "guides/webhooks",
+              "guides/callbacks"
             ]
           },
           {
