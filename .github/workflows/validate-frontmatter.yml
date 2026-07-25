@@ -13,6 +13,7 @@ on:
       - "scripts/validate-frontmatter.mjs"
       - "scripts/validate-nav-and-redirects.mjs"
       - "scripts/check-plan-limits.mjs"
+      - "scripts/check-webhooks-guide.mjs"
       - "package.json"
   pull_request:
     paths:
@@ -22,6 +23,7 @@ on:
       - "scripts/validate-frontmatter.mjs"
       - "scripts/validate-nav-and-redirects.mjs"
       - "scripts/check-plan-limits.mjs"
+      - "scripts/check-webhooks-guide.mjs"
       - "package.json"
 
 jobs:
@@ -39,3 +41,5 @@ jobs:
         run: node scripts/validate-nav-and-redirects.mjs
       - name: Check plan-limit tables match the source of truth
         run: node scripts/check-plan-limits.mjs
+      - name: Check webhooks guide matches the webhook contract
+        run: node scripts/check-webhooks-guide.mjs
