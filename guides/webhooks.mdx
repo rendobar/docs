@@ -1,6 +1,6 @@
 ---
 title: "Webhooks for job events"
-description: "Receive job and account events as signed HMAC POSTs. Create endpoints from the dashboard or SDK, verify in one call, and handle retries."
+description: "Receive job and account events as signed HMAC POSTs. Create an endpoint in the dashboard, verify with one SDK call, and handle retries."
 sidebarTitle: "Webhooks"
 icon: "bell"
 keywords: ["webhooks", "hmac signature", "job status webhook", "rendobar webhook setup", "signed webhook", "verifyWebhook", "webhook sdk"]
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/guides/webhooks"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/guides/webhooks/#article",
       "headline": "Webhooks for job events",
-      "description": "Receive job status events via signed HMAC POST. Create endpoints from the dashboard or SDK, verify signatures, and handle retries.",
+      "description": "Receive job status events via signed HMAC POST. Create an endpoint in the dashboard, verify the signature, and handle retries.",
       "datePublished": "2026-03-20",
       "dateModified": "2026-07-25",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
@@ -25,75 +25,23 @@ canonical: "https://rendobar.com/docs/guides/webhooks"
   }}
 />
 
-Webhooks push events to your server the moment a [job](/concepts/job) changes status or your credit balance crosses a threshold. No polling. Rendobar POSTs a signed JSON payload to a URL you control, and your server verifies it and reacts.
-
-Setting one up is three moves: create an endpoint, verify the signature on the way in, and read the payload. This guide walks each one.
+Webhooks push events to your server the moment a [job](/concepts/job) changes status or your balance runs low. No polling. Rendobar POSTs a signed JSON payload, your server verifies it and reacts.
 
 ## Create an endpoint
 
-The fastest path is the dashboard. You can also create endpoints from the SDK or a raw request. All three produce the same thing: a URL plus a signing secret.
+Create and manage endpoints in the dashboard.
 
-<Tabs>
+1. Open [**Webhooks**](https://app.rendobar.com/webhooks).
+2. Click **New Endpoint**, name it, paste your **HTTPS** URL, and check the events you want. New endpoints start with `job.completed`, `job.failed`, and `job.cancelled` selected.
+3. Click **Create Endpoint**, then copy the signing secret (`whsec_...`). It is shown once, so store it in your secret manager.
 
-<Tab title="Dashboard">
-
-1. Open [**Webhooks**](https://app.rendobar.com/webhooks) in the dashboard.
-2. Click **New Endpoint**. Give it a name, paste your **HTTPS** URL, and check the events you want. New endpoints start with `job.completed`, `job.failed`, and `job.cancelled` selected.
-3. Click **Create Endpoint**, then copy the signing secret. It is shown once.
-
-Each endpoint gets its own card. From there you can edit its events, rotate the secret, send a test delivery, and browse recent deliveries (with the request payload and your server's response) to re-send any that failed.
-
-</Tab>
-
-<Tab title="SDK">
-
-```ts
-import { createClient } from "@rendobar/sdk";
-
-const client = createClient({ apiKey: "rb_YOUR_KEY" });
-
-const endpoint = await client.webhooks.create({
-  name: "Production",
-  url: "https://your-server.com/webhooks/rendobar",
-  subscribedEvents: ["job.completed", "job.failed"],
-});
-
-// The plaintext signing secret is returned once, on create. Store it now.
-console.log(endpoint.signingSecret); // whsec_...
-```
-
-</Tab>
-
-<Tab title="cURL">
-
-```bash
-curl -X POST https://api.rendobar.com/webhooks/endpoints \
-  -H "Authorization: Bearer rb_YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Production",
-    "url": "https://your-server.com/webhooks/rendobar",
-    "subscribedEvents": ["job.completed", "job.failed"]
-  }'
-```
-
-</Tab>
-
-</Tabs>
-
-Fields: `name` (1 to 50 chars), `url` (HTTPS only), `subscribedEvents` (at least one). An organization can have up to 10 endpoints.
-
-<Warning>
-The signing secret (`whsec_...`) is returned once, at creation. Store it in your secret manager. If you lose it, [rotate](#secret-rotation) to issue a new one.
-</Warning>
+Each endpoint gets a card where you edit events, rotate the secret, send a test delivery, and re-send anything that failed. An organization can have up to 10.
 
 <Tip>
-Before you go live, send a test delivery. Use **Send Test** on the endpoint card, or `client.webhooks.test(endpointId)`. Rendobar POSTs a sample event so you can confirm your receiver is reachable and returns `2xx`.
+Hit **Send Test** on the card to fire a sample event and confirm your receiver returns `2xx` before real jobs start flowing.
 </Tip>
 
 ## Events
-
-Subscribe to any of these when you create or edit an endpoint.
 
 | Event | When |
 |---|---|
@@ -105,21 +53,21 @@ Subscribe to any of these when you create or edit an endpoint.
 | `balance.low` | Credit balance crossed the low threshold |
 | `balance.depleted` | Credit balance reached zero |
 
-## Receive and verify
+## Verify every delivery
 
-Every delivery is signed. Verify the signature before you trust the body. The SDK does the whole check in one call.
+Rendobar signs each payload. Check the signature before you trust the body. The SDK does it in one call.
 
 ```ts
 import { verifyWebhook } from "@rendobar/sdk/webhooks";
 
-// Pass the raw request body (a string, not parsed JSON) and the incoming headers.
+// Raw body (a string, not parsed JSON) plus the request headers.
 const ok = await verifyWebhook(rawBody, req.headers, process.env.WEBHOOK_SECRET);
 if (!ok) throw new Error("invalid signature");
 ```
 
-`verifyWebhook` reads the signature and timestamp headers, rebuilds the signed string, checks the HMAC, and rejects stale deliveries so a captured request cannot be replayed. During a [secret rotation](#secret-rotation) it accepts either the current or previous secret. It pulls in no dependencies and runs on Node, Deno, Bun, Cloudflare Workers, and the browser.
+`verifyWebhook` rebuilds the signed string, checks the HMAC, rejects stale deliveries so a captured request cannot be replayed, and accepts either secret during a [rotation](#secret-rotation). It has no dependencies and runs on Node, Deno, Bun, Cloudflare Workers, and the browser.
 
-Here is a complete receiver on Express. The one thing to get right is the **raw body**: the signature covers the exact bytes Rendobar sent, so verify before any JSON middleware reparses them.
+A full receiver on Express. The one rule: verify the raw bytes, before any JSON parser touches them.
 
 ```ts
 import express from "express";
@@ -129,27 +77,25 @@ const app = express();
 
 app.post(
   "/webhooks/rendobar",
-  express.raw({ type: "application/json" }), // keep the body as raw bytes
+  express.raw({ type: "application/json" }),
   async (req, res) => {
     const raw = req.body.toString("utf8");
 
-    const ok = await verifyWebhook(raw, req.headers, process.env.WEBHOOK_SECRET);
-    if (!ok) return res.status(401).send("invalid signature");
+    if (!(await verifyWebhook(raw, req.headers, process.env.WEBHOOK_SECRET))) {
+      return res.status(401).send("invalid signature");
+    }
 
-    // Acknowledge fast, then do the real work off the request path.
-    res.status(200).send("ok");
+    res.status(200).send("ok"); // ack fast, then work off the request path
 
     const { event, data } = JSON.parse(raw);
-    if (event === "job.completed") {
-      console.log(data.jobId, data.output.file?.url);
-    }
+    if (event === "job.completed") console.log(data.jobId, data.output.file?.url);
   },
 );
 
 app.listen(3000);
 ```
 
-Not on Node, or prefer to verify by hand? The signature is HMAC-SHA256 over `{timestamp}.{body}`, hex-encoded, in the `X-Rendobar-Signature` header as `sha256=<hex>`.
+Not on Node? The signature is HMAC-SHA256 over `{timestamp}.{body}`, hex-encoded, in `X-Rendobar-Signature` as `sha256=<hex>`.
 
 <CodeGroup>
 
@@ -158,21 +104,10 @@ import { createHmac, timingSafeEqual } from "crypto";
 
 function verify(body, signature, timestamp, secret) {
   const message = `${timestamp}.${body}`;
-  const expected = createHmac("sha256", secret).update(message, "utf8").digest("hex");
+  const expected = createHmac("sha256", secret).update(message).digest("hex");
   const received = signature.replace("sha256=", "");
   return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(received, "hex"));
 }
-
-app.post("/webhooks/rendobar", (req, res) => {
-  const ok = verify(
-    req.rawBody, // raw string, not parsed JSON
-    req.headers["x-rendobar-signature"],
-    req.headers["x-rendobar-timestamp"],
-    process.env.WEBHOOK_SECRET,
-  );
-  if (!ok) return res.status(401).send("invalid signature");
-  res.status(200).send("ok");
-});
 ```
 
 ```python Python
@@ -181,14 +116,13 @@ import hmac, hashlib
 def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
     message = f"{timestamp}.{body.decode()}"
     expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-    received = signature.replace("sha256=", "")
-    return hmac.compare_digest(expected, received)
+    return hmac.compare_digest(expected, signature.replace("sha256=", ""))
 ```
 
 </CodeGroup>
 
 <Warning>
-Always compare with a timing-safe function (`timingSafeEqual`, `hmac.compare_digest`). Plain string equality leaks the signature one byte at a time through timing.
+Compare with a timing-safe function (`timingSafeEqual`, `hmac.compare_digest`). Plain string equality leaks the signature one byte at a time.
 </Warning>
 
 ## Payload
@@ -203,18 +137,18 @@ X-Rendobar-Delivery: whd_x1y2z3
 X-Rendobar-Attempt: 1
 ```
 
-The body is a versioned envelope. The envelope fields identify the event and delivery. The event-specific payload lives under `data`. For job events, `data` carries the same contract as [GET /jobs/{id}](/concepts/job#the-output).
+The body is a versioned envelope. The envelope fields identify the event and delivery. The event payload lives under `data`, which for job events matches [GET /jobs/{id}](/concepts/job#the-output).
 
-| Envelope field | Meaning |
+| Field | Meaning |
 |---|---|
 | `version` | Envelope schema version (currently `"1"`) |
-| `event` | The event name (see the table above) |
+| `event` | The event name |
 | `deliveryId` | Unique per delivery. Use it to deduplicate |
 | `timestamp` | When the envelope was built (unix ms) |
 | `orgId` | Your organization ID |
 | `data` | Event-specific payload |
 
-A `job.completed` delivery. `data.output` is the unified job output. `file.url` is a signed, time-limited URL, and `files` lists every produced file. See [Job output](/concepts/job#the-output) for the full shape and the four output patterns.
+A `job.completed` delivery. `output.file.url` is a signed, time-limited URL, and `output.files` lists every produced file.
 
 ```json
 {
@@ -236,58 +170,38 @@ A `job.completed` delivery. `data.output` is the unified job output. `file.url` 
         "size": 15234567,
         "meta": { "format": "mp4", "width": 1920, "height": 1080, "durationMs": 127500 }
       },
-      "files": [
-        {
-          "url": "https://r2.rendobar.com/...",
-          "path": "output.mp4",
-          "type": "video",
-          "size": 15234567,
-          "meta": { "format": "mp4", "width": 1920, "height": 1080, "durationMs": 127500 }
-        }
-      ],
+      "files": [{ "url": "https://r2.rendobar.com/...", "path": "output.mp4", "type": "video", "size": 15234567 }],
       "expiresAt": 1707440415000
     },
     "cost": { "amount": 50000000, "currency": "USD", "formatted": "$0.05" },
-    "timing": {
-      "createdAt": 1707436800000,
-      "startedAt": 1707436805000,
-      "completedAt": 1707436815000
-    }
+    "timing": { "createdAt": 1707436800000, "startedAt": 1707436805000, "completedAt": 1707436815000 }
   }
 }
 ```
 
-The `output` shape is identical for every job type. A data-only job (such as `ffprobe`) carries its answer in `output.data`, with `file` null and `files` empty. A stream job carries the manifest as `output.file` and every segment in `output.files`. See [Job output](/concepts/job#the-output) for each pattern.
+The `output` shape is identical for every job type. A data-only job (such as `ffprobe`) puts its answer in `output.data` with `file` null. See [Job output](/concepts/job#the-output) for each pattern.
 
-For `job.failed`, `data` carries `error` instead of `output`. The error matches the [GET /jobs](/concepts/job#the-output) error shape: `code`, `message`, `detail` (the process stderr tail, or null), and `retryable`.
+For `job.failed`, `data` carries `error` instead of `output`.
 
 ```json
-{
-  "version": "1",
-  "event": "job.failed",
-  "deliveryId": "whd_a4b5c6",
-  "timestamp": 1707436810000,
-  "orgId": "org_abc123",
-  "data": {
-    "jobId": "job_a1b2c3d4",
-    "jobType": "ffmpeg",
-    "status": "failed",
-    "error": {
-      "code": "RUNNER_ERROR",
-      "message": "FFmpeg process exited with code 1",
-      "detail": "Conversion failed: Invalid data found when processing input",
-      "retryable": false
-    },
-    "timing": { "createdAt": 1707436800000, "startedAt": 1707436805000, "failedAt": 1707436810000 }
+"data": {
+  "jobId": "job_a1b2c3d4",
+  "jobType": "ffmpeg",
+  "status": "failed",
+  "error": {
+    "code": "RUNNER_ERROR",
+    "message": "FFmpeg process exited with code 1",
+    "detail": "Invalid data found when processing input",
+    "retryable": false
   }
 }
 ```
 
 ## Delivery and retries
 
-If your endpoint does not return `2xx` within 10 seconds, Rendobar retries up to 5 times with exponential backoff. The delay doubles each attempt and caps at 5 minutes.
+If your endpoint does not return `2xx` within 10 seconds, Rendobar retries up to 5 times, doubling the wait each attempt.
 
-| Retry | Delay before it |
+| Retry | Wait |
 |---|---|
 | 1st | 10 s |
 | 2nd | 20 s |
@@ -295,67 +209,31 @@ If your endpoint does not return `2xx` within 10 seconds, Rendobar retries up to
 | 4th | 80 s |
 | 5th | 160 s |
 
-After the retries are exhausted the delivery is marked `failed`. A delivery whose status is `failed` or `cancelled` can be re-sent from the dashboard, the SDK, or the API.
+After that the delivery is marked `failed`. Re-send a `failed` or `cancelled` delivery from the card, or from code:
 
 ```ts
-// Browse recent deliveries and re-send one that failed.
-const { data: deliveries } = await client.webhooks.listDeliveries({
-  endpointId: endpoint.id,
-  status: "failed",
-});
-await client.webhooks.retryDelivery(deliveries[0].id);
+await client.webhooks.retryDelivery(deliveryId);
 ```
 
 An endpoint that fails 10 deliveries in a row is disabled automatically and flagged in the dashboard. Update or re-enable it to reset the counter.
 
 ## Secret rotation
 
-Rotation has a 24-hour window. During it, Rendobar sends both `X-Rendobar-Signature` (new secret) and `X-Rendobar-Signature-Previous` (old). Verify against either, which `verifyWebhook` already does for you. Rotate from the endpoint card, or from code:
+Rotate from the card, or with `client.webhooks.rotateSecret(endpointId)`. For 24 hours Rendobar signs with both secrets, sending `X-Rendobar-Signature` (new) and `X-Rendobar-Signature-Previous` (old), so `verifyWebhook` keeps passing while you roll the new one out. After the window the old secret stops signing. An endpoint can rotate once per 24 hours.
 
-```ts
-const rotated = await client.webhooks.rotateSecret(endpoint.id);
-console.log(rotated.signingSecret); // new whsec_..., shown once
-```
-
-Deploy the new secret to your server within the window. After 24 hours the previous secret stops signing. A given endpoint can be rotated once per 24 hours.
-
-## Network rules
-
+<Info>
 Endpoint URLs must be HTTPS. Delivery to private and reserved ranges (`10.x`, `172.16-31.x`, `192.168.x`, `127.x`, `::1`) is blocked to prevent SSRF, so point webhooks at a publicly reachable host.
-
-## Manage endpoints from code
-
-Everything on the dashboard is in the SDK, so you can provision and audit webhooks programmatically.
-
-```ts
-// List every endpoint for the org
-const { data: endpoints } = await client.webhooks.list();
-
-// Send a test delivery
-const result = await client.webhooks.test(endpoint.id);
-// { delivered: true, statusCode: 200, responseTimeMs: 142 }
-
-// Change subscribed events, or disable without deleting
-await client.webhooks.update(endpoint.id, {
-  subscribedEvents: ["job.completed", "job.failed", "balance.low"],
-});
-await client.webhooks.update(endpoint.id, { active: false });
-
-// Remove it
-await client.webhooks.delete(endpoint.id);
-```
+</Info>
 
 ## Best practices
 
-- **Return 200 fast.** Acknowledge, then process asynchronously. A slow handler trips the 10-second timeout and triggers a retry, which means a duplicate delivery.
-- **Deduplicate** on `X-Rendobar-Delivery` (or `data.jobId`). The same event can arrive more than once after a retry.
-- **Verify every signature** before you read the body. Reject anything that fails.
+- **Return 200 fast.** Acknowledge, then process asynchronously. A slow handler trips the 10-second timeout and earns a duplicate delivery.
+- **Deduplicate** on `X-Rendobar-Delivery` (or `data.jobId`). The same event can arrive twice after a retry.
+- **Verify every signature** before you read the body.
 
 ## Related
 
-- [Job output](/concepts/job#the-output): the canonical `output` and `error` shape this payload carries
-- [Job lifecycle](/concepts/job): what each status means before `job.completed` fires
-- [Error codes](/support/errors): the codes you will see inside `job.failed` payloads
-- [FFmpeg](/jobs/ffmpeg): the job type that drives most webhook traffic
-- [MCP](/mcp-server): an alternative push channel for AI agent clients
+- [Job output](/concepts/job#the-output): the `output` and `error` shape this payload carries
+- [Job lifecycle](/concepts/job): what each status means
+- [Error codes](/support/errors): the codes inside `job.failed` payloads
 - [Changelog](https://rendobar.com/changelog/): webhook payload changes and new events
