@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/mcp-server"
       "headline": "Connect AI agents with the MCP server",
       "description": "Connect Claude Desktop, Cursor, claude.ai, or any MCP client to submit video jobs, upload files, and poll status without writing HTTP code.",
       "datePublished": "2026-06-22",
-      "dateModified": "2026-06-22",
+      "dateModified": "2026-07-25",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -25,13 +25,36 @@ canonical: "https://rendobar.com/docs/mcp-server"
   }}
 />
 
-`@rendobar/mcp` is a Model Context Protocol server that gives an AI agent the same operations as the REST API: submit jobs, upload local files, poll status. Run it locally with `npx`, or connect the remote HTTP server from a browser.
+`@rendobar/mcp` is a Model Context Protocol server that gives an AI agent the same operations as the REST API: submit jobs, upload local files, poll status. Connect the hosted server over OAuth with no API key, or run the local server with `npx` when the agent needs to upload files from your disk.
 
 ## Connect a client
+
+### Fastest: hosted server with OAuth
+
+No API key needed. Add the hosted server and your browser opens once to approve access:
+
+```bash
+claude mcp add --transport http rendobar https://api.rendobar.com/mcp
+```
+
+The same URL works in claude.ai (Settings, Connectors, Add custom connector) and any client that speaks Streamable HTTP with OAuth. The hosted server cannot read files on your disk. For local file uploads, use the local server below.
+
+### Local server with an API key
 
 Get an API key at [app.rendobar.com](https://app.rendobar.com) under Settings, API Keys. Copy the `rb_...` value. Then add Rendobar to your client.
 
 <Tabs>
+<Tab title="Claude Code">
+
+Run from a terminal:
+
+```bash
+claude mcp add rendobar -s user --env RENDOBAR_API_KEY=rb_... -- npx -y @rendobar/mcp
+```
+
+If you already ran `rb login` with the Rendobar CLI, drop the `--env` part. The server reads the credentials file automatically.
+
+</Tab>
 <Tab title="Claude Desktop">
 
 Edit the config file, then restart Claude Desktop.
@@ -66,15 +89,6 @@ Edit `~/.cursor/mcp.json` (global) or `<project>/.cursor/mcp.json` (project).
     }
   }
 }
-```
-
-</Tab>
-<Tab title="Claude Code">
-
-Run from a terminal:
-
-```bash
-claude mcp add rendobar -s user --env RENDOBAR_API_KEY=rb_... -- npx -y @rendobar/mcp
 ```
 
 </Tab>
@@ -121,14 +135,14 @@ Both servers expose the same five job tools. The local server adds `upload_file`
 | Tool | Purpose | Returns |
 |---|---|---|
 | `submit_job` | Submit any active job type. `inputs` maps name to URL, `params` carries type-specific options. | `{ jobId, status, url? }` |
-| `get_job` | Poll one job by ID. Shape grows with status (`progress` while running, `cost` and `output` when complete). | `{ id, type, status, output?, ... }` |
+| `get_job` | Fetch one job by ID. Pass `wait: true` to block until the job finishes, up to about 50 seconds, then it returns a snapshot to call again. Shape grows with status (`progress` while running, `cost` and `output` when complete). | `{ id, type, status, output?, ... }` |
 | `list_jobs` | Recent jobs, filterable by `status` and `type`. | `{ jobs[], total }` |
 | `cancel_job` | Cancel a `waiting` or `dispatched` job. `CONFLICT` once it's running. | `{ id, status: "cancelled" }` |
 | `get_account` | Balance, plan, and limits. No parameters. | `{ balance, plan, isPro, limits }` |
 | `upload_file` | Local only. Read a file from disk, upload to ephemeral storage. | `{ downloadUrl, sizeBytes }` |
 | `upload_media` | Remote only. Return an upload endpoint and curl command for the user to run. | `{ uploadEndpoint, instructions, ... }` |
 
-On a completed job, read `output.file.url` for the file to play or download, or `output.data` for a computed answer. The `output` shape is the same for every job type. Failures come back as `isError: true` with `{ error: { code, message } }`. Common codes: `UNAUTHORIZED`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `INVALID_JOB_TYPE`.
+On a completed job, read `output.file.url` for the file to play or download, or `output.data` for a computed answer. The `output` shape is the same for every job type. Failures come back as `isError: true` with `{ error: { code, message, retryable } }`. Common codes: `UNAUTHORIZED`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `INVALID_JOB_TYPE`.
 
 `submit_job` enumerates current job types at server startup. `ffmpeg` is the only Live type today. See the [FFmpeg reference](/jobs/ffmpeg) for accepted commands.
 
@@ -142,7 +156,7 @@ The agent runs the flow in tool calls you can watch in the panel:
 
 1. `upload_file` for the `.mp4`, then for the `.srt`. Each returns a `downloadUrl`.
 2. `submit_job` with `type: "ffmpeg"`, both URLs as `inputs`, and a command using `-vf subtitles`.
-3. `get_job` every few seconds until `status: "complete"`, then `output.file.url`.
+3. `get_job` with `wait: true`, which returns as soon as `status: "complete"`, then `output.file.url`.
 
 A 30-second clip renders in about 20 to 40 seconds. Open the link to download. Source and output files live on `cdn.rendobar.com` for 24 hours, then auto-delete.
 
@@ -153,7 +167,7 @@ Browser and phone clients can't run a local stdio process. Point them at the rem
 In **claude.ai**, open Settings, Connectors, Add custom connector. In **ChatGPT**, open Settings, Apps & Connectors, Custom. Both want:
 
 - **URL:** `https://api.rendobar.com/mcp`
-- **Authentication:** Bearer token, your `rb_...` key
+- **Authentication:** OAuth. The client opens a browser window to sign in and approve. A Bearer token with your `rb_...` key also works where the client supports it.
 
 Any client supporting the Streamable HTTP transport works the same way. On desktop, prefer the local server. Uploads happen in one tool call instead of a manual curl round-trip.
 
