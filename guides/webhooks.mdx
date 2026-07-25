@@ -31,18 +31,8 @@ Webhooks push events to your server the moment a [job](/concepts/job) changes st
 
 Create and manage endpoints on the [**Webhooks page**](https://app.rendobar.com/webhooks) in the dashboard.
 
-1. Open [**Webhooks**](https://app.rendobar.com/webhooks) and click **Create Your First Endpoint**.
-
-<Frame caption="The Webhooks page before any endpoints exist.">
-  <img src="https://cdn.rendobar.com/assets/docs/webhooks/empty-state.png" alt="Rendobar dashboard Webhooks page empty state with a Create Your First Endpoint button" />
-</Frame>
-
+1. Open [**Webhooks**](https://app.rendobar.com/webhooks) and click **New Endpoint**.
 2. Name it, paste your **HTTPS** URL, and check the events you want. New endpoints start with `job.completed`, `job.failed`, and `job.cancelled` selected.
-
-<Frame caption="Name, URL, and event selection in the New Endpoint panel.">
-  <img src="https://cdn.rendobar.com/assets/docs/webhooks/new-endpoint.png" alt="New Webhook Endpoint panel with a name field, HTTPS URL field, and grouped job and balance event checkboxes" />
-</Frame>
-
 3. Click **Create Endpoint**, then copy the signing secret (`whsec_...`). It is shown once, so store it in your secret manager.
 
 Each endpoint gets a card where you edit events, rotate the secret, send a test delivery, and re-send anything that failed. An organization can have up to 10.
