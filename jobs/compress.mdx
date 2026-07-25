@@ -1,0 +1,225 @@
+---
+title: "Compress media to a target quality or size"
+sidebarTitle: "Compress"
+description: "Compress an image, video, or audio file to the smallest size that clears a perceptual quality bar, or hit a byte budget and get the quality scored. AVIF, JPEG XL, AV1, Opus, and more."
+icon: "file-zipper"
+keywords: ["image compression api", "video compression api", "compress to target size api", "avif api", "jpeg xl api", "smallest file at quality", "ssimulacra2 api", "vmaf api", "compress video to 1mb", "audio compression api"]
+canonical: "https://rendobar.com/docs/jobs/compress"
+tag: "Live"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/jobs/compress/#article",
+      "headline": "Compress media to a target quality or size",
+      "description": "Compress an image, video, or audio file to the smallest size that clears a perceptual quality bar, or hit a byte budget and get the quality scored. AVIF, JPEG XL, AV1, Opus, and more.",
+      "datePublished": "2026-07-25",
+      "dateModified": "2026-07-25",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+`compress.target` takes a media URL and a target, then searches candidate encodes for the smallest file that still clears the bar. Images are scored with SSIMULACRA2, video with VMAF, and every job returns a report: the achieved score, the compression ratio, and what the search did.
+
+<Check>
+**Live.** Accepts video, image, and audio URLs.
+</Check>
+
+## Compress an image for the web
+
+<CodeGroup>
+
+```ts SDK
+import { createClient } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.create({
+  type: "compress.target",
+  inputs: { source: "https://cdn.rendobar.com/assets/examples/photo.jpg" },
+  params: { for: "web", target: "efficient" },
+});
+
+const done = await client.jobs.wait(job.id);
+console.log(done.output.data.compressionRatio); // 2.8
+console.log(done.output.file.url); // the compressed AVIF
+```
+
+```python Python
+import requests, time
+
+base = "https://api.rendobar.com"
+headers = {"Authorization": "Bearer rb_YOUR_KEY"}
+
+job = requests.post(
+    f"{base}/jobs",
+    headers=headers,
+    json={
+        "type": "compress.target",
+        "inputs": {"source": "https://cdn.rendobar.com/assets/examples/photo.jpg"},
+        "params": {"for": "web", "target": "efficient"},
+    },
+).json()["data"]
+
+while job["status"] not in ("complete", "failed", "cancelled"):
+    time.sleep(1)
+    job = requests.get(f"{base}/jobs/{job['id']}", headers=headers).json()["data"]
+
+print(job["output"]["data"]["compressionRatio"])
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "compress.target",
+    "inputs": { "source": "https://cdn.rendobar.com/assets/examples/photo.jpg" },
+    "params": { "for": "web", "target": "efficient" }
+  }'
+# Returns { "data": { "id": "job_...", "status": "waiting" } }.
+# Poll GET /jobs/{id} until "status": "complete".
+```
+
+</CodeGroup>
+
+The compressed file lands in `output.file` and the report in `output.data`. Images finish in about 10 seconds, audio in about 1, video takes longer because every search probe is a real encode plus a VMAF pass.
+
+## The report
+
+Every completed job carries the search's account of itself:
+
+```json
+{
+  "status": "ok",
+  "verdict": "high",
+  "mode": "quality",
+  "codec": "avif",
+  "metric": "ssimulacra2",
+  "achievedScore": 79.11,
+  "compressionRatio": 2.8,
+  "originalBytes": 179208,
+  "outputBytes": 64031,
+  "qualityLevel": 82,
+  "probes": 7
+}
+```
+
+`status` is the honest part. `ok` means the target was met. `infeasible_quality` means even the best encode could not reach the score you asked for, and you got the best effort. `infeasible_size` means the byte cap and the quality floor could not both hold. `skipped_no_improvement` means no encode beat your original, so the original came back untouched with `compressionRatio: 1` and `verdict: "passthrough"`. Set `forceReencode: true` to get the re-encode anyway.
+
+`verdict` maps the score to a label. For images: 90+ is `visually_lossless`, 70+ is `high`, 50+ is `medium`, below that `low`. For video on VMAF: 95+, 90+, and 80+ (`acceptable`).
+
+## Targets
+
+`target` takes one of four shapes:
+
+| Shape | Example | What the search does |
+|---|---|---|
+| Named tier | `"visually-lossless"`, `"balanced"`, `"efficient"` | Finds the smallest file clearing that tier's score |
+| Quality number | `85` | Same, with your own 1-100 score as the bar |
+| Byte budget | `{ "maxSize": "500kb" }` or `{ "maxBytes": 512000 }` | Finds the best-looking file under the cap and reports the score it got |
+| Bitrate | `{ "bitrate": 128 }` | One encode at that bitrate in kbps, no search |
+
+The tier thresholds per medium: images clear SSIMULACRA2 90 / 85 / 78, video clears VMAF 96 / 93 / 88. Audio has no metric loop; tiers map to a channel-aware Opus bitrate ladder, so a mono voice track gets half the budget of stereo music.
+
+## Codecs
+
+With `codec: "auto"`, the pick follows `compatibility`:
+
+| Medium | `modern` (~90% reach) | `broad` (~99%, default) | `legacy` (~100%) |
+|---|---|---|---|
+| Image | JPEG XL | AVIF | JPEG |
+| Video | AV1 | H.264 | H.264 |
+| Audio | Opus | Opus | AAC |
+
+Or pin one: `av1`, `hevc`, `h264`, `vp9`, `avif`, `jxl`, `jpegli`, `webp`, `png`, `opus`, `aac`, `mp3`, `flac`, `alac`. The lossless-only codecs (`png`, `flac`, `alac`) always encode losslessly; combined with a byte budget, the report tells you whether the lossless file fit.
+
+`for: "archive"` skips the lossy ladder entirely and produces a lossless master: PNG for images, FFV1 in MKV for video, FLAC for audio.
+
+## Predict without encoding
+
+`dryRun: true` runs the search and returns the report with a predicted `outputBytes`, but writes no file and uploads nothing. `output.file` is `null`, the same shape as a data job. Use it to quote a compression before committing to it.
+
+## Parameters
+
+<ParamField body="for" type="string">
+  Delivery posture. `"web"` resolves the defaults to sRGB + stripped metadata; `"archive"` resolves to lossless with everything preserved. Any explicit field you set wins over the profile.
+</ParamField>
+
+<ParamField body="target" type="string | number | object" default="balanced">
+  The compression target. One of the four shapes above.
+</ParamField>
+
+<ParamField body="compatibility" type="string" default="broad">
+  Decode reach `codec: "auto"` must guarantee: `"modern"`, `"broad"`, or `"legacy"`.
+</ParamField>
+
+<ParamField body="codec" type="string" default="auto">
+  Output codec, or `"auto"` to follow the compatibility ladder.
+</ParamField>
+
+<ParamField body="maxResolution" type="string | number | null" default="null">
+  Cap the longest edge: a pixel count or a rung like `"1080p"` / `"720p"`. Images downscale before encoding; video scales in-encode and the VMAF score is measured against the full-resolution source.
+</ParamField>
+
+<ParamField body="alpha" type="string" default="preserve">
+  Transparency: `"preserve"`, `"flatten"` (onto white), or a `"#RRGGBB"` fill color.
+</ParamField>
+
+<ParamField body="metadata" type="string" default="colorOnly">
+  `"all"` keeps everything, `"colorOnly"` strips EXIF and GPS (ICC preservation is best-effort), `"none"` strips all.
+</ParamField>
+
+<ParamField body="effort" type="string" default="balanced">
+  `"fast"`, `"balanced"`, or `"thorough"` — trades encode time for extra compression on every codec that has a speed knob.
+</ParamField>
+
+<ParamField body="forceReencode" type="boolean" default="false">
+  Re-encode even when the result would not beat the original.
+</ParamField>
+
+<ParamField body="dryRun" type="boolean" default="false">
+  Return the predicted report without producing a file.
+</ParamField>
+
+<ParamField body="video" type="object">
+  Video-only policies. `audioTracks`: `"all"` (default), `"primary"`, or `"none"`. `subtitles`: `"strip"` (default) or `"preserve"` (best-effort copy; fails when the output container cannot hold the codec).
+</ParamField>
+
+<ParamField body="audio" type="object">
+  Audio-only policies. `loudnessLufs`: normalize to an integrated LUFS target such as `-14`, or `null` (default) for off. `channels`: `"preserve"` (default), `"mono"`, or `"stereo"`.
+</ParamField>
+
+<ParamField body="tuning" type="object">
+  Expert knobs. `metric`: `"auto"` (default), `"ssimulacra2"`, or `"vmaf"` to override the scoring oracle. `floor`: a hard minimum score the output must never drop below, in any mode.
+</ParamField>
+
+<ParamField body="timeout" type="integer" default="plan maximum">
+  Max execution time in seconds. Plan caps apply, same as [FFmpeg](/jobs/ffmpeg#parameters).
+</ParamField>
+
+## How the search behaves
+
+The search is a binary search over the encoder's quality scale, so a job costs about 7 probe encodes at most, each scored against the source. Videos longer than 12 seconds probe on three 2-second samples instead of the full file, and only the final encode runs over everything. A byte-budget search always encodes the full file, because the budget is exact.
+
+Compression ratios depend on the input. A camera original shrinks hard; a file that is already well-compressed often comes back as `skipped_no_improvement`, which is the job telling you the original was already the smallest honest answer.
+
+## Errors
+
+A malformed request (an unknown codec name, a removed tuning knob, two target goals at once) returns `VALIDATION_ERROR` on `POST /jobs` before anything is billed. A URL that resolves somewhere Rendobar won't fetch from returns `INPUT_URL_BLOCKED`.
+
+After the job starts, failures carry the standard `error` shape. `INPUT_FETCH_FAILED` follows the same retryable rules as [ffprobe](/jobs/ffprobe#errors). An infeasible target is not an error: the job completes with `status: "infeasible_quality"` or `"infeasible_size"` in the report and the best file the search found.
+
+## See also
+
+- [Job output](/concepts/job#the-output): the output shape every job returns
+- [ffprobe](/jobs/ffprobe): inspect a file before deciding how to compress it
+- [FFmpeg](/jobs/ffmpeg): full manual control when you want to write the command yourself
+- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling

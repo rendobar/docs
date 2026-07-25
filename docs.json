@@ -43,6 +43,7 @@
               "jobs/ffmpeg",
               "jobs/ffprobe",
               "jobs/compose",
+              "jobs/compress",
               {
                 "group": "Captions",
                 "icon": "closed-captioning",
