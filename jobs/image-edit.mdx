@@ -1,0 +1,257 @@
+---
+title: "Edit an image with an instruction"
+sidebarTitle: "Image edit"
+description: "Use a written instruction to edit one to four reference images on hosted diffusion models. Swap a background, restyle, or compose."
+icon: "wand-magic-sparkles"
+keywords: ["image editing api", "instruction image edit api", "ai image edit api", "qwen image edit api", "flux kontext api", "background swap api", "restyle image api", "reference image edit", "compose images api"]
+canonical: "https://rendobar.com/docs/jobs/image-edit"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/jobs/image-edit/#article",
+      "headline": "Edit an image with an instruction",
+      "description": "Use a written instruction to edit one to four reference images on hosted diffusion models. Swap a background, restyle, or compose.",
+      "datePublished": "2026-07-26",
+      "dateModified": "2026-07-26",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+`image.edit` takes one to four reference images and a written instruction, then produces a new image on a hosted diffusion model. No masks and no coordinates. You describe the change in plain language and the model applies it. The result is a webp file returned as a signed URL.
+
+This is one product in [Rendobar's Generation API](/concepts/generation).
+
+## Edit an image
+
+Reference images go in `inputs.images` as an array of URLs. The instruction goes in `params.prompt`.
+
+<CodeGroup>
+
+```ts SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.run({
+  type: "image.edit",
+  inputs: { images: ["https://cdn.rendobar.com/assets/examples/photo.jpg"] },
+  params: {
+    prompt: "Place the product on a pale grey studio backdrop with a soft shadow underneath",
+  },
+});
+
+console.log(outputUrl(job)); // signed URL to the edited webp
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image.edit",
+    "inputs": { "images": ["https://cdn.rendobar.com/assets/examples/photo.jpg"] },
+    "params": { "prompt": "Place the product on a pale grey studio backdrop with a soft shadow underneath" }
+  }'
+# Returns { "data": { "id": "job_...", "status": "waiting" } }.
+# Poll GET /jobs/{id} until "status": "complete".
+```
+
+```python Python
+import requests, time
+
+base = "https://api.rendobar.com"
+headers = {"Authorization": "Bearer rb_YOUR_KEY"}
+
+job = requests.post(
+    f"{base}/jobs",
+    headers=headers,
+    json={
+        "type": "image.edit",
+        "inputs": {"images": ["https://cdn.rendobar.com/assets/examples/photo.jpg"]},
+        "params": {"prompt": "Place the product on a pale grey studio backdrop with a soft shadow underneath"},
+    },
+).json()["data"]
+
+while job["status"] not in ("complete", "failed", "cancelled"):
+    time.sleep(1)
+    job = requests.get(f"{base}/jobs/{job['id']}", headers=headers).json()["data"]
+
+print(job["output"]["file"]["url"])  # the edited webp
+```
+
+</CodeGroup>
+
+Each URL can be a public link or an [uploaded asset's](/sdk#uploads) content URL. The output size follows the first reference image unless you set `width` and `height`.
+
+## Reference images
+
+`inputs.images` accepts one to four URLs. The per-model cap is tighter than the schema ceiling, so a request that clears the schema can still be rejected against the resolved model.
+
+| Model | Reference images |
+|---|---|
+| `flux-2-klein-4b` (economy) | Up to 4 |
+| `qwen-image-edit-2511-lightning` (standard) | Up to 3 |
+| `qwen-image-edit-2511` (premium) | Up to 3 |
+
+Passing more images than the resolved model accepts returns `VALIDATION_ERROR` before anything is billed. Multiple references let you compose a scene, for example a product from one image on a background from another.
+
+## Tiers and models
+
+Set `model` to a tier alias or pin an exact model id. Omit it and you get the `economy` tier. Aliases can be re-pointed as the catalog grows, so pin an exact id when you need a result to stay stable.
+
+| Tier | Model | Est. USD per image | Reference images | Controls |
+|---|---|---|---|---|
+| `economy` (default) | `flux-2-klein-4b` | 0.0009 | Up to 4 | prompt only |
+| `standard` | `qwen-image-edit-2511-lightning` | 0.0024 | Up to 3 | steps (4 to 8) |
+| `premium` | `qwen-image-edit-2511` | 0.033 | Up to 3 | steps (20 to 40), guidance, negative prompt |
+
+<Info>
+The USD figures are per-image cost estimates, the same values [`GET /models`](#discover-models) returns. They are estimates, not a fixed price. Jobs bill on the compute they use, cost-plus. See [credits and billing](/concepts/credits).
+</Info>
+
+## Model-specific controls
+
+Tier aliases accept the base fields only. To use `steps`, `guidance`, or `negativePrompt`, pin an exact model id. Only `qwen-image-edit-2511` accepts `guidance` and `negativePrompt`. `flux-2-klein-4b` fixes its own step count and exposes the base fields only.
+
+<CodeGroup>
+
+```ts SDK
+await client.jobs.run({
+  type: "image.edit",
+  inputs: { images: ["https://cdn.rendobar.com/assets/examples/photo.jpg"] },
+  params: {
+    prompt: "Turn the daytime sky into a clear starry night",
+    model: "qwen-image-edit-2511",
+    steps: 30,
+    guidance: 4,
+    negativePrompt: "artifacts, halos",
+  },
+});
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image.edit",
+    "inputs": { "images": ["https://cdn.rendobar.com/assets/examples/photo.jpg"] },
+    "params": {
+      "prompt": "Turn the daytime sky into a clear starry night",
+      "model": "qwen-image-edit-2511",
+      "steps": 30,
+      "guidance": 4,
+      "negativePrompt": "artifacts, halos"
+    }
+  }'
+```
+
+```python Python
+requests.post(
+    f"{base}/jobs",
+    headers=headers,
+    json={
+        "type": "image.edit",
+        "inputs": {"images": ["https://cdn.rendobar.com/assets/examples/photo.jpg"]},
+        "params": {
+            "prompt": "Turn the daytime sky into a clear starry night",
+            "model": "qwen-image-edit-2511",
+            "steps": 30,
+            "guidance": 4,
+            "negativePrompt": "artifacts, halos",
+        },
+    },
+)
+```
+
+</CodeGroup>
+
+## The output
+
+A completed job carries a single webp file in `output.file`, typed `image`. `output.data` is `null`.
+
+```json
+{
+  "data": null,
+  "file": {
+    "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+    "path": "output.webp",
+    "type": "image",
+    "size": 498000,
+    "meta": { "format": "webp", "width": 1024, "height": 1024 }
+  },
+  "files": [
+    { "url": "https://api.rendobar.com/dl/job_abc123?token=<token>", "path": "output.webp", "type": "image", "size": 498000, "meta": { "format": "webp", "width": 1024, "height": 1024 } }
+  ],
+  "expiresAt": 1735689600000
+}
+```
+
+The full [output shape](/concepts/job#the-output) is the same for every job type.
+
+## Parameters
+
+<ParamField body="inputs.images" type="string[]" required>
+  One to four reference image URLs. A public link or an uploaded asset's content URL. The per-model cap applies.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The change to make, in plain language. No masks, no coordinates. Up to 4000 characters.
+</ParamField>
+
+<ParamField body="model" type="string" default="economy">
+  A tier alias (`economy`, `standard`, `premium`) or an exact model id. A tier lets the platform pick the model. A pinned id unlocks that model's own controls.
+</ParamField>
+
+<ParamField body="width" type="integer">
+  Requested output width in pixels. Defaults to the first reference image. Snapped to what the model can render.
+</ParamField>
+
+<ParamField body="height" type="integer">
+  Requested output height in pixels. Defaults to the first reference image.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  A fixed seed makes the result reproducible. Omit it for a fresh result each time.
+</ParamField>
+
+<ParamField body="enhancePrompt" type="boolean">
+  Rewrite the instruction for the model before editing. The default is per model, so omit it to keep the model's own default. `qwen-image-edit-2511` enhances by default, the lighter models do not.
+</ParamField>
+
+<ParamField body="steps" type="integer">
+  Denoise steps. More steps means more detail and more time. Requires a pinned model that exposes steps. The accepted range depends on the model.
+</ParamField>
+
+<ParamField body="guidance" type="number">
+  How strictly to follow the instruction. Higher is stricter. Range 1 to 10. Requires `qwen-image-edit-2511`.
+</ParamField>
+
+<ParamField body="negativePrompt" type="string">
+  What to keep out of the edited image. Up to 1000 characters. Requires `qwen-image-edit-2511`.
+</ParamField>
+
+## Discover models
+
+`GET /models?job=image.edit` lists the edit models with their reference-image caps, controls, and estimated cost.
+
+```bash
+curl "https://api.rendobar.com/models?job=image.edit" \
+  -H "Authorization: Bearer rb_YOUR_KEY"
+```
+
+## See also
+
+- [Generation API](/concepts/generation): the modalities and the shared model catalog
+- [Image generate](/jobs/image-generate): make an image from a text prompt
+- [Job output](/concepts/job#the-output): the output shape every job returns
+- [SDK](/sdk): `jobs.run`, uploads, and reading the output
+- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling

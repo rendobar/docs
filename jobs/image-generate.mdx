@@ -1,0 +1,280 @@
+---
+title: "Generate an image from a prompt"
+sidebarTitle: "Image generate"
+description: "Generate a webp image from a text prompt on hosted diffusion models. Pick an economy, standard, or premium tier, or pin an exact model id."
+icon: "image"
+keywords: ["image generation api", "text to image api", "flux api", "qwen image api", "ai image api", "diffusion api", "generate image from prompt", "webp image api", "text to image rest api"]
+canonical: "https://rendobar.com/docs/jobs/image-generate"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/jobs/image-generate/#article",
+      "headline": "Generate an image from a prompt",
+      "description": "Generate a webp image from a text prompt on hosted diffusion models. Pick an economy, standard, or premium tier, or pin an exact model id.",
+      "datePublished": "2026-07-26",
+      "dateModified": "2026-07-26",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+`image.generate` turns a text prompt into an image on a hosted diffusion model. Ask for a tier and the platform picks the model, or pin an exact model id to reach its own controls. The result is a webp file returned as a signed URL, the same async job shape as everything else on Rendobar.
+
+This is one product in [Rendobar's Generation API](/concepts/generation).
+
+## Generate an image
+
+<CodeGroup>
+
+```ts SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+// jobs.run submits and waits for the finished job in one call.
+const job = await client.jobs.run({
+  type: "image.generate",
+  params: {
+    prompt:
+      "A ceramic pour-over coffee dripper on a walnut counter, morning light from the left, soft shadows",
+    width: 1024,
+    height: 1024,
+  },
+});
+
+console.log(outputUrl(job)); // signed URL to the webp
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image.generate",
+    "params": {
+      "prompt": "A ceramic pour-over coffee dripper on a walnut counter, morning light from the left, soft shadows",
+      "width": 1024,
+      "height": 1024
+    }
+  }'
+# Returns { "data": { "id": "job_...", "status": "waiting" } }.
+# Poll GET /jobs/{id} until "status": "complete".
+```
+
+```python Python
+import requests, time
+
+base = "https://api.rendobar.com"
+headers = {"Authorization": "Bearer rb_YOUR_KEY"}
+
+job = requests.post(
+    f"{base}/jobs",
+    headers=headers,
+    json={
+        "type": "image.generate",
+        "params": {
+            "prompt": "A ceramic pour-over coffee dripper on a walnut counter, morning light from the left, soft shadows",
+            "width": 1024,
+            "height": 1024,
+        },
+    },
+).json()["data"]
+
+while job["status"] not in ("complete", "failed", "cancelled"):
+    time.sleep(1)
+    job = requests.get(f"{base}/jobs/{job['id']}", headers=headers).json()["data"]
+
+print(job["output"]["file"]["url"])  # the webp
+```
+
+</CodeGroup>
+
+No `inputs` are needed. The prompt is the whole request. Every generation job is async, so you submit, then poll, [wait](/sdk#wait), or receive a [webhook](/guides/webhooks).
+
+## The output
+
+A completed job carries a single webp file in `output.file`. `output.data` is `null`, because generation writes a file rather than computing an answer.
+
+```json
+{
+  "data": null,
+  "file": {
+    "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+    "path": "output.webp",
+    "type": "image",
+    "size": 512000,
+    "meta": { "format": "webp", "width": 1024, "height": 1024 }
+  },
+  "files": [
+    { "url": "https://api.rendobar.com/dl/job_abc123?token=<token>", "path": "output.webp", "type": "image", "size": 512000, "meta": { "format": "webp", "width": 1024, "height": 1024 } }
+  ],
+  "expiresAt": 1735689600000
+}
+```
+
+The real dimensions are in `output.file.meta`. Each model snaps your requested `width` and `height` to a size it can render, so the returned image can differ from what you asked for. The full [output shape](/concepts/job#the-output) is the same for every job type.
+
+## Tiers and models
+
+Set `model` to a tier alias for a price and quality posture without naming a model, or pin an exact model id to reach that model's own controls. Omit `model` and you get the `economy` tier.
+
+<CodeGroup>
+
+```ts SDK
+// Tier alias: the platform picks the model.
+await client.jobs.run({
+  type: "image.generate",
+  params: { prompt: "A red bicycle leaning on a brick wall", model: "premium" },
+});
+
+// Pinned model id: unlocks that model's own controls.
+await client.jobs.run({
+  type: "image.generate",
+  params: {
+    prompt: "A red bicycle leaning on a brick wall",
+    model: "qwen-image-2512",
+    steps: 40,
+    guidance: 4.5,
+    negativePrompt: "blurry, low quality",
+  },
+});
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image.generate",
+    "params": { "prompt": "A red bicycle leaning on a brick wall", "model": "premium" }
+  }'
+```
+
+```python Python
+requests.post(
+    f"{base}/jobs",
+    headers=headers,
+    json={
+        "type": "image.generate",
+        "params": {"prompt": "A red bicycle leaning on a brick wall", "model": "premium"},
+    },
+)
+```
+
+</CodeGroup>
+
+The three tiers map to these models today. Aliases can be re-pointed as the catalog grows, so pin an exact id when you need a result to stay stable.
+
+| Tier | Model | Est. USD per image | Controls | Best for |
+|---|---|---|---|---|
+| `economy` (default) | `flux-2-klein-4b` | 0.0009 | prompt only | Drafts and fast iteration at the lowest cost |
+| `standard` | `ernie-image-turbo` | 0.0027 | prompt only | Everyday images with balanced quality |
+| `premium` | `qwen-image-2512` | 0.0394 | steps, guidance, negative prompt | Highest fidelity with full control |
+
+You can also pin a model that no tier points at:
+
+| Model | Est. USD per image | Controls | Best for |
+|---|---|---|---|
+| `z-image-turbo` | 0.002 | steps (8 to 12) | A very fast turbo model |
+| `qwen-image-2512-lightning` | 0.0037 | steps (4 to 8) | Qwen quality at turbo speed |
+| `flux-2-dev` | 0.0378 | steps (10 to 50), guidance | FLUX.2 quality with guidance control |
+
+<Info>
+The USD figures are per-image cost estimates, the same values [`GET /models`](#discover-models) returns. They are estimates, not a fixed price. Jobs bill on the compute they use, cost-plus. See [credits and billing](/concepts/credits).
+</Info>
+
+## Model-specific controls
+
+Tier aliases accept the base fields only. To use `steps`, `guidance`, or `negativePrompt`, pin an exact model id. Sending a control the resolved model does not support returns `VALIDATION_ERROR` before anything is billed.
+
+| Control | Models that accept it | Range |
+|---|---|---|
+| `steps` | `z-image-turbo`, `qwen-image-2512`, `qwen-image-2512-lightning`, `flux-2-dev` | Per model, see table above |
+| `guidance` | `qwen-image-2512`, `flux-2-dev` | 1 to 10 |
+| `negativePrompt` | `qwen-image-2512` | Up to 1000 characters |
+
+`flux-2-klein-4b` and `ernie-image-turbo` fix their own step count and expose the base fields only.
+
+## Parameters
+
+<ParamField body="prompt" type="string" required>
+  What you want, in plain language. No special syntax. Up to 4000 characters.
+</ParamField>
+
+<ParamField body="model" type="string" default="economy">
+  A tier alias (`economy`, `standard`, `premium`) or an exact model id. A tier lets the platform pick the model. A pinned id unlocks that model's own controls.
+</ParamField>
+
+<ParamField body="width" type="integer">
+  Requested output width in pixels. Snapped to what the model can render. The real size comes back in `output.file.meta`.
+</ParamField>
+
+<ParamField body="height" type="integer">
+  Requested output height in pixels. Snapped to what the model can render.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  A fixed seed makes the result reproducible. Omit it for a fresh random image each time.
+</ParamField>
+
+<ParamField body="enhancePrompt" type="boolean">
+  Rewrite the prompt for the model before generating. The default is per model, so omit it to keep the model's own default. `qwen-image-2512` enhances by default, the lighter models do not.
+</ParamField>
+
+<ParamField body="steps" type="integer">
+  Denoise steps. More steps means more detail and more time. Requires a pinned model that exposes steps. The accepted range depends on the model.
+</ParamField>
+
+<ParamField body="guidance" type="number">
+  How strictly to follow the prompt. Higher is stricter. Range 1 to 10. Requires `qwen-image-2512` or `flux-2-dev`.
+</ParamField>
+
+<ParamField body="negativePrompt" type="string">
+  What to keep out of the image. Up to 1000 characters. Requires `qwen-image-2512`.
+</ParamField>
+
+## Discover models
+
+`GET /models` lists every generation model with its tier, capabilities, step range, and estimated cost, so a model picker never has to hardcode the catalog. Filter to one job type with `?job=`.
+
+```bash
+curl "https://api.rendobar.com/models?job=image.generate" \
+  -H "Authorization: Bearer rb_YOUR_KEY"
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "flux-2-klein-4b",
+      "jobs": ["image.generate", "image.edit"],
+      "tier": "economy",
+      "estCostUsd": 0.0009,
+      "maxRefImages": 4,
+      "steps": null,
+      "supports": { "negativePrompt": false, "guidance": false },
+      "enhanceDefault": false,
+      "status": "active"
+    }
+  ]
+}
+```
+
+## Errors
+
+A bad request fails on `POST /jobs` before anything is billed. An unknown model id, or a control the resolved model does not support, returns `VALIDATION_ERROR`. After the job starts, failures carry the standard [error](/support/errors) shape.
+
+## See also
+
+- [Generation API](/concepts/generation): the modalities and the shared model catalog
+- [Image edit](/jobs/image-edit): change an existing image from an instruction
+- [Job output](/concepts/job#the-output): the output shape every job returns
+- [SDK](/sdk): `jobs.run`, `jobs.wait`, and reading the output
+- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling

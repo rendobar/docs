@@ -34,6 +34,7 @@
             "group": "Concepts",
             "pages": [
               "concepts/job",
+              "concepts/generation",
               "guides/webhooks",
               "guides/callbacks"
             ]
@@ -51,6 +52,14 @@
                 "pages": [
                   "jobs/captions/animate",
                   "jobs/captions/burn"
+                ]
+              },
+              {
+                "group": "Generate",
+                "icon": "sparkles",
+                "pages": [
+                  "jobs/image-generate",
+                  "jobs/image-edit"
                 ]
               }
             ]
