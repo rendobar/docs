@@ -64,6 +64,7 @@ flowchart LR
     running --> failed
     waiting --> cancelled
     dispatched --> cancelled
+    running --> cancelled
 ```
 
 | Status | What it means |
@@ -75,7 +76,7 @@ flowchart LR
 | `failed` | Errored. Read `error.code` and `error.message`. |
 | `cancelled` | Stopped before it finished. |
 
-On any terminal status the job is billed for the compute it used, and a [webhook](/guides/webhooks) fires if you configured one. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its type's time limit fails with `RUNNER_TIMEOUT` and is not charged.
+On any terminal status the job is billed for the compute it used, and a [webhook](/guides/webhooks) fires if you configured one. A job that never started settles free. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its plan's time limit fails with `JOB_TIMEOUT` and is billed for the compute it consumed. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged. Cancelling a `running` job stops the upstream execution too.
 
 ## The output
 

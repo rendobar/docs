@@ -73,7 +73,7 @@ Call `list_job_types` first. It returns every active job type fresh, so it never
 | `list_jobs` | Recent jobs, filterable by `status` and `type`. | `{ jobs[], total }` |
 | `probe_media` | Run ffprobe against a media URL as an async job. Poll `get_job` for the normalized summary and full report. | `{ jobId, status }` |
 | `get_account` | Credit balance, plan limits, active jobs, and rate limit usage. | `{ balance, plan, limits }` |
-| `cancel_job` | Cancel a job still `waiting` or `dispatched`. | `{ id, status: "cancelled" }` |
+| `cancel_job` | Cancel a `waiting`, `dispatched` or `running` job. | `{ id, status: "cancelled" }` |
 | `upload_media` | Open an upload session. Presigned URLs for shell-capable callers, or a `pageUrl` for the user to upload from their own device. | `{ session, pageUrl, files[] }` |
 | `complete_upload` | Finalize an asset after its bytes land in storage. | `{ asset: { id, url, status } }` |
 | `get_upload` | Check an upload session's progress. `wait: true` blocks up to 45 seconds. | `{ status, assets[] }` |
