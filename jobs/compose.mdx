@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/jobs/compose"
       "headline": "Compose: render from a timeline",
       "description": "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects.",
       "datePublished": "2026-06-21",
-      "dateModified": "2026-06-22",
+      "dateModified": "2026-07-30",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -327,15 +327,19 @@ A scene's clips can omit `start` and `length` to span the whole scene. Every cli
 
 ### Output
 
-The `output` object controls the render target.
+The `output` object controls the render target. Provide either an explicit `resolution` or a named `size` preset.
 
 | Field | Values |
 | --- | --- |
 | `format` | `mp4` (default), `webm`, `gif` (no audio), `mp3` (audio only), `jpg`, `png` (still frame) |
-| `resolution` | `{ width, height }` (integer pixels) |
-| `fps` | number |
-| `videoCodec` | `h264`, `vp9` (optional; per-format default otherwise) |
+| `resolution` | `{ width, height }` (integer pixels). Wins over `size` when both are set |
+| `size` | Named preset: `360p`, `720p`, `1080p`, `1440p`, `4k`, `tiktok`, `reels`, `shorts`, `instagram-story`, `instagram-feed`, `square`, `youtube-hd`, `youtube-4k`, `x-landscape`, `linkedin` |
+| `fps` | Frame rate (default `30`) |
+| `quality` | Encoder ladder: `draft` (fast preview), `standard` (default, web delivery), `high`, `max`. Sets rate factor, encoder speed, and audio bitrate together |
+| `videoCodec` | `h264`, `vp9` (optional, per-format default otherwise) |
 | `audioCodec` | `aac`, `opus`, `mp3` (optional) |
+| `crf` | Advanced: constant rate factor, lower is higher quality. Overrides `quality`. `0`..`51` for h264, up to `63` for vp9 |
+| `encoderPreset` | Advanced: h264 speed preset from `ultrafast` to `veryslow`. Slower means smaller files at the same quality |
 | `frameTime` | second of the timeline to capture for `jpg` / `png` (default `0`) |
 
 ### Assets
@@ -344,11 +348,11 @@ A clip's `asset` is one of:
 
 | `type` | Fields |
 | --- | --- |
-| `video` | `src`, `trim` `{ from, to }`, `volume` (default `1`) |
+| `video` | `src`, `trim` `{ from, to }` (seconds in the source), `volume` (default `1`, `0` mutes) |
 | `image` | `src` |
 | `audio` | `src`, `trim`, `volume`, `fadeIn`, `fadeOut` (seconds) |
 | `text` | `text`, `style` |
-| `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip |
+| `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip. Every clip field below applies to a composition clip too, except `speed` (set speed on the clips inside the composition instead) |
 
 ### Clip fields
 
@@ -356,15 +360,16 @@ Every clip has `asset`, `start`, `length`, plus any of:
 
 | Field | What it does |
 | --- | --- |
-| `opacity` | `0`..`1`, or keyframes `[{ time, value, easing: step \| linear \| smooth }]` |
-| `transform` | `position {x,y}`, `scale`, `rotate`, `anchor` (`center` \| `topLeft`), `fit` (`contain` \| `fill`), `animateTo` (Ken Burns end state) |
-| `crop` | `top` / `right` / `bottom` / `left`, each a percent string like `"10%"` |
-| `speed` | playback rate (`0.5` = slow motion, `2` = fast, and pitch shifts with speed) |
+| `opacity` | `0`..`1`, or keyframes `[{ time, value, easing: step \| linear \| smooth }]`. Keyframe `time` is in seconds from the clip's start |
+| `transform` | `position {x,y}` (percent strings, the clip's center by default), `scale`, `rotate` (degrees), `anchor` (`center` \| `topLeft`), `fit` (`contain` \| `fill`), `animateTo` (Ken Burns end state). Without `position` the clip pins to the top-left corner |
+| `transform.animateTo` | End state for an eased Ken Burns move over the clip's duration: any of `position`, `scale`, `rotate`. Omitted fields keep their start value, so `animateTo: { scale: 1.4 }` is a plain zoom |
+| `crop` | `top` / `right` / `bottom` / `left`, each a percent string like `"10%"`. The kept region scales back up to fill the frame |
+| `speed` | playback rate (`0.5` = slow motion, `2` = fast, and pitch shifts with speed). Avoid a slow-motion clip as the outgoing side of a transition, it can run out of frames mid-overlap |
 | `color` | `brightness` (-1..1), `contrast` (0..4), `saturation` (0..3), `gamma` (0.1..10), `hue` (-180..180), `temperature` (1000..40000 K) |
 | `filter` | `greyscale`, `negative`, `boost`, `muted`, `lighten`, `darken`, `contrast` (mutually exclusive with `color`) |
 | `blur` / `sharpen` | gaussian blur strength / unsharp amount |
-| `chromaKey` | `color` (hex), `similarity` (0..1) |
-| `blendMode` | `normal`, `multiply`, `screen`, `overlay`, `darken`, `lighten`, `add`, `difference` |
+| `chromaKey` | `color` (hex), `similarity` (0..1, default 0.2). Key a clip on an overlay track so the removed color reveals the track below |
+| `blendMode` | `normal` (default), `multiply`, `screen`, `overlay`, `darken`, `lighten`, `add`, `difference`. Applies where the clip meets the layer below it |
 | `pan` | stereo balance, `-1` (left) to `1` (right) |
 | `flip` | `{ horizontal, vertical }` |
 
@@ -380,13 +385,24 @@ Place between two clips on a track: `{ "type": "transition", "transition": <kind
 | `zoom` | B grows in from the center |
 | `none` | Hard cut, no blend |
 
+### Scenes
+
+The scene-first shape, when you use `scenes` instead of `tracks`:
+
+| Field | Notes |
+| --- | --- |
+| `scenes[].duration` | Seconds. Defaults to the longest clip in the scene |
+| `scenes[].transition` | The transition INTO this scene from the previous one: `{ transition, duration, direction? }`, same kinds as the table above |
+| `scenes[].clips` | Clips as in tracks mode. `start` and `length` are optional and default to spanning the scene |
+| `overlays` | Clips composited over the whole video (a logo, a watermark, a persistent title). `start` and `length` are required here |
+
 ### Text style
 
 Fields on a text asset's `style`:
 
 | Field | Notes |
 | --- | --- |
-| `font` | Font family name |
+| `font` | Font family name. Available: `Inter`, `Roboto`, `Montserrat`, `Poppins`, `Oswald`, `Anton`, `Bebas Neue` |
 | `size` | Point size |
 | `weight` | 100..1000 (default 400) |
 | `color` | Hex fill |
