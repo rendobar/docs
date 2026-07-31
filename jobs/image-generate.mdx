@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/jobs/image-generate"
       "headline": "Generate an image from a prompt",
       "description": "Generate a webp image from a text prompt on hosted diffusion models. Pick an economy, standard, or premium tier, or pin an exact model id.",
       "datePublished": "2026-07-26",
-      "dateModified": "2026-07-26",
+      "dateModified": "2026-07-31",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -121,6 +121,30 @@ A completed job carries a single webp file in `output.file`. `output.data` is `n
 
 The real dimensions are in `output.file.meta`. Each model snaps your requested `width` and `height` to a size it can render, so the returned image can differ from what you asked for. The full [output shape](/concepts/job#the-output) is the same for every job type.
 
+## Watch it render
+
+A generation job emits `job.preview` events while the model denoises, each carrying a small webp frame. Subscribe with the SDK to show the picture resolving instead of a spinner.
+
+```ts
+const sub = client.realtime.subscribeJob(created.id, {
+  onPreview: (e) => {
+    // e.data is base64 webp, roughly 256px on its long edge.
+    setPreview(`data:image/webp;base64,${e.data}`);
+    setBlur((1 - (e.progress ?? 0)) * 20); // ease the blur out as it sharpens
+  },
+  onComplete: (job) => sub.unsubscribe(),
+});
+```
+
+| Field | Meaning |
+|---|---|
+| `seq` | Monotonic per job. Drop any frame whose `seq` is at or below the last one you rendered. |
+| `progress` | Denoise progress from 0 to 1 at capture, or `null` when the model does not report it. |
+| `width` / `height` | Dimensions of the preview frame, not of the final image. |
+| `data` | Base64 webp, roughly 256px on its long edge. |
+
+Previews are decoration and never hold up a job. They are ephemeral: nothing is replayed on reconnect, and a late subscriber sees only the newest frame. A model with no fast decoder emits none, and a four-step model resolves too late to be worth watching. Build for zero frames and treat anything you get as a bonus.
+
 ## Tiers and models
 
 Set `model` to a tier alias for a price and quality posture without naming a model, or pin an exact model id to reach that model's own controls. Omit `model` and you get the `economy` tier.
@@ -172,23 +196,27 @@ requests.post(
 
 The three tiers map to these models today. Aliases can be re-pointed as the catalog grows, so pin an exact id when you need a result to stay stable.
 
-| Tier | Model | Est. USD per image | Controls | Best for |
+| Tier | Model | Price | Controls when pinned | Best for |
 |---|---|---|---|---|
-| `economy` (default) | `flux-2-klein-4b` | 0.0009 | prompt only | Drafts and fast iteration at the lowest cost |
-| `standard` | `ernie-image-turbo` | 0.0027 | prompt only | Everyday images with balanced quality |
-| `premium` | `qwen-image-2512` | 0.0394 | steps, guidance, negative prompt | Highest fidelity with full control |
+| `economy` (default) | `flux-2-klein-4b` | `$` | prompt only | Drafts and fast iteration at the lowest cost |
+| `standard` | `z-image-turbo` | `$$` | steps (8 to 12) | Everyday images at turbo speed |
+| `premium` | `qwen-image-2512` | `$$$$` | steps, guidance, negative prompt | Highest fidelity with full control |
 
 You can also pin a model that no tier points at:
 
-| Model | Est. USD per image | Controls | Best for |
+| Model | Price | Controls | Best for |
 |---|---|---|---|
-| `z-image-turbo` | 0.002 | steps (8 to 12) | A very fast turbo model |
-| `qwen-image-2512-lightning` | 0.0037 | steps (4 to 8) | Qwen quality at turbo speed |
-| `flux-2-dev` | 0.0378 | steps (10 to 50), guidance | FLUX.2 quality with guidance control |
+| `flux-2-dev` | `$$$$` | steps (10 to 50), guidance | FLUX.2 quality with guidance control |
 
 <Info>
-The USD figures are per-image cost estimates, the same values [`GET /models`](#discover-models) returns. They are estimates, not a fixed price. Jobs bill on the compute they use, cost-plus. See [credits and billing](/concepts/credits).
+`Price` is the model's `priceTier`, a relative comparison from `$` to `$$$$`. It is not a per-image charge. Jobs bill on the compute they actually use, cost-plus, so a slower model on a bigger GPU costs more per image. See [credits and billing](/concepts/credits).
 </Info>
+
+### Models under review
+
+A model can be pulled from tier resolution while we re-evaluate its cost and quality. It stays in [`GET /models`](#discover-models) with `underReview: true`, and pinning it returns `VALIDATION_ERROR` at submit before anything is billed.
+
+`ernie-image-turbo` and `qwen-image-2512-lightning` are under review today. Use a tier, or pin one of the models above.
 
 ## Model-specific controls
 
@@ -196,11 +224,11 @@ Tier aliases accept the base fields only. To use `steps`, `guidance`, or `negati
 
 | Control | Models that accept it | Range |
 |---|---|---|
-| `steps` | `z-image-turbo`, `qwen-image-2512`, `qwen-image-2512-lightning`, `flux-2-dev` | Per model, see table above |
+| `steps` | `z-image-turbo`, `qwen-image-2512`, `flux-2-dev` | Per model, see table above |
 | `guidance` | `qwen-image-2512`, `flux-2-dev` | 1 to 10 |
 | `negativePrompt` | `qwen-image-2512` | Up to 1000 characters |
 
-`flux-2-klein-4b` and `ernie-image-turbo` fix their own step count and expose the base fields only.
+`flux-2-klein-4b` fixes its own step count and exposes the base fields only.
 
 ## Parameters
 
@@ -213,11 +241,11 @@ Tier aliases accept the base fields only. To use `steps`, `guidance`, or `negati
 </ParamField>
 
 <ParamField body="width" type="integer">
-  Requested output width in pixels. Snapped to what the model can render. The real size comes back in `output.file.meta`.
+  Requested output width in pixels, up to 4096. Snapped to what the model can render. The real size comes back in `output.file.meta`.
 </ParamField>
 
 <ParamField body="height" type="integer">
-  Requested output height in pixels. Snapped to what the model can render.
+  Requested output height in pixels, up to 4096. Snapped to what the model can render.
 </ParamField>
 
 <ParamField body="seed" type="integer">
@@ -225,7 +253,7 @@ Tier aliases accept the base fields only. To use `steps`, `guidance`, or `negati
 </ParamField>
 
 <ParamField body="enhancePrompt" type="boolean">
-  Rewrite the prompt for the model before generating. The default is per model, so omit it to keep the model's own default. `qwen-image-2512` enhances by default, the lighter models do not.
+  Rewrite the prompt for the model before generating. Off by default on every model in the catalog today. The default is per model (`enhanceDefault` in [`GET /models`](#discover-models)), so omit it to keep whatever the model ships with.
 </ParamField>
 
 <ParamField body="steps" type="integer">
@@ -242,7 +270,7 @@ Tier aliases accept the base fields only. To use `steps`, `guidance`, or `negati
 
 ## Discover models
 
-`GET /models` lists every generation model with its tier, capabilities, step range, and estimated cost, so a model picker never has to hardcode the catalog. Filter to one job type with `?job=`.
+`GET /models` lists every generation model with its tier, relative price, capabilities, and step range, so a model picker never has to hardcode the catalog. Filter to one job type with `?job=`.
 
 ```bash
 curl "https://api.rendobar.com/models?job=image.generate" \
@@ -256,7 +284,8 @@ curl "https://api.rendobar.com/models?job=image.generate" \
       "id": "flux-2-klein-4b",
       "jobs": ["image.generate", "image.edit"],
       "tier": "economy",
-      "estCostUsd": 0.0009,
+      "underReview": false,
+      "priceTier": "$",
       "maxRefImages": 4,
       "steps": null,
       "supports": { "negativePrompt": false, "guidance": false },
@@ -266,6 +295,8 @@ curl "https://api.rendobar.com/models?job=image.generate" \
   ]
 }
 ```
+
+Read `tier` to group models, `priceTier` to sort them by cost, and `underReview` to grey out the ones that will not run. `steps` is `null` on a model that fixes its own step count.
 
 ## Errors
 

@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/jobs/image-edit"
       "headline": "Edit an image with an instruction",
       "description": "Use a written instruction to edit one to four reference images on hosted diffusion models. Swap a background, restyle, or compose.",
       "datePublished": "2026-07-26",
-      "dateModified": "2026-07-26",
+      "dateModified": "2026-07-31",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -107,14 +107,16 @@ Passing more images than the resolved model accepts returns `VALIDATION_ERROR` b
 
 Set `model` to a tier alias or pin an exact model id. Omit it and you get the `economy` tier. Aliases can be re-pointed as the catalog grows, so pin an exact id when you need a result to stay stable.
 
-| Tier | Model | Est. USD per image | Reference images | Controls |
+| Tier | Model | Price | Reference images | Controls when pinned |
 |---|---|---|---|---|
-| `economy` (default) | `flux-2-klein-4b` | 0.0009 | Up to 4 | prompt only |
-| `standard` | `qwen-image-edit-2511-lightning` | 0.0024 | Up to 3 | steps (4 to 8) |
-| `premium` | `qwen-image-edit-2511` | 0.033 | Up to 3 | steps (20 to 40), guidance, negative prompt |
+| `economy` (default) | `flux-2-klein-4b` | `$` | Up to 4 | prompt only |
+| `standard` | `qwen-image-edit-2511-lightning` | `$$$` | Up to 3 | steps (4 to 8) |
+| `premium` | `qwen-image-edit-2511` | `$$$$` | Up to 3 | steps (20 to 40), guidance, negative prompt |
+
+Every `image.edit` model is reachable through a tier. There is no pin-only model on this job type today.
 
 <Info>
-The USD figures are per-image cost estimates, the same values [`GET /models`](#discover-models) returns. They are estimates, not a fixed price. Jobs bill on the compute they use, cost-plus. See [credits and billing](/concepts/credits).
+`Price` is the model's `priceTier`, a relative comparison from `$` to `$$$$`. It is not a per-image charge. Jobs bill on the compute they actually use, cost-plus. See [credits and billing](/concepts/credits).
 </Info>
 
 ## Model-specific controls
@@ -197,6 +199,19 @@ A completed job carries a single webp file in `output.file`, typed `image`. `out
 
 The full [output shape](/concepts/job#the-output) is the same for every job type.
 
+## Watch it render
+
+An edit job emits `job.preview` events while the model denoises, each carrying a small webp frame. Subscribe with the SDK to show the edit resolving instead of a spinner.
+
+```ts
+const sub = client.realtime.subscribeJob(created.id, {
+  onPreview: (e) => setPreview(`data:image/webp;base64,${e.data}`),
+  onComplete: (job) => sub.unsubscribe(),
+});
+```
+
+Previews are decoration and never hold up a job. The `standard` tier finishes in four steps, so it usually completes before a frame is worth showing. See [the field reference](/jobs/image-generate#watch-it-render) on the generate page.
+
 ## Parameters
 
 <ParamField body="inputs.images" type="string[]" required>
@@ -212,11 +227,11 @@ The full [output shape](/concepts/job#the-output) is the same for every job type
 </ParamField>
 
 <ParamField body="width" type="integer">
-  Requested output width in pixels. Defaults to the first reference image. Snapped to what the model can render.
+  Requested output width in pixels, up to 4096. Defaults to the first reference image. Snapped to what the model can render.
 </ParamField>
 
 <ParamField body="height" type="integer">
-  Requested output height in pixels. Defaults to the first reference image.
+  Requested output height in pixels, up to 4096. Defaults to the first reference image.
 </ParamField>
 
 <ParamField body="seed" type="integer">
@@ -224,7 +239,7 @@ The full [output shape](/concepts/job#the-output) is the same for every job type
 </ParamField>
 
 <ParamField body="enhancePrompt" type="boolean">
-  Rewrite the instruction for the model before editing. The default is per model, so omit it to keep the model's own default. `qwen-image-edit-2511` enhances by default, the lighter models do not.
+  Rewrite the instruction for the model before editing. Off by default on every model in the catalog today. The default is per model (`enhanceDefault` in [`GET /models`](#discover-models)), so omit it to keep whatever the model ships with.
 </ParamField>
 
 <ParamField body="steps" type="integer">
@@ -241,7 +256,7 @@ The full [output shape](/concepts/job#the-output) is the same for every job type
 
 ## Discover models
 
-`GET /models?job=image.edit` lists the edit models with their reference-image caps, controls, and estimated cost.
+`GET /models?job=image.edit` lists the edit models with their reference-image caps, controls, and relative price. The [response shape](/jobs/image-generate#discover-models) is the same for both generation job types.
 
 ```bash
 curl "https://api.rendobar.com/models?job=image.edit" \

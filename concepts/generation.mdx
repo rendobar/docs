@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/concepts/generation"
       "headline": "The Generation API",
       "description": "Generate images from a text prompt or edit them from an instruction on hosted diffusion models. One async API, one job shape, many models.",
       "datePublished": "2026-07-26",
-      "dateModified": "2026-07-26",
+      "dateModified": "2026-07-31",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -53,7 +53,7 @@ Tier aliases can be re-pointed to newer models as the catalog grows. Pin an exac
 
 ## Discover models
 
-`GET /models` returns the live catalog: every model with its supported jobs, tier, capabilities, step range, and an estimated per-image cost. Filter to one job type with `?job=`. Build a model picker against this endpoint instead of hardcoding the list.
+`GET /models` returns the live catalog: every model with its supported jobs, tier, relative price, capabilities, and step range. Filter to one job type with `?job=`. Build a model picker against this endpoint instead of hardcoding the list.
 
 ```bash
 curl "https://api.rendobar.com/models" \
@@ -67,22 +67,27 @@ curl "https://api.rendobar.com/models" \
       "id": "qwen-image-2512",
       "jobs": ["image.generate"],
       "tier": "premium",
-      "estCostUsd": 0.0394,
+      "underReview": false,
+      "priceTier": "$$$$",
       "maxRefImages": 0,
       "steps": { "default": 50, "min": 20, "max": 50 },
       "supports": { "negativePrompt": true, "guidance": true },
-      "enhanceDefault": true,
+      "enhanceDefault": false,
       "status": "active"
     }
   ]
 }
 ```
 
-The `estCostUsd` field is an estimate to help you compare models, not a fixed price. Jobs bill on the compute they use, cost-plus. See [credits and billing](/concepts/credits).
+`priceTier` compares models against each other, from `$` to `$$$$`. It is not a per-image charge, because jobs bill on the compute they actually use, cost-plus. See [credits and billing](/concepts/credits).
+
+A model with `underReview: true` is pulled from tier resolution while we re-evaluate its cost and quality. It stays listed so a caller pinning it can see why the submit was rejected, but no tier resolves to it and pinning it returns `VALIDATION_ERROR`.
 
 ## Same job, same shape
 
 A generation job is a [job](/concepts/job) like any other. You submit it to `POST /jobs`, it runs async, and you poll, [wait](/sdk#wait), or receive a [webhook](/guides/webhooks). The image jobs return a single webp file in `output.file`, with `output.data` set to `null`.
+
+One thing is specific to generation. While the model denoises, the job emits `job.preview` events carrying a small frame of the image as it resolves, so a client can show the picture arriving instead of a spinner. Previews are decoration: they are never replayed, and a model can emit none. See [watch it render](/jobs/image-generate#watch-it-render).
 
 ```ts
 import { createClient, outputUrl } from "@rendobar/sdk";
