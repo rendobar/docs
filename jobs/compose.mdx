@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/jobs/compose"
       "headline": "Compose: render from a timeline",
       "description": "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects.",
       "datePublished": "2026-06-21",
-      "dateModified": "2026-06-22",
+      "dateModified": "2026-07-30",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -201,11 +201,11 @@ A second track renders over the first. This lays an animated title over the vide
 ```json
 "tracks": [
   { "clips": [
-    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" }, "start": 0, "length": 5 }
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" }, "start": 0, "length": 3 }
   ] },
   { "clips": [
-    { "asset": { "type": "text", "text": "Coastal Escape", "style": { "size": 84 } },
-      "start": 0, "length": 5 }
+    { "asset": { "type": "text", "text": "Coastal Escape", "style": { "font": "Inter", "size": 84, "color": "#FFFFFF" } },
+      "start": 0, "length": 3 }
   ] }
 ]
 ```
@@ -218,7 +218,7 @@ Effects are fields on a clip. Stack as many as you like on one clip. Each exampl
 {
   "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" },
   "start": 0,
-  "length": 5,
+  "length": 3,
   "color": { "saturation": 1.2, "temperature": 6800 },
   "speed": 0.8,
   "transform": { "scale": 1.1, "animateTo": { "scale": 1.3 } }
@@ -305,17 +305,18 @@ A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`
 
 ## Scene-first authoring
 
-Tracks give you precise multi-track control. For a sequential edit, you can instead describe a list of scenes. Each scene is a self-contained segment with its own clips and an optional transition into the next. `overlays` is a flat list of clips that sit over the whole composition, like a persistent logo or watermark.
+Tracks give you precise multi-track control. For a sequential edit, you can instead describe a list of scenes. Each scene is a self-contained segment with its own clips. A scene's `transition` blends INTO it from the previous scene, so put it on the second of two scenes. `overlays` is a flat list of clips that sit over the whole composition, like a persistent logo or watermark.
 
 ```json
 {
   "scenes": [
-    { "duration": 4, "transition": { "transition": "crossfade", "duration": 0.6 },
+    { "duration": 4,
       "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/river.mp4" } }] },
-    { "duration": 4, "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/forest.mp4" } }] }
+    { "duration": 4, "transition": { "transition": "crossfade", "duration": 0.6 },
+      "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/forest.mp4" } }] }
   ],
   "overlays": [
-    { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" }, "start": 0, "length": 8,
+    { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" }, "start": 0, "length": 7.4,
       "transform": { "scale": 0.2, "position": { "x": "88%", "y": "12%" } } }
   ]
 }
@@ -323,19 +324,71 @@ Tracks give you precise multi-track control. For a sequential edit, you can inst
 
 A scene's clips can omit `start` and `length` to span the whole scene. Every clip field works the same as in tracks mode. `scenes` and `tracks` are mutually exclusive: a timeline uses one or the other.
 
+## Edit like a pro
+
+You do not need editing experience to get professional results. These are the conventions working editors follow, translated into compose fields. AI agents get the same rules automatically through the MCP compose reference.
+
+### Pacing
+
+Clip `length` is the pacing lever. Social clips run 0.8 to 3 seconds each with a visual change at least every 3 seconds, vlogs 2 to 6, tutorials 5 to 15 (cut at step boundaries), cinematic 4 to 8 with varied lengths. Shorten clips as the video builds, then hold the final shot about twice as long. The first clip is the hook: no fade-in, no logo, the payoff visible or promised within 3 seconds. A 20 to 35 second total is the highest-completion band on social.
+
+Cutting to music: seconds per beat is 60 divided by BPM. Cut every 2 or 4 beats, every beat only at the climax. For 120 BPM music that means 1 or 2 second clips.
+
+### Transitions
+
+Professionals cut. Keep crossfades under 10% of your joins and pick ONE decorative style (slide or zoom) per video, at section boundaries only.
+
+| Use | Transition | Duration |
+| --- | --- | --- |
+| Almost every join | none (hard cut) | 0 |
+| Time passes, mood softens | `crossfade` | 0.6 to 1.0s |
+| Chapter break | `fade` | 1 to 2s |
+| Energy, social | `slide` or `zoom` | 0.3 to 0.7s |
+
+### Text placement and size
+
+On vertical video keep every text element inside x 8 to 92%, y 13.5 to 83% (platform UI covers the rest). Captions sit at y 60 to 75%. Sizes at 1080x1920: titles 135 to 190px, lower thirds 70 to 80px, captions 90 to 105px. Always add a stroke (black, width 4 to 8), a shadow, or a background box. Titles are 6 words or fewer, 2 lines maximum. Pair one display font (Oswald, Anton, Bebas Neue) with one body font (Inter, Roboto).
+
+### Color looks
+
+Apply one look to every clip in the video:
+
+| Look | `color` value |
+| --- | --- |
+| Warm sunset | `{ "temperature": 5000, "saturation": 1.2, "contrast": 1.1 }` |
+| Cool corporate | `{ "temperature": 7500, "contrast": 1.15, "saturation": 0.95 }` |
+| Moody cinematic | `{ "temperature": 6200, "saturation": 0.75, "contrast": 1.25, "gamma": 0.92 }` |
+| Vintage faded | `{ "temperature": 5600, "contrast": 0.85, "saturation": 0.65, "brightness": 0.06 }` |
+| Bright social | `{ "temperature": 6800, "saturation": 1.3, "gamma": 1.15 }` |
+| Night | `{ "temperature": 11000, "saturation": 0.6, "gamma": 0.8, "brightness": -0.15 }` |
+
+With faces in frame stay inside saturation 0.7 to 1.3, hue within 8 degrees, temperature 4500 to 12000K. To match two clips shot differently: fix brightness first, then temperature, then saturation.
+
+### Audio levels
+
+`volume` is linear gain. With speech at 1.0: music under speech 0.10 to 0.12, music alone 0.35 to 0.5, sound effects 0.25 to 0.32. Fade music in over 1 to 2 seconds and out over 3 to 5, ending on the last frame. To duck music under speech, split the music into three clips: before speech at 0.4 with a 0.4s fadeOut, under speech at 0.11, after speech at 0.4 with a 1.5s fadeIn.
+
+### Photos need motion
+
+A static photo in a video reads as a mistake. Give every image clip a gentle Ken Burns move: `"transform": { "scale": 1, "position": { "x": "50%", "y": "50%" }, "animateTo": { "scale": 1.12 } }`.
+
 ## Reference
 
 ### Output
 
-The `output` object controls the render target.
+The `output` object controls the render target. Provide either an explicit `resolution` or a named `size` preset.
 
 | Field | Values |
 | --- | --- |
 | `format` | `mp4` (default), `webm`, `gif` (no audio), `mp3` (audio only), `jpg`, `png` (still frame) |
-| `resolution` | `{ width, height }` (integer pixels) |
-| `fps` | number |
-| `videoCodec` | `h264`, `vp9` (optional; per-format default otherwise) |
+| `resolution` | `{ width, height }` (integer pixels). Wins over `size` when both are set |
+| `size` | Named preset: `360p`, `720p`, `1080p`, `1440p`, `4k`, `tiktok`, `reels`, `shorts`, `instagram-story`, `instagram-feed`, `square`, `youtube-hd`, `youtube-4k`, `x-landscape`, `linkedin` |
+| `fps` | Frame rate (default `30`) |
+| `quality` | Encoder ladder: `draft` (fast preview), `standard` (default, web delivery), `high`, `max`. Sets rate factor, encoder speed, and audio bitrate together |
+| `videoCodec` | `h264`, `vp9` (optional, per-format default otherwise) |
 | `audioCodec` | `aac`, `opus`, `mp3` (optional) |
+| `crf` | Advanced: constant rate factor, lower is higher quality. Overrides `quality`. `0`..`51` for h264, up to `63` for vp9 |
+| `encoderPreset` | Advanced: h264 speed preset from `ultrafast` to `veryslow`. Slower means smaller files at the same quality |
 | `frameTime` | second of the timeline to capture for `jpg` / `png` (default `0`) |
 
 ### Assets
@@ -344,11 +397,11 @@ A clip's `asset` is one of:
 
 | `type` | Fields |
 | --- | --- |
-| `video` | `src`, `trim` `{ from, to }`, `volume` (default `1`) |
+| `video` | `src`, `trim` `{ from, to }` (seconds in the source), `volume` (default `1`, `0` mutes) |
 | `image` | `src` |
 | `audio` | `src`, `trim`, `volume`, `fadeIn`, `fadeOut` (seconds) |
 | `text` | `text`, `style` |
-| `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip |
+| `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip. Every clip field below applies to a composition clip too, except `speed` (set speed on the clips inside the composition instead) |
 
 ### Clip fields
 
@@ -356,15 +409,16 @@ Every clip has `asset`, `start`, `length`, plus any of:
 
 | Field | What it does |
 | --- | --- |
-| `opacity` | `0`..`1`, or keyframes `[{ time, value, easing: step \| linear \| smooth }]` |
-| `transform` | `position {x,y}`, `scale`, `rotate`, `anchor` (`center` \| `topLeft`), `fit` (`contain` \| `fill`), `animateTo` (Ken Burns end state) |
-| `crop` | `top` / `right` / `bottom` / `left`, each a percent string like `"10%"` |
-| `speed` | playback rate (`0.5` = slow motion, `2` = fast, and pitch shifts with speed) |
+| `opacity` | `0`..`1`, or keyframes `[{ time, value, easing: step \| linear \| smooth }]`. Keyframe `time` is in seconds from the clip's start |
+| `transform` | `position {x,y}` (percent strings, the clip's center by default), `scale`, `rotate` (degrees), `anchor` (`center` \| `topLeft`), `fit` (`contain` \| `fill`), `animateTo` (Ken Burns end state). Without `position` the clip pins to the top-left corner |
+| `transform.animateTo` | End state for an eased Ken Burns move over the clip's duration: any of `position`, `scale`, `rotate`. Omitted fields keep their start value, so `animateTo: { scale: 1.4 }` is a plain zoom |
+| `crop` | `top` / `right` / `bottom` / `left`, each a percent string like `"10%"`. The kept region scales back up to fill the frame |
+| `speed` | playback rate (`0.5` = slow motion, `2` = fast, and pitch shifts with speed). Avoid a slow-motion clip as the outgoing side of a transition, it can run out of frames mid-overlap |
 | `color` | `brightness` (-1..1), `contrast` (0..4), `saturation` (0..3), `gamma` (0.1..10), `hue` (-180..180), `temperature` (1000..40000 K) |
 | `filter` | `greyscale`, `negative`, `boost`, `muted`, `lighten`, `darken`, `contrast` (mutually exclusive with `color`) |
 | `blur` / `sharpen` | gaussian blur strength / unsharp amount |
-| `chromaKey` | `color` (hex), `similarity` (0..1) |
-| `blendMode` | `normal`, `multiply`, `screen`, `overlay`, `darken`, `lighten`, `add`, `difference` |
+| `chromaKey` | `color` (hex), `similarity` (0..1, default 0.2). Key a clip on an overlay track so the removed color reveals the track below |
+| `blendMode` | `normal` (default), `multiply`, `screen`, `overlay`, `darken`, `lighten`, `add`, `difference`. Applies where the clip meets the layer below it |
 | `pan` | stereo balance, `-1` (left) to `1` (right) |
 | `flip` | `{ horizontal, vertical }` |
 
@@ -380,13 +434,24 @@ Place between two clips on a track: `{ "type": "transition", "transition": <kind
 | `zoom` | B grows in from the center |
 | `none` | Hard cut, no blend |
 
+### Scenes
+
+The scene-first shape, when you use `scenes` instead of `tracks`:
+
+| Field | Notes |
+| --- | --- |
+| `scenes[].duration` | Seconds. Defaults to the longest clip in the scene |
+| `scenes[].transition` | The transition INTO this scene from the previous one: `{ transition, duration, direction? }`, same kinds as the table above |
+| `scenes[].clips` | Clips as in tracks mode. `start` and `length` are optional and default to spanning the scene |
+| `overlays` | Clips composited over the whole video (a logo, a watermark, a persistent title). `start` and `length` are required here |
+
 ### Text style
 
 Fields on a text asset's `style`:
 
 | Field | Notes |
 | --- | --- |
-| `font` | Font family name |
+| `font` | Font family name. Available: `Inter`, `Roboto`, `Montserrat`, `Poppins`, `Oswald`, `Anton`, `Bebas Neue` |
 | `size` | Point size |
 | `weight` | 100..1000 (default 400) |
 | `color` | Hex fill |

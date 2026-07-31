@@ -63,11 +63,11 @@ Clients without OAuth support can authenticate with an API key instead: header `
 
 ## What you can do
 
-Call `list_job_types` first. It returns every active job type fresh, so it never goes stale like a hardcoded list would.
+Call `list_job_types` first. It returns every active job type fresh, so it never goes stale like a hardcoded list would. Pass `type` (for example `"compose"`) to get that one job type's complete parameter schema instead, with per-field documentation: ranges, defaults, units, and usage notes. Agents should do this before authoring a complex payload like a compose timeline.
 
 | Tool | What it does | Returns |
 |---|---|---|
-| `list_job_types` | Every active job type: use cases, what it chains with, a params digest, and an example payload. | `{ jobTypes[], guidance }` |
+| `list_job_types` | Every active job type: use cases, what it chains with, a params digest, and an example payload. With `type`, the full annotated parameter schema for that one type. | `{ jobTypes[], guidance }` or `{ type, paramsJsonSchema, example, guidance }` |
 | `submit_job` | Submit a job. `inputs` accepts a URL string, `{ url }`, `{ content }` (inline text), or `{ job: "job_..." }` for chaining. | `{ jobId, status }` |
 | `get_job` | Check status and results. `wait: true` blocks up to 45 seconds instead of polling. A completed video job includes an inline poster image. | `{ id, status, output?, cost?, error? }` |
 | `list_jobs` | Recent jobs, filterable by `status` and `type`. | `{ jobs[], total }` |

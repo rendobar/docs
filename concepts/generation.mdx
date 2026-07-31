@@ -1,0 +1,111 @@
+---
+title: "The Generation API"
+sidebarTitle: "Generation"
+description: "Generate images from a text prompt or edit them from an instruction on hosted diffusion models. One async API, one job shape, many models."
+icon: "sparkles"
+keywords: ["generation api", "ai media generation api", "text to image api", "image editing api", "diffusion model api", "hosted diffusion models", "ai image api", "generative media api"]
+canonical: "https://rendobar.com/docs/concepts/generation"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/concepts/generation/#article",
+      "headline": "The Generation API",
+      "description": "Generate images from a text prompt or edit them from an instruction on hosted diffusion models. One async API, one job shape, many models.",
+      "datePublished": "2026-07-26",
+      "dateModified": "2026-07-31",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Rendobar's Generation API creates new media from a prompt on hosted diffusion models. It is one of the platform's products, and it submits, runs, and returns like every other job. You describe what you want, the job runs on a GPU, and the result comes back as a signed file URL.
+
+## Modalities
+
+Images are the first modality. You can generate an image from a text prompt, or edit existing images from a written instruction.
+
+<CardGroup cols={2}>
+  <Card title="Image generate" icon="image" href="/jobs/image-generate">
+    Turn a text prompt into a webp image. Pick a tier or pin an exact model.
+  </Card>
+  <Card title="Image edit" icon="wand-magic-sparkles" href="/jobs/image-edit">
+    Edit one to four reference images from a plain-language instruction.
+  </Card>
+</CardGroup>
+
+More modalities will join the same surface over time. Only image generation and editing are available today.
+
+## Tiers or exact models
+
+Every generation job takes a `model`. You can name a tier and let the platform choose, or pin an exact model id.
+
+- **Tiers** (`economy`, `standard`, `premium`) express a price and quality posture without naming a model. Omit `model` and you get `economy`.
+- **Exact ids** (for example `qwen-image-2512`) pin the model and unlock its own controls, such as denoise steps, guidance, and a negative prompt.
+
+Tier aliases can be re-pointed to newer models as the catalog grows. Pin an exact id when you need a result to stay stable across that change.
+
+## Discover models
+
+`GET /models` returns the live catalog: every model with its supported jobs, tier, relative price, capabilities, and step range. Filter to one job type with `?job=`. Build a model picker against this endpoint instead of hardcoding the list.
+
+```bash
+curl "https://api.rendobar.com/models" \
+  -H "Authorization: Bearer rb_YOUR_KEY"
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "qwen-image-2512",
+      "jobs": ["image.generate"],
+      "tier": "premium",
+      "underReview": false,
+      "priceTier": "$$$$",
+      "maxRefImages": 0,
+      "steps": { "default": 50, "min": 20, "max": 50 },
+      "supports": { "negativePrompt": true, "guidance": true },
+      "enhanceDefault": false,
+      "status": "active"
+    }
+  ]
+}
+```
+
+`priceTier` compares models against each other, from `$` to `$$$$`. It is not a per-image charge, because jobs bill on the compute they actually use, cost-plus. See [credits and billing](/concepts/credits).
+
+A model with `underReview: true` is pulled from tier resolution while we re-evaluate its cost and quality. It stays listed so a caller pinning it can see why the submit was rejected, but no tier resolves to it and pinning it returns `VALIDATION_ERROR`.
+
+## Same job, same shape
+
+A generation job is a [job](/concepts/job) like any other. You submit it to `POST /jobs`, it runs async, and you poll, [wait](/sdk#wait), or receive a [webhook](/guides/webhooks). The image jobs return a single webp file in `output.file`, with `output.data` set to `null`.
+
+One thing is specific to generation. While the model denoises, the job emits `job.preview` events carrying a small frame of the image as it resolves, so a client can show the picture arriving instead of a spinner. Previews are decoration: they are never replayed, and a model can emit none. See [watch it render](/jobs/image-generate#watch-it-render).
+
+```ts
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.run({
+  type: "image.generate",
+  params: { prompt: "A paper boat on a still pond at dawn", model: "standard" },
+});
+
+console.log(outputUrl(job)); // signed URL to the webp
+```
+
+## See also
+
+- [Image generate](/jobs/image-generate): text to image, with the full model catalog
+- [Image edit](/jobs/image-edit): instruction editing with one to four reference images
+- [How a job works](/concepts/job): statuses and the output shape
+- [SDK](/sdk): `jobs.run`, `jobs.wait`, and reading the output
+- [Credits and billing](/concepts/credits): how compute-based billing works
