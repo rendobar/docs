@@ -324,6 +324,54 @@ Tracks give you precise multi-track control. For a sequential edit, you can inst
 
 A scene's clips can omit `start` and `length` to span the whole scene. Every clip field works the same as in tracks mode. `scenes` and `tracks` are mutually exclusive: a timeline uses one or the other.
 
+## Edit like a pro
+
+You do not need editing experience to get professional results. These are the conventions working editors follow, translated into compose fields. AI agents get the same rules automatically through the MCP compose reference.
+
+### Pacing
+
+Clip `length` is the pacing lever. Social clips run 0.8 to 3 seconds each with a visual change at least every 3 seconds, vlogs 2 to 6, tutorials 5 to 15 (cut at step boundaries), cinematic 4 to 8 with varied lengths. Shorten clips as the video builds, then hold the final shot about twice as long. The first clip is the hook: no fade-in, no logo, the payoff visible or promised within 3 seconds. A 20 to 35 second total is the highest-completion band on social.
+
+Cutting to music: seconds per beat is 60 divided by BPM. Cut every 2 or 4 beats, every beat only at the climax. For 120 BPM music that means 1 or 2 second clips.
+
+### Transitions
+
+Professionals cut. Keep crossfades under 10% of your joins and pick ONE decorative style (slide or zoom) per video, at section boundaries only.
+
+| Use | Transition | Duration |
+| --- | --- | --- |
+| Almost every join | none (hard cut) | 0 |
+| Time passes, mood softens | `crossfade` | 0.6 to 1.0s |
+| Chapter break | `fade` | 1 to 2s |
+| Energy, social | `slide` or `zoom` | 0.3 to 0.7s |
+
+### Text placement and size
+
+On vertical video keep every text element inside x 8 to 92%, y 13.5 to 83% (platform UI covers the rest). Captions sit at y 60 to 75%. Sizes at 1080x1920: titles 135 to 190px, lower thirds 70 to 80px, captions 90 to 105px. Always add a stroke (black, width 4 to 8), a shadow, or a background box. Titles are 6 words or fewer, 2 lines maximum. Pair one display font (Oswald, Anton, Bebas Neue) with one body font (Inter, Roboto).
+
+### Color looks
+
+Apply one look to every clip in the video:
+
+| Look | `color` value |
+| --- | --- |
+| Warm sunset | `{ "temperature": 5000, "saturation": 1.2, "contrast": 1.1 }` |
+| Cool corporate | `{ "temperature": 7500, "contrast": 1.15, "saturation": 0.95 }` |
+| Moody cinematic | `{ "temperature": 6200, "saturation": 0.75, "contrast": 1.25, "gamma": 0.92 }` |
+| Vintage faded | `{ "temperature": 5600, "contrast": 0.85, "saturation": 0.65, "brightness": 0.06 }` |
+| Bright social | `{ "temperature": 6800, "saturation": 1.3, "gamma": 1.15 }` |
+| Night | `{ "temperature": 11000, "saturation": 0.6, "gamma": 0.8, "brightness": -0.15 }` |
+
+With faces in frame stay inside saturation 0.7 to 1.3, hue within 8 degrees, temperature 4500 to 12000K. To match two clips shot differently: fix brightness first, then temperature, then saturation.
+
+### Audio levels
+
+`volume` is linear gain. With speech at 1.0: music under speech 0.10 to 0.12, music alone 0.35 to 0.5, sound effects 0.25 to 0.32. Fade music in over 1 to 2 seconds and out over 3 to 5, ending on the last frame. To duck music under speech, split the music into three clips: before speech at 0.4 with a 0.4s fadeOut, under speech at 0.11, after speech at 0.4 with a 1.5s fadeIn.
+
+### Photos need motion
+
+A static photo in a video reads as a mistake. Give every image clip a gentle Ken Burns move: `"transform": { "scale": 1, "position": { "x": "50%", "y": "50%" }, "animateTo": { "scale": 1.12 } }`.
+
 ## Reference
 
 ### Output
