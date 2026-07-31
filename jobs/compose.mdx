@@ -201,11 +201,11 @@ A second track renders over the first. This lays an animated title over the vide
 ```json
 "tracks": [
   { "clips": [
-    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" }, "start": 0, "length": 5 }
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" }, "start": 0, "length": 3 }
   ] },
   { "clips": [
-    { "asset": { "type": "text", "text": "Coastal Escape", "style": { "size": 84 } },
-      "start": 0, "length": 5 }
+    { "asset": { "type": "text", "text": "Coastal Escape", "style": { "font": "Inter", "size": 84, "color": "#FFFFFF" } },
+      "start": 0, "length": 3 }
   ] }
 ]
 ```
@@ -218,7 +218,7 @@ Effects are fields on a clip. Stack as many as you like on one clip. Each exampl
 {
   "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" },
   "start": 0,
-  "length": 5,
+  "length": 3,
   "color": { "saturation": 1.2, "temperature": 6800 },
   "speed": 0.8,
   "transform": { "scale": 1.1, "animateTo": { "scale": 1.3 } }
@@ -305,17 +305,18 @@ A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`
 
 ## Scene-first authoring
 
-Tracks give you precise multi-track control. For a sequential edit, you can instead describe a list of scenes. Each scene is a self-contained segment with its own clips and an optional transition into the next. `overlays` is a flat list of clips that sit over the whole composition, like a persistent logo or watermark.
+Tracks give you precise multi-track control. For a sequential edit, you can instead describe a list of scenes. Each scene is a self-contained segment with its own clips. A scene's `transition` blends INTO it from the previous scene, so put it on the second of two scenes. `overlays` is a flat list of clips that sit over the whole composition, like a persistent logo or watermark.
 
 ```json
 {
   "scenes": [
-    { "duration": 4, "transition": { "transition": "crossfade", "duration": 0.6 },
+    { "duration": 4,
       "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/river.mp4" } }] },
-    { "duration": 4, "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/forest.mp4" } }] }
+    { "duration": 4, "transition": { "transition": "crossfade", "duration": 0.6 },
+      "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/forest.mp4" } }] }
   ],
   "overlays": [
-    { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" }, "start": 0, "length": 8,
+    { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" }, "start": 0, "length": 7.4,
       "transform": { "scale": 0.2, "position": { "x": "88%", "y": "12%" } } }
   ]
 }
