@@ -1,0 +1,182 @@
+---
+title: "Upscale an image"
+sidebarTitle: "Image upscale"
+description: "Increase an image's resolution on a one-step diffusion restoration model. Ask for a factor or a target height, and transparency survives."
+icon: "expand"
+keywords: ["image upscale api", "ai image upscaler api", "super resolution api", "upscale image api", "enlarge image api", "photo restoration api", "seedvr2 api", "png upscale api", "image upscaler rest api"]
+canonical: "https://rendobar.com/docs/jobs/image-upscale"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/jobs/image-upscale/#article",
+      "headline": "Upscale an image",
+      "description": "Increase an image's resolution on a one-step diffusion restoration model. Ask for a factor or a target height, and transparency survives.",
+      "datePublished": "2026-08-03",
+      "dateModified": "2026-08-03",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+`image.upscale` increases an image's resolution on a hosted one-step diffusion model. Ask for a factor or a target height and the other side follows the source aspect ratio. The result is a png returned as a signed URL, the same async job shape as everything else on Rendobar.
+
+This model reconstructs detail rather than only sharpening what is already there. A compressed or soft source comes back rebuilt, not just enlarged. That is a different job from a faithful resize, and it is worth knowing which one you asked for.
+
+This is one product in [Rendobar's Generation API](/concepts/generation).
+
+## Upscale an image
+
+<CodeGroup>
+
+```ts SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+// jobs.run submits and waits for the finished job in one call.
+const job = await client.jobs.run({
+  type: "image.upscale",
+  inputs: { source: "https://example.com/photo.jpg" },
+  params: {
+    sizing: { mode: "factor", factor: 2 },
+  },
+});
+
+console.log(outputUrl(job)); // signed URL to the png
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image.upscale",
+    "inputs": { "source": "https://example.com/photo.jpg" },
+    "params": {
+      "sizing": { "mode": "factor", "factor": 2 }
+    }
+  }'
+# Returns { "data": { "id": "job_...", "status": "waiting" } }.
+# Poll GET /jobs/{id} until "status": "complete".
+```
+
+```python Python
+import requests, time
+
+base = "https://api.rendobar.com"
+headers = {"Authorization": "Bearer rb_YOUR_KEY"}
+
+job = requests.post(
+    f"{base}/jobs",
+    headers=headers,
+    json={
+        "type": "image.upscale",
+        "inputs": {"source": "https://example.com/photo.jpg"},
+        "params": {"sizing": {"mode": "factor", "factor": 2}},
+    },
+).json()["data"]
+
+while job["status"] not in ("complete", "failed", "cancelled"):
+    time.sleep(1)
+    job = requests.get(f"{base}/jobs/{job['id']}", headers=headers).json()["data"]
+
+print(job["output"]["file"]["url"])  # the png
+```
+
+</CodeGroup>
+
+## Sizing
+
+`sizing` is a union, because "twice as big" and "2160 pixels tall" are different questions and only one can be answered per request.
+
+<CodeGroup>
+
+```json Factor
+{ "sizing": { "mode": "factor", "factor": 2 } }
+```
+
+```json Target height
+{ "sizing": { "mode": "height", "height": 2160 } }
+```
+
+</CodeGroup>
+
+Either way the output lands on exactly the size you asked for. The default is `factor: 2`.
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `model` | `seedvr2-3b` | `seedvr2-3b` or `seedvr2-7b`. The 7B is the larger checkpoint, offered as an option rather than an upgrade. |
+| `sizing` | `{ mode: "factor", factor: 2 }` | How large the output should be. |
+| `inputNoise` | `0.1` | Artifact reduction, 0 to 1. Higher is smoother and reconstructs less. 0.1 to 0.3 is the useful band. |
+| `inputScale` | `1` | Shrink the source before upscaling, 0.25 to 1. Below 1 gives the model less to preserve and more to rebuild. |
+| `passes` | auto | Run the model repeatedly, each pass covering an equal share of the total factor. Left unset it follows the factor, keeping every step near a doubling. Costs one full render per pass. |
+| `latentNoise` | `0` | Softens excessive detail, 0 to 1. Reach for it when a result looks overcooked rather than soft. 0.05 to 0.15 is the useful band. |
+| `colorCorrection` | `lab` | How colour is matched back to the source: `lab`, `wavelet`, `wavelet_adaptive`, `hsv`, `adain`, `none`. `lab` is the most faithful. |
+| `seed` | `42` | The same seed returns the same image. This model reconstructs detail rather than copying it, so a different seed is a different plausible result. |
+
+Every parameter is optional. Send none of them and you get the defaults above,
+which are the settings this job was tuned on.
+
+### Choosing a factor
+
+2x is where this model does its best work. It reconstructs about one doubling,
+so a larger factor adds pixels faster than it adds detail. Ask for 4x and the
+job runs two 2x steps automatically, which looks close to a native 2x and costs
+two renders. A single large step is available with `passes: 1`, and looks worse.
+
+### Choosing inputScale
+
+Leave it at `1` for photographs. Lowering it hands the model less to work from and more to invent, which suits a clean uncompressed source and hurts a compressed one, where the reconstruction follows the compression artifacts instead of the subject.
+
+## Transparency
+
+A transparent png stays transparent. Alpha is upscaled alongside the colour channels rather than flattened, so a logo keeps its edge.
+
+## The output
+
+A completed job carries a single png file in `output.file`. `output.data` is `null`, because upscaling writes a file rather than computing an answer.
+
+png rather than webp on purpose. Re-compressing lossily is the one thing that would undo the point of an upscale.
+
+```json
+{
+  "data": null,
+  "file": {
+    "url": "https://api.rendobar.com/dl/job_abc123?token=<token>",
+    "path": "output.png",
+    "type": "image",
+    "size": 4194304,
+    "meta": { "format": "png", "width": 3840, "height": 2160 }
+  },
+  "expiresAt": 1735689600000
+}
+```
+
+## Size limits
+
+There is no product cap on how large an output you can ask for. The bound is what the GPU can physically hold, and a request past it is refused before any rendering happens, with the numbers:
+
+```
+Requested output is 5760x3240 (18.7 MP), larger than the 9.9 MP this GPU
+can hold. For a 1920x1080 source the largest factor is about 2.2.
+```
+
+The job fails with `VALIDATION_ERROR` rather than a generation failure, because
+the request was refused rather than the model breaking. The refusal happens
+before the model is loaded, so you are billed only for the few seconds the
+container was alive, not for a full render.
+
+## Related
+
+- [Generate an image from a prompt](/jobs/image-generate)
+- [Edit an image from an instruction](/jobs/image-edit)
+- [How the Generation API works](/concepts/generation)
