@@ -157,7 +157,10 @@ Requested output is 5760x3240 (18.7 MP), larger than the 9.9 MP this GPU
 can hold. For a 1920x1080 source the largest factor is about 2.2.
 ```
 
-You are not charged for a render that never ran.
+The job fails with `VALIDATION_ERROR` rather than a generation failure, because
+the request was refused rather than the model breaking. The refusal happens
+before the model is loaded, so you are billed only for the few seconds the
+container was alive, not for a full render.
 
 ## Related
 
