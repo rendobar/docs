@@ -118,7 +118,20 @@ Either way the output lands on exactly the size you asked for. The default is `f
 | `sizing` | `{ mode: "factor", factor: 2 }` | How large the output should be. |
 | `inputNoise` | `0.1` | Artifact reduction, 0 to 1. Higher is smoother and reconstructs less. 0.1 to 0.3 is the useful band. |
 | `inputScale` | `1` | Shrink the source before upscaling, 0.25 to 1. Below 1 gives the model less to preserve and more to rebuild. |
-| `passes` | `1` | Run the model repeatedly, each pass covering an equal share of the total factor. Costs one full render per pass. |
+| `passes` | auto | Run the model repeatedly, each pass covering an equal share of the total factor. Left unset it follows the factor, keeping every step near a doubling. Costs one full render per pass. |
+| `latentNoise` | `0` | Softens excessive detail, 0 to 1. Reach for it when a result looks overcooked rather than soft. 0.05 to 0.15 is the useful band. |
+| `colorCorrection` | `lab` | How colour is matched back to the source: `lab`, `wavelet`, `wavelet_adaptive`, `hsv`, `adain`, `none`. `lab` is the most faithful. |
+| `seed` | `42` | The same seed returns the same image. This model reconstructs detail rather than copying it, so a different seed is a different plausible result. |
+
+Every parameter is optional. Send none of them and you get the defaults above,
+which are the settings this job was tuned on.
+
+### Choosing a factor
+
+2x is where this model does its best work. It reconstructs about one doubling,
+so a larger factor adds pixels faster than it adds detail. Ask for 4x and the
+job runs two 2x steps automatically, which looks close to a native 2x and costs
+two renders. A single large step is available with `passes: 1`, and looks worse.
 
 ### Choosing inputScale
 
