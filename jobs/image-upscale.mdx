@@ -108,7 +108,7 @@ print(job["output"]["file"]["url"])  # the png
 
 </CodeGroup>
 
-Either way the output lands on exactly the size you asked for. The default is `factor: 2`.
+Either way the output lands on exactly the size you asked for, as long as it fits on the GPU. The default is `factor: 2`. See [Size limits](#size-limits) for what happens when it does not.
 
 ## Parameters
 
@@ -163,17 +163,20 @@ png rather than webp on purpose. Re-compressing lossily is the one thing that wo
 
 ## Size limits
 
-There is no product cap on how large an output you can ask for. The bound is what the GPU can physically hold, and a request past it is refused before any rendering happens, with the numbers:
+There is no product cap on how large an output you can ask for. The bound is what the GPU can physically hold.
+
+Ask for more than that and the job still runs. The output is capped to the largest size that fits, keeping your source's aspect ratio, and the job log says what happened:
 
 ```
-Requested output is 5760x3240 (18.7 MP), larger than the 9.9 MP this GPU
-can hold. For a 1920x1080 source the largest factor is about 2.2.
+requested 2730x4096 (11.2 MP) is larger than the 9.9 MP this GPU can hold,
+so it was capped to 2568x3852 (about 1.87x this 1365x2048 source)
 ```
 
-The job fails with `VALIDATION_ERROR` rather than a generation failure, because
-the request was refused rather than the model breaking. The refusal happens
-before the model is loaded, so you are billed only for the few seconds the
-container was alive, not for a full render.
+Read the real dimensions off `output.file.meta` rather than assuming they match what you asked for. Everything under the ceiling is untouched and lands exactly on the requested size.
+
+The limit is on output **pixels**, not on the factor, so how far you can go depends on the source. A 1365x2048 photo is already 2.8 megapixels, and 2x of it is 11.2, which is why the example above caps at under 2x. A small source can go to 4x and beyond.
+
+The ceiling also depends on the model. `seedvr2-7b` holds about twice the weights of `seedvr2-3b` and keeps less room for the image, so it caps roughly 40% sooner. If you are working near the limit, `seedvr2-3b` is the one that goes further, and it is also the default.
 
 ## Related
 
