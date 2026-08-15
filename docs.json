@@ -27,7 +27,8 @@
           {
             "group": "Getting Started",
             "pages": [
-              "quickstart"
+              "quickstart",
+              "build-with-ai"
             ]
           },
           {
@@ -262,6 +263,13 @@
       "mcp",
       "cursor",
       "vscode"
+    ]
+  },
+  "markdown": {
+    "instructions": [
+      "Keep the API key in an env var (RENDOBAR_API_KEY), never in chat or committed code.",
+      "Job types change, so fetch the live catalog from GET https://api.rendobar.com/jobs/types rather than relying on memory.",
+      "The full integration prompt for coding agents is at https://rendobar.com/prompts/integrate.md."
     ]
   },
   "seo": {
