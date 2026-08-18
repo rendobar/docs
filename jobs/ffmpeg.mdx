@@ -186,8 +186,8 @@ This burns a subtitle track that lives only in the request, with no file to host
   Container format. Inferred from the trailing filename if omitted. One of: `mp4`, `mkv`, `webm`, `mov`, `avi`, `ts`, `gif`, `png`, `jpg`, `mp3`, `wav`, `flac`, `ogg`, `aac`, `opus`, `m4a`, `srt`, `vtt`.
 </ParamField>
 
-<ParamField body="timeout" type="integer" default="120">
-  Max execution time in seconds. Range 1–900. Plan caps apply (Free 5 min, Pro 15 min).
+<ParamField body="timeout" type="integer">
+  Max execution time in seconds. Defaults to your plan's full job budget (Free 1 hour, Pro 9 hours), so you only set this when you want a job to fail sooner. Asking for more than your plan allows is rejected at submit with `PLAN_LIMIT`.
 </ParamField>
 
 <ParamField body="compute" type="enum" default="auto">
@@ -281,7 +281,7 @@ Every command is validated before it runs, then executed in an isolated, network
 
 Priced per compute second from your [credit balance](/concepts/credits), the wall-clock time FFmpeg ran, excluding file transfer.
 
-Plan timeouts: 5 min (Free), 15 min (Pro). See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `RUNNER_TIMEOUT`, and no credits are charged.
+Plan job budgets: 1 hour (Free), 9 hours (Pro). That is a bound on processing time, not on how long your output can be. See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `RUNNER_TIMEOUT`, and no credits are charged.
 
 ## Examples
 
