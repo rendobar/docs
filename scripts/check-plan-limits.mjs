@@ -25,7 +25,18 @@ const SOURCE_URL = "https://rendobar.com/plan-limits.json";
 const fmtInt = (n) => String(n);
 const fmtBytes = (n) =>
   n % 1024 ** 3 === 0 ? `${n / 1024 ** 3} GB` : `${n / 1024 ** 2} MB`;
-const fmtMin = (sec) => `${sec / 60} min`;
+// Mirrors formatTimeout() in the monorepo's packages/shared/src/constants/
+// pricing-display.ts. This repo cannot import it, so the two are kept honest by
+// this script itself: it renders from the LIVE plan-limits.json and fails when a
+// table cell disagrees, which is exactly what a drift in either would produce.
+const fmtDuration = (sec) => {
+  if (sec >= 3600) {
+    const h = sec / 3600;
+    const r = Number.isInteger(h) ? h : Math.round(h * 10) / 10;
+    return `${r} ${r === 1 ? "hour" : "hours"}`;
+  }
+  return sec >= 60 ? `${Math.round(sec / 60)} min` : `${sec}s`;
+};
 const fmtDays = (n) => `${n} days`;
 
 // label substring (lowercased) -> [limits key, formatter]
@@ -35,7 +46,7 @@ const ROWS = [
   ["api requests", "apiRequestsPerMinute", fmtInt],
   ["max input file", "maxInputFileSize", fmtBytes],
   ["max batch size", "maxBatchSize", fmtInt],
-  ["job timeout", "maxJobTimeout", fmtMin],
+  ["job timeout", "maxJobTimeout", fmtDuration],
   ["output retention", "outputRetentionDays", fmtDays],
   ["total r2 storage", "storageQuota", fmtBytes],
 ];

@@ -87,12 +87,14 @@ Every method takes an optional `{ signal }` to abort the request or the `wait` l
 
 ```ts
 const job = await client.jobs.wait(created.id, {
-  timeout: 600_000,                          // default 300_000
+  timeout: 600_000,                          // default: the job's own budget
   onProgress: (j) => console.log(j.status),
 });
 ```
 
-`wait` polls until the job is `complete`, `failed`, or `cancelled`, then hands it back. Polling starts at 2s and backs off to 10s. Past the timeout it throws `WaitTimeoutError` carrying the last status seen. Pass `throwOnFailure: true` to throw `JobFailedError` on a failed or cancelled job instead of returning it.
+`wait` polls until the job is `complete`, `failed`, or `cancelled`, then hands it back. Polling starts at 2s and backs off to 10s. Past the timeout it throws `WaitTimeoutError` carrying the last status seen.
+
+With no `timeout` given, the wait follows the job's own budget (`job.timeoutMs`, your plan's per-job limit) plus grace for upload and callback, so a long job is never reported as timed out while it is still running. Until the server reports that budget the bound is 5 minutes, which is also the floor. Pass a `timeout` to bound the wait yourself. Pass `throwOnFailure: true` to throw `JobFailedError` on a failed or cancelled job instead of returning it.
 
 ### Read the output
 
