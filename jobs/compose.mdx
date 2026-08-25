@@ -358,8 +358,8 @@ A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`
 
 ## Shapes
 
-A `shape` asset draws a rectangle. No image to make, no file to host, and it
-stays sharp at any output resolution.
+A `shape` asset draws a rect, ellipse, circle, triangle or diamond. No image to
+make, no file to host, and it stays sharp at any output resolution.
 
 ```json
 "asset": {
@@ -373,12 +373,41 @@ stays sharp at any output resolution.
 That is a bar across the lower third, dark enough to read a title on and thin
 enough to see the footage through. Put it on a track below the text.
 
-Two things to know up front. `position` is the **centre** of the shape, not a
-corner, so a full-width bar sits at `x: "50%"` whatever its width. And there is
-no `length`, because a shape has no duration of its own: like text and images it
-runs to the end of its container unless you give it one.
+Two things to know up front. `position` is the **centre** of the shape unless
+you set `anchor`, so a full-width bar sits at `x: "50%"` whatever its width. And
+there is no `length`, because a shape has no duration of its own: like text and
+images it runs to the end of its container unless you give it one.
 
 `width` is a percent of the frame's width, `height` a percent of its height.
+
+### Leave the height out to get a circle
+
+Omit `size.height` and the shape is made **square in pixels**. That is the only
+way to get a true circle or square on a frame that is not square, and it is the
+one thing about shapes worth memorising.
+
+A `10%` by `10%` box on a 16:9 frame is 192 by 108 pixels. Rounding it fully
+gives a pill, not a circle. Omit the height and the engine derives 17.8% for
+you.
+
+```json
+{ "type": "shape", "shape": "circle", "color": "#059669",
+  "position": { "x": "88%", "y": "18%" }, "size": { "width": "12%" } }
+```
+
+`shape: "circle"` is `ellipse` with that rule applied, so it rejects an explicit
+height rather than quietly ignoring one. The same omission works on every kind:
+a `rect` with no height is a square, a `diamond` with no height is a regular one.
+
+### Anchor
+
+`anchor: "topLeft"` points `position` at the corner instead of the centre. It is
+what makes letterbox bars arithmetic-free.
+
+```json
+{ "type": "shape", "color": "#000000", "anchor": "topLeft",
+  "position": { "x": "0%", "y": "90%" }, "size": { "width": "100%", "height": "10%" } }
+```
 
 ### Transparency goes in the colour
 
@@ -389,82 +418,102 @@ Do not reach for the clip's `opacity` instead. `opacity` dims the fill as well
 as fading it, so a half-opacity white box renders grey rather than white you can
 see through. Keep `opacity` for animated fades.
 
-### Rounded corners and circles
+### Rounded corners
 
-`radius` runs from `0` (square) to `1` (fully round).
-
-At `1`, a wide box becomes a pill and a **pixel-square** box becomes a circle.
-Square in pixels, not in percent: on a 16:9 frame a width of `10%` needs a
-height of `17.8%` (that is `10 × 16/9`). On a 9:16 frame the same width needs
-`5.6%`.
+`radius` runs from `0` (square) to `1` (fully round) on a `rect`. At `1` a wide
+box becomes a pill and a square one becomes a circle.
 
 ```json
-{ "type": "shape", "color": "#059669", "position": { "x": "12%", "y": "80%" },
-  "size": { "width": "10%", "height": "17.8%" }, "radius": 1 }
+{ "type": "shape", "color": "#0A0A0ACC", "radius": 0.35,
+  "position": { "x": "26%", "y": "50%" },
+  "size": { "width": "34%", "height": "34%" },
+  "stroke": { "color": "#FFFFFF", "width": 3 } }
 ```
 
-### Outlines
+### Outlines, with a real hole
 
-`stroke` draws a border just inside the shape's edge. Set `color` to
-`#00000000` and the fill disappears, leaving an outline-only highlight box.
+`stroke` draws a border just inside the shape's edge. Give the shape a `color`
+too and you get a filled shape with a border, and `radius` rounds both together.
+
+Leave `color` out and only the outline draws. What it surrounds is genuinely
+transparent, not filled with black, so the footage shows through the middle.
+That works on every kind.
 
 ```json
-{ "type": "shape", "color": "#00000000",
-  "position": { "x": "72%", "y": "30%" },
-  "size": { "width": "36%", "height": "34%" },
-  "stroke": { "color": "#F59E0B", "width": 4 } }
+{ "type": "shape", "shape": "ellipse",
+  "position": { "x": "62%", "y": "40%" },
+  "size": { "width": "26%", "height": "40%" },
+  "stroke": { "color": "#F59E0B", "width": 5 } }
 ```
 
-`stroke` cannot be combined with `radius` or with `animateTo`, and the API
-rejects both combinations rather than rendering them wrong. The outline is drawn
-as a square band, so a rounded shape would end up with square corners inside a
-rounded edge, and it cannot follow a shape that moves.
+`width` is in pixels of the output frame, so it stays the same visual weight
+whatever the shape's size.
 
-### A progress bar is a shape that grows
+### Rotation turns about the shape, not the frame
 
-`animateTo` moves and resizes the shape over the clip, in a straight line.
-Starting from a width of `0%` gives you a progress bar.
+`rotate` is degrees clockwise about the shape's **own** centre, so a shape spins
+where it sits rather than orbiting the middle of the frame. A diagonal rule is a
+thin rect and one field:
 
 ```json
-{ "type": "shape", "color": "#FFFFFF",
-  "position": { "x": "50%", "y": "97%" },
+{ "type": "shape", "color": "#FFFFFF", "rotate": 30,
+  "position": { "x": "50%", "y": "72%" },
+  "size": { "width": "40%", "height": "0.8%" } }
+```
+
+There is no `line` type for the same reason there is no `square` type: a line is
+a rect with a small height, and `rotate` is what makes it diagonal.
+
+### Softness
+
+`softness` runs 0 to 1 and feathers the edge. At 0.2 to 0.4 an ellipse reads as
+a spotlight or a vignette rather than a hard-edged disc.
+
+### Animation
+
+`animateTo` moves, resizes and turns the shape over the clip. `easing` is
+`linear` by default, which is what a progress bar or a timer wants, or `smooth`
+for an entrance.
+
+```json
+{ "type": "shape", "color": "#FFFFFF", "anchor": "topLeft",
+  "position": { "x": "2%", "y": "86%" },
   "size": { "width": "0%", "height": "1.5%" },
-  "animateTo": { "size": { "width": "96%" } } }
+  "animateTo": { "size": { "width": "96%" }, "easing": "smooth" } }
 ```
 
 A dimension you leave out of `animateTo` keeps its starting value, so the bar
 above grows sideways without changing height. `transform` cannot do this: its
 `scale` is uniform, so it would grow the bar in both directions at once.
 
-### Lines and letterbox bars
+A shape that is square in pixels stays square as it grows, so an animated circle
+does not turn into an ellipse halfway through.
 
-There is no `line` type, because a line is a rectangle with a small height.
+### Combinations the API refuses
 
-```json
-{ "type": "shape", "color": "#FFFFFF", "position": { "x": "50%", "y": "50%" },
-  "size": { "width": "60%", "height": "0.4%" } }
-```
+Two engine primitives draw shapes and they have different abilities, so a few
+combinations are rejected at submit time rather than rendered wrong. Each error
+names the fix.
 
-For a diagonal, centre the shape and add `transform` to the clip:
-`"transform": { "rotate": 30 }`. Rotation turns the frame about its centre, so a
-centred shape spins in place and an off-centre one swings around the middle of
-the frame.
-
-Letterbox bars are two shapes: one at `y: "5%"`, one at `y: "95%"`, both
-`height: "10%"` and `color: "#000000"`. A full-frame scrim is one shape at
-`100%` by `100%` with a colour like `#00000080`.
+| Not combinable | Why | What to do instead |
+| --- | --- | --- |
+| `radius` on anything but a `rect` | only rectangles have corners | drop it |
+| `radius` with no `color` | an outline-only shape is drawn by the primitive with no corner rounding | give it a fill |
+| `radius` or a two-colour fill plus stroke, with `rotate` or `softness` | the primitive that rounds and carries two colours cannot turn or feather | drop one, or rotate the whole clip with `transform.rotate` |
+| a fill and a stroke on a non-`rect` | that primitive carries one colour | put the fill on its own shape clip below |
+| an animated `rotate` beyond -180 to 180 | the engine turns a shape over exactly one revolution | animate `transform.rotate` for a full spin |
 
 ### What else a shape takes
 
-Every per-clip field applies. `transform` rotates and repositions it,
-`blendMode` mixes it with the layer below, `blur` softens its edges, and opacity
+Every per-clip field applies. `transform` repositions and scales it, `blendMode`
+mixes it with the layer below, `blur` softens the whole thing, and opacity
 keyframes fade it in and out. A track holding only shapes composites as a base
 layer, so a solid colour background is a timeline that references no files at
 all.
 
-What a shape is not is a drawing surface. There is no gradient fill, no ellipse
-and no drop shadow. A rounded rectangle, a pill, a pixel-square circle and an
-outline are the whole set. Anything past that is still an `image` asset.
+What a shape is not is a drawing surface. There is no gradient fill and no drop
+shadow. Anything past a filled or outlined rect, ellipse, circle, triangle or
+diamond is still an `image` asset.
 
 
 ## Fonts
@@ -677,7 +726,7 @@ A clip's `asset` is one of:
 | `image` | `src` |
 | `audio` | `src`, `trim`, `volume`, `fadeIn`, `fadeOut` (seconds) |
 | `text` | `text`, `style` |
-| `shape` | `color`, `position` (the shape's **centre**), `size` `{ width, height }`, `radius` (`0` to `1`), `stroke` `{ color, width }`, `animateTo` `{ position, size }`. See [Shapes](#shapes) |
+| `shape` | `shape` (`rect`, `ellipse`, `circle`, `triangle`, `diamond`), `color` (fill, omit for outline-only), `stroke` `{ color, width }`, `position` (the **centre** by default), `anchor`, `size` `{ width, height? }` (omit the height for a shape square in pixels), `radius`, `rotate`, `softness`, `animateTo` `{ position, size, rotate, easing }`. See [Shapes](#shapes) |
 | `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip. Every clip field below applies to a composition clip too, except `speed` (set speed on the clips inside the composition instead) |
 
 ### Clip fields
