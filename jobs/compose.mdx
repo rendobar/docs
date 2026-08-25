@@ -213,14 +213,37 @@ Both fields default to something useful, so most timelines need neither.
 | Field | Omitted means |
 | --- | --- |
 | `length` | Play the whole source. With `trim`, the trimmed span. With `speed`, the source duration divided by the rate, so `speed: 0.5` on a 4 second clip occupies 8 seconds. On a `composition` clip, the nested timeline's own end |
-| `start` | Begin where the previous clip on this track ends, pulled back by any transition between them. The first clip on a track starts at 0 |
-
-Two rules follow from that:
-
-- `length` is required on `text` and `image` clips. Neither has a source with a duration, so there is nothing to measure, and the submit is rejected with that message rather than rendering a guess.
-- Inside a `composition`, both stay required. A nested timeline's length is set by the clip hosting it, so there is nothing to append to.
+| `start` | Begin after everything already placed on this track, pulled back by any transition immediately before it. The first clip on a track starts at 0 |
 
 Set either field where you want something other than the default: a gap before a clip, a deliberate overlap, or less than the whole source. Every timeline written with full timing keeps rendering exactly as it did.
+
+### Running to the end of the video
+
+Some clips should last as long as the finished video: a music bed, a watermark, a title that stays up. Their length is not their source's length (a 3 minute music track under a 20 second video) and working it out means totalling clips on a different track. Write `"end"` instead.
+
+```json
+"tracks": [
+  { "clips": [
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/river.mp4" } },
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/forest.mp4" } }
+  ] },
+  { "clips": [
+    { "asset": { "type": "audio", "src": "https://cdn.rendobar.com/assets/showcase/music.mp3", "volume": 0.35, "fadeOut": 2 },
+      "length": "end" }
+  ] }
+]
+```
+
+The music starts at 0 and stops on the last frame, whatever the clips above it add up to. Add a third clip later and it still does.
+
+An `"end"` clip measures against every clip that is not one, so two of them on different tracks both land on the real end rather than chasing each other. It runs to the last frame, so nothing may follow it on the same track, and a timeline made only of `"end"` clips has nothing to measure and is rejected.
+
+Inside a scene, the scene is the end, so `"end"` and an omitted `length` mean the same thing there.
+
+### Where a length is still required
+
+- `text` and `image` clips have no source with a duration, so they need a number or `"end"`. The submit is rejected with that message rather than rendering a guess.
+- Inside a `composition`, `start` and `length` both stay required. A nested timeline's length is set by the clip hosting it, so there is nothing to append to.
 
 ## Add a layer
 
@@ -533,7 +556,7 @@ A clip's `asset` is one of:
 
 ### Clip fields
 
-Every clip has an `asset`, an optional `start` and `length` (see [Timing is optional](#timing-is-optional)), plus any of:
+Every clip has an `asset`. `start` and `length` are optional, and `length` also accepts `"end"` (see [Timing is optional](#timing-is-optional)). Plus any of:
 
 | Field | What it does |
 | --- | --- |
@@ -570,7 +593,7 @@ The scene-first shape, when you use `scenes` instead of `tracks`:
 | --- | --- |
 | `scenes[].duration` | Seconds. Defaults to the longest clip in the scene, or to the length of the video inside it when its clips carry no timing either |
 | `scenes[].transition` | The transition INTO this scene from the previous one: `{ transition, duration, direction? }`, same kinds as the table above |
-| `scenes[].clips` | Clips as in tracks mode. `start` and `length` are optional and default to spanning the scene |
+| `scenes[].clips` | Clips as in tracks mode. `start` and `length` are optional and default to spanning the scene, which is also what `length: "end"` means here |
 | `overlays` | Clips composited over the whole video (a logo, a watermark, a persistent title). They always span the whole video, so `length` is ignored here and `start` defaults to 0 |
 
 ### Text style
