@@ -208,18 +208,22 @@ So a multi-track timeline is layers (tracks) of sequences (clips). That is the w
 
 ### Timing is optional
 
-Both fields default to something useful, so most timelines need neither.
+Every clip sits in a **container**: the scene it belongs to, or the whole video. Two sentences cover every case.
 
-| Field | Omitted means |
-| --- | --- |
-| `length` | Play the whole source. With `trim`, the trimmed span. With `speed`, the source duration divided by the rate, so `speed: 0.5` on a 4 second clip occupies 8 seconds. On a `composition` clip, the nested timeline's own end |
-| `start` | Begin after everything already placed on this track, pulled back by any transition immediately before it. The first clip on a track starts at 0 |
+- **Omit `length`** and the clip runs as long as its **content** does, never past its container.
+- **Write `length: "end"`** and it runs to the end of its **container**, whatever its content says.
 
-Set either field where you want something other than the default: a gap before a clip, a deliberate overlap, or less than the whole source. Every timeline written with full timing keeps rendering exactly as it did.
+Content means the source's duration, or the trim span, or the source duration divided by `speed` (so `speed: 0.5` on a 4 second clip occupies 8 seconds), or a composition's own end.
 
-### Running to the end of the video
+Text and images have no duration of their own, so for them the two sentences say the same thing. A title with no `length` stays up for the whole video, which is what a watermark wants.
 
-Some clips should last as long as the finished video: a music bed, a watermark, a title that stays up. Their length is not their source's length (a 3 minute music track under a 20 second video) and working it out means totalling clips on a different track. Write `"end"` instead.
+`start` follows the same shape: omit it and the clip begins after everything already placed on its track, pulled back by any transition immediately before it. Give it a number and that is seconds from the start of its container.
+
+Set either field wherever you want something else. Every timeline written with full timing keeps rendering exactly as it did.
+
+### Worked examples
+
+A music bed. The source is three minutes long, the video is not, and `"end"` is how you say so without totalling the clips above it.
 
 ```json
 "tracks": [
@@ -234,16 +238,24 @@ Some clips should last as long as the finished video: a music bed, a watermark, 
 ]
 ```
 
-The music starts at 0 and stops on the last frame, whatever the clips above it add up to. Add a third clip later and it still does.
+A watermark. It has no duration of its own, so it needs nothing at all.
 
-An `"end"` clip measures against every clip that is not one, so two of them on different tracks both land on the real end rather than chasing each other. It runs to the last frame, so nothing may follow it on the same track, and a timeline made only of `"end"` clips has nothing to measure and is rejected.
+```json
+{ "clips": [
+  { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" },
+    "transform": { "scale": 0.15, "position": { "x": "88%", "y": "12%" } }, "opacity": 0.8 }
+] }
+```
 
-Inside a scene, the scene is the end, so `"end"` and an omitted `length` mean the same thing there.
+Both stop on the last frame, whatever the clips elsewhere add up to. Add another clip later and they still do.
 
-### Where a length is still required
+### The rules that fall out of it
 
-- `text` and `image` clips have no source with a duration, so they need a number or `"end"`. The submit is rejected with that message rather than rendering a guess.
-- Inside a `composition`, `start` and `length` both stay required. A nested timeline's length is set by the clip hosting it, so there is nothing to append to.
+A clip running to the end of the **video** is measured against every clip that is not, so two of them on different tracks both land on the real end rather than chasing each other. It runs to the last frame, so nothing may follow it on the same track, and a timeline where nothing has a length of its own has no end to measure and is rejected.
+
+A clip never runs past its container, so a 6 second video in a 3 second scene plays 3 seconds, and a 2 second video in a 5 second scene plays 2. That applies to a length you wrote as well as one the engine worked out.
+
+Inside a `composition`, `start` and `length` both stay required. A nested timeline's length is set by the clip hosting it, so there is nothing to append to and no container to measure against.
 
 ## Add a layer
 
@@ -591,10 +603,10 @@ The scene-first shape, when you use `scenes` instead of `tracks`:
 
 | Field | Notes |
 | --- | --- |
-| `scenes[].duration` | Seconds. Defaults to the longest clip in the scene, or to the length of the video inside it when its clips carry no timing either |
+| `scenes[].duration` | Seconds. Defaults to the longest thing in the scene, measured from its clips' own lengths or the sources inside them |
 | `scenes[].transition` | The transition INTO this scene from the previous one: `{ transition, duration, direction? }`, same kinds as the table above |
-| `scenes[].clips` | Clips as in tracks mode. `start` and `length` are optional and default to spanning the scene, which is also what `length: "end"` means here |
-| `overlays` | Clips composited over the whole video (a logo, a watermark, a persistent title). They always span the whole video, so `length` is ignored here and `start` defaults to 0 |
+| `scenes[].clips` | Clips as in tracks mode. The scene is their container: an omitted `length` runs the clip as long as its source but never past the scene, and `length: "end"` spans the scene |
+| `overlays` | Clips composited over the whole video (a logo, a watermark, a persistent title). The whole video is their container, so an omitted `length` spans it. `start` defaults to 0 |
 
 ### Text style
 
