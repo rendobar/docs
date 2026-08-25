@@ -97,14 +97,22 @@ Omit `subtitles` to auto-transcribe. The spoken language is detected by default 
   URL of an SRT, VTT, or ASS subtitle file. A provided ASS file is burned as-is, preserving its own styling. Omit to auto-transcribe the audio.
 </ParamField>
 
+<ParamField body="font" type="string">
+  URL of your own font file (TTF, OTF, TTC, WOFF, WOFF2). Captions render in it, and it takes priority over `fontFamily`, so you do not need to know the family name inside your own file. An uploaded asset's content URL works here.
+</ParamField>
+
 ## Parameters
 
 <ParamField body="language" type="enum" default="auto">
   Spoken language for the auto-transcribe path, as an ISO-639-1 code (e.g. `en`, `es`, `ja`) or `auto` to detect. English uses a faster model. Everything else routes to multilingual transcription. Ignored when a subtitle file is provided.
 </ParamField>
 
-<ParamField body="fontFamily" type="string" default="Inter">
-  Font family. Must resolve to a font available to the renderer.
+<ParamField body="font" type="string" default="Inter">
+  Font family, or a CSS fallback stack. Any [Google Fonts](https://fonts.google.com) family works by name and is fetched at render time. Seven are bundled and resolve instantly: `Inter`, `Roboto`, `Montserrat`, `Poppins`, `Oswald`, `Anton`, `Bebas Neue`. A stack falls through in order, so `"Lato, Inter, sans-serif"` tries each in turn. To render in your own file, pass its URL as the `font` **input**, which wins over this parameter.
+</ParamField>
+
+<ParamField body="fontFamily" type="string" deprecated>
+  Deprecated alias for `font`. Still accepted so existing clients keep working. `font` wins when both are present.
 </ParamField>
 
 <ParamField body="fontSize" type="integer" default="48">
