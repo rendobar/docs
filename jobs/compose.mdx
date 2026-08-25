@@ -255,6 +255,8 @@ A clip running to the end of the **video** is measured against every clip that i
 
 A clip never runs past its container, so a 6 second video in a 3 second scene plays 3 seconds, and a 2 second video in a 5 second scene plays 2. That applies to a length you wrote as well as one the engine worked out.
 
+`"end"` is the opposite request and does not cap: it asks for the container's full extent whatever the source holds. On a source shorter than the container that is impossible, and the job is rejected for outrunning its source. Leave the length off instead, or trim less.
+
 Inside a `composition`, `start` and `length` both stay required. A nested timeline's length is set by the clip hosting it, so there is nothing to append to and no container to measure against.
 
 ## Add a layer
