@@ -138,12 +138,16 @@ curl -X POST https://api.rendobar.com/jobs \
 </ParamField>
 
 <ParamField body="font" type="string">
-  URL of a TTF or OTF font file. Set `style.font` to that font's family name to render captions in it. See [Fonts](#fonts).
+  URL of a TTF or OTF font file. Set `style.font` to the family name **embedded in that file** to render captions in it. See [Fonts](#fonts).
 </ParamField>
 
 ## Fonts
 
 Eleven presets ship with sensible default fonts. To pick a different one, set `style.font` to a bundled family. No upload needed.
+
+<Note>
+  Unlike [compose](/jobs/compose#fonts) and [caption.burn](/jobs/captions/burn), this job does not fetch Google Fonts by name. Use a bundled family, or supply your own file.
+</Note>
 
 | Bundled family | Pass as `style.font` |
 | --- | --- |
