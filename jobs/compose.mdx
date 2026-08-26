@@ -358,8 +358,9 @@ A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`
 
 ## Shapes
 
-A `shape` asset draws a rect, ellipse, circle, triangle or diamond. No image to
-make, no file to host, and it stays sharp at any output resolution.
+A `shape` asset draws a rect, ellipse, circle, triangle, diamond, or any SVG
+path you paste in. No image to make, no file to host, and it stays sharp at any
+output resolution.
 
 ```json
 "asset": {
@@ -373,10 +374,13 @@ make, no file to host, and it stays sharp at any output resolution.
 That is a bar across the lower third, dark enough to read a title on and thin
 enough to see the footage through. Put it on a track below the text.
 
+Only `type` and `size` are required. Everything else on this page is optional,
+and the defaults are chosen so the common cases need almost none of it.
+
 Two things to know up front. `position` is the **centre** of the shape unless
-you set `anchor`, so a full-width bar sits at `x: "50%"` whatever its width. And
-there is no `length`, because a shape has no duration of its own: like text and
-images it runs to the end of its container unless you give it one.
+you set `anchor`, so a full-width bar sits at `x: "50%"` whatever its height.
+And there is no `length`, because a shape has no duration of its own: like text
+and images it runs to the end of its container unless you give it one.
 
 `width` is a percent of the frame's width, `height` a percent of its height.
 
@@ -409,35 +413,36 @@ what makes letterbox bars arithmetic-free.
   "position": { "x": "0%", "y": "90%" }, "size": { "width": "100%", "height": "10%" } }
 ```
 
-### Transparency goes in the colour
+### Fills, flat and gradient
 
-`color` takes `#RRGGBB` or the 8-digit `#RRGGBBAA`. Use the alpha byte for a
-constant translucency, the way `#0A0A0ACC` does above.
+`color` takes `#RRGGBB`, or the 8-digit `#RRGGBBAA` for a constant translucency
+the way `#0A0A0ACC` does above.
 
 Do not reach for the clip's `opacity` instead. `opacity` dims the fill as well
 as fading it, so a half-opacity white box renders grey rather than white you can
 see through. Keep `opacity` for animated fades.
 
-### Rounded corners
-
-`radius` runs from `0` (square) to `1` (fully round) on a `rect`. At `1` a wide
-box becomes a pill and a square one becomes a circle.
+Give `color` **two** colours and it is a gradient. `gradient` names the
+direction: `vertical` (the default), `horizontal`, `diagonal` or `radial`.
 
 ```json
-{ "type": "shape", "color": "#0A0A0ACC", "radius": 0.35,
-  "position": { "x": "26%", "y": "50%" },
-  "size": { "width": "34%", "height": "34%" },
-  "stroke": { "color": "#FFFFFF", "width": 3 } }
+{ "type": "shape", "color": ["#E11D48", "#3B82F6"], "gradient": "diagonal",
+  "position": { "x": "50%", "y": "50%" }, "size": { "width": "40%", "height": "30%" } }
 ```
+
+The gradient maps to the **shape**, not the frame, so a small badge shows the
+whole ramp instead of a sliver of one. Stops take the 8-digit form too, which is
+how you get a scrim that fades to nothing: `["#0A0A0A00", "#0A0A0AFF"]`.
 
 ### Outlines, with a real hole
 
-`stroke` draws a border just inside the shape's edge. Give the shape a `color`
-too and you get a filled shape with a border, and `radius` rounds both together.
+`stroke` draws a border just inside the shape's edge, its `width` in pixels of
+the output frame. Give the shape a `color` too and you get a filled shape with a
+border; `radius` rounds both together.
 
 Leave `color` out and only the outline draws. What it surrounds is genuinely
 transparent, not filled with black, so the footage shows through the middle.
-That works on every kind.
+That works on every kind except a path.
 
 ```json
 { "type": "shape", "shape": "ellipse",
@@ -446,8 +451,22 @@ That works on every kind.
   "stroke": { "color": "#F59E0B", "width": 5 } }
 ```
 
-`width` is in pixels of the output frame, so it stays the same visual weight
-whatever the shape's size.
+### Rounded corners
+
+`radius` runs from `0` (square) to `1` (fully round) on a `rect`. At `1` a wide
+box becomes a pill and a square one becomes a circle.
+
+### Drop shadows
+
+`shadow` follows the shape, including its outline, its rotation and its
+animation. Every field has a default, so `"shadow": {}` is a sensible shadow.
+
+```json
+{ "type": "shape", "color": ["#FFFFFF", "#E5E7EB"], "radius": 0.3,
+  "stroke": { "color": "#111827", "width": 3 },
+  "shadow": { "color": "#00000099", "blur": 14, "x": 8, "y": 10 },
+  "position": { "x": "30%", "y": "50%" }, "size": { "width": "34%", "height": "40%" } }
+```
 
 ### Rotation turns about the shape, not the frame
 
@@ -467,13 +486,32 @@ a rect with a small height, and `rotate` is what makes it diagonal.
 ### Softness
 
 `softness` runs 0 to 1 and feathers the edge. At 0.2 to 0.4 an ellipse reads as
-a spotlight or a vignette rather than a hard-edged disc.
+a spotlight or a vignette rather than a hard-edged disc. A full-frame ellipse
+with `softness: 0.5` and a radial `["#00000000", "#000000CC"]` fill is a
+vignette with no image asset at all.
+
+### Paths
+
+`shape: "path"` takes SVG path data straight out of a design tool. `viewBox`
+gives the coordinate space it was drawn in, defaulting to `"0 0 100 100"`, and
+the path is scaled into `size` so the same data works at any size on any frame.
+
+```json
+{ "type": "shape", "shape": "path", "viewBox": "0 0 24 24",
+  "path": "M12 21C12 21 3 14.5 3 8.5C3 5.5 5.5 3 8.5 3C10.4 3 12 4.5 12 4.5C12 4.5 13.6 3 15.5 3C18.5 3 21 5.5 21 8.5C21 14.5 12 21 12 21Z",
+  "color": "#E11D48", "position": { "x": "50%", "y": "50%" }, "size": { "width": "20%" } }
+```
+
+`M L H V C S Q T Z` are supported, absolute and relative. Elliptical arcs (`A`)
+are refused rather than approximated, so re-export with arcs converted to
+curves. A path takes a fill, a gradient, a shadow, rotation and softness, but
+not a `stroke`: outlining arbitrary path data needs true path offsetting.
 
 ### Animation
 
-`animateTo` moves, resizes and turns the shape over the clip. `easing` is
-`linear` by default, which is what a progress bar or a timer wants, or `smooth`
-for an entrance.
+`animateTo` moves `position`, `size`, `rotate`, `color` and `radius` over the
+clip. `easing` is `linear` by default, which is what a progress bar or a timer
+wants, or `smooth` for an entrance.
 
 ```json
 { "type": "shape", "color": "#FFFFFF", "anchor": "topLeft",
@@ -483,11 +521,13 @@ for an entrance.
 ```
 
 A dimension you leave out of `animateTo` keeps its starting value, so the bar
-above grows sideways without changing height. `transform` cannot do this: its
-`scale` is uniform, so it would grow the bar in both directions at once.
+above grows sideways without changing height. A shape that is square in pixels
+stays square as it grows, so an animated circle does not turn into an ellipse
+halfway through. A solid colour can animate into a gradient, and a square can
+round itself off with `animateTo.radius`.
 
-A shape that is square in pixels stays square as it grows, so an animated circle
-does not turn into an ellipse halfway through.
+An animated `rotate` has to stay within -180 and 180 degrees at both ends,
+because the engine turns a shape over exactly one revolution.
 
 ### Combinations the API refuses
 
@@ -499,21 +539,20 @@ names the fix.
 | --- | --- | --- |
 | `radius` on anything but a `rect` | only rectangles have corners | drop it |
 | `radius` with no `color` | an outline-only shape is drawn by the primitive with no corner rounding | give it a fill |
-| `radius` or a two-colour fill plus stroke, with `rotate` or `softness` | the primitive that rounds and carries two colours cannot turn or feather | drop one, or rotate the whole clip with `transform.rotate` |
-| a fill and a stroke on a non-`rect` | that primitive carries one colour | put the fill on its own shape clip below |
-| an animated `rotate` beyond -180 to 180 | the engine turns a shape over exactly one revolution | animate `transform.rotate` for a full spin |
+| `radius` with `rotate` or `softness` | the primitive that rounds corners cannot turn or feather | drop one of them |
+| `stroke` on a `path` | outlining arbitrary path data needs true path offsetting | draw the outline into the path itself |
+| an animated `rotate` beyond -180 to 180 | the engine turns a shape over exactly one revolution | animate in two clips |
+| `transform` on any shape | it moves the whole frame, not the shape in it, so the result lands somewhere neither value asked for | use `position`, `size` and `rotate` |
 
 ### What else a shape takes
 
-Every per-clip field applies. `transform` repositions and scales it, `blendMode`
-mixes it with the layer below, `blur` softens the whole thing, and opacity
-keyframes fade it in and out. A track holding only shapes composites as a base
-layer, so a solid colour background is a timeline that references no files at
-all.
+`blendMode` mixes it with the layer below, `blur` softens the whole thing,
+colour grading tints it, and opacity keyframes fade it in and out. A track
+holding only shapes composites as a base layer, so a solid colour background is
+a timeline that references no files at all.
 
-What a shape is not is a drawing surface. There is no gradient fill and no drop
-shadow. Anything past a filled or outlined rect, ellipse, circle, triangle or
-diamond is still an `image` asset.
+There is no arbitrary path stroke and no per-corner radius. Anything past that
+is still an `image` asset.
 
 
 ## Fonts
@@ -726,7 +765,7 @@ A clip's `asset` is one of:
 | `image` | `src` |
 | `audio` | `src`, `trim`, `volume`, `fadeIn`, `fadeOut` (seconds) |
 | `text` | `text`, `style` |
-| `shape` | `shape` (`rect`, `ellipse`, `circle`, `triangle`, `diamond`), `color` (fill, omit for outline-only), `stroke` `{ color, width }`, `position` (the **centre** by default), `anchor`, `size` `{ width, height? }` (omit the height for a shape square in pixels), `radius`, `rotate`, `softness`, `animateTo` `{ position, size, rotate, easing }`. See [Shapes](#shapes) |
+| `shape` | `shape` (`rect`, `ellipse`, `circle`, `triangle`, `diamond`, `path`), `color` (one colour, or two for a gradient; omit for outline-only), `gradient`, `stroke` `{ color, width }`, `shadow` `{ color, blur, x, y }`, `position` (the **centre** by default), `anchor`, `size` `{ width, height? }` (omit the height for a shape square in pixels), `radius`, `rotate`, `softness`, `path` + `viewBox`, `animateTo` `{ position, size, rotate, color, radius, easing }`. See [Shapes](#shapes) |
 | `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip. Every clip field below applies to a composition clip too, except `speed` (set speed on the clips inside the composition instead) |
 
 ### Clip fields
