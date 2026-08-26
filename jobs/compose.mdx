@@ -526,8 +526,8 @@ stays square as it grows, so an animated circle does not turn into an ellipse
 halfway through. A solid colour can animate into a gradient, and a square can
 round itself off with `animateTo.radius`.
 
-An animated `rotate` has to stay within -180 and 180 degrees at both ends,
-because the engine turns a shape over exactly one revolution.
+An animated `rotate` has no limit: rotation is baked into the shape's own
+outline, so animating from 0 to 720 is two full turns.
 
 ### Combinations the API refuses
 
@@ -541,7 +541,6 @@ names the fix.
 | `radius` with no `color` | an outline-only shape is drawn by the primitive with no corner rounding | give it a fill |
 | `radius` with `rotate` or `softness` | the primitive that rounds corners cannot turn or feather | drop one of them |
 | `stroke` on a `path` | outlining arbitrary path data needs true path offsetting | draw the outline into the path itself |
-| an animated `rotate` beyond -180 to 180 | the engine turns a shape over exactly one revolution | animate in two clips |
 | `transform` on any shape | it moves the whole frame, not the shape in it, so the result lands somewhere neither value asked for | use `position`, `size` and `rotate` |
 
 ### What else a shape takes
