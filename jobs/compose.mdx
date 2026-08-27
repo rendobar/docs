@@ -374,6 +374,27 @@ output resolution.
 That is a bar across the lower third, dark enough to read a title on and thin
 enough to see the footage through. Put it on a track below the text.
 
+<Columns cols={3}>
+  <Frame caption="a bar, plus a text track">
+    <video src="https://cdn.rendobar.com/assets/showcase/shapes/lower-third.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="animateTo on the width">
+    <video src="https://cdn.rendobar.com/assets/showcase/shapes/progress-bar.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="radius with a shadow">
+    <video src="https://cdn.rendobar.com/assets/showcase/shapes/rounded-card.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="a circle, two colours">
+    <video src="https://cdn.rendobar.com/assets/showcase/shapes/gradient-badge.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="a stroke with no fill">
+    <video src="https://cdn.rendobar.com/assets/showcase/shapes/outline-box.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="pasted path data">
+    <video src="https://cdn.rendobar.com/assets/showcase/shapes/svg-path.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
 Only `type` and `size` are required. Everything else on this page is optional,
 and the defaults are chosen so the common cases need almost none of it.
 
