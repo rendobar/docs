@@ -45,13 +45,43 @@ const ROWS = [
   ["queued backlog", "maxQueuedJobs", fmtInt],
   ["api requests", "apiRequestsPerMinute", fmtInt],
   ["max input file", "maxInputFileSize", fmtBytes],
-  ["max batch size", "maxBatchSize", fmtInt],
   ["job timeout", "maxJobTimeout", fmtDuration],
   ["output retention", "outputRetentionDays", fmtDays],
-  ["total r2 storage", "storageQuota", fmtBytes],
+  // The table heading is "Total object storage"; the old "total r2 storage"
+  // label matched nothing, so this row went unchecked.
+  ["total object storage", "storageQuota", fmtBytes],
 ];
 
 const FILES = ["concepts/credits.mdx", "support/limits.mdx"];
+
+/**
+ * Frontmatter descriptions repeat these numbers, and nothing checked them.
+ * support/limits.mdx advertised "30 vs 300/min" and "100 MB vs 2 GB" while its
+ * table, which IS checked, said 120/600 and 500 MB/10 GB. The description is
+ * what a search result and an AI answer quote, so it was the most-read wrong
+ * number on the site.
+ *
+ * Each pattern must match. Rephrase the sentence and this fails, telling you to
+ * update the pattern, rather than quietly checking nothing.
+ */
+const DESCRIPTION_CLAIMS = [
+  {
+    file: "support/limits.mdx",
+    what: "rate limits",
+    pattern: /rate limits \((\S+) vs (\S+)\/min\)/,
+    key: "apiRequestsPerMinute",
+    fmt: fmtInt,
+  },
+  {
+    file: "support/limits.mdx",
+    what: "file size caps",
+    pattern: /file size caps \(([\d.]+ [MG]B) vs ([\d.]+ [MG]B)\)/,
+    key: "maxInputFileSize",
+    fmt: fmtBytes,
+  },
+];
+
+const description = (md) => /^description:\s*"([^"]*)"/m.exec(md)?.[1] ?? "";
 
 /** Find the `| label… | free | pro |` row and return the free/pro cells. */
 function tierRow(md, labelSubstring) {
@@ -75,11 +105,15 @@ async function main() {
   }
 
   const errors = [];
+  // A label that matches nothing used to `continue` silently, so renaming a row
+  // heading disabled its check without a word. Track what matched instead.
+  const matchedLabels = new Set();
   for (const file of FILES) {
     const md = readFileSync(join(ROOT, file), "utf8");
     for (const [label, key, fmt] of ROWS) {
       const row = tierRow(md, label);
       if (!row) continue; // not every row is in every file
+      matchedLabels.add(label);
       const wantFree = fmt(source.plans.free.limits[key]);
       const wantPro = fmt(source.plans.pro.limits[key]);
       if (row.free !== wantFree || row.pro !== wantPro) {
@@ -90,13 +124,37 @@ async function main() {
     }
   }
 
+  for (const label of ROWS.map(([l]) => l)) {
+    if (!matchedLabels.has(label)) {
+      errors.push(`no table row matched "${label}" in any checked file — was the row renamed or removed?`);
+    }
+  }
+
+  for (const claim of DESCRIPTION_CLAIMS) {
+    const desc = description(readFileSync(join(ROOT, claim.file), "utf8"));
+    const m = claim.pattern.exec(desc);
+    if (!m) {
+      errors.push(
+        `${claim.file}: the description no longer states "${claim.what}" in the expected shape, so it is unchecked. Update DESCRIPTION_CLAIMS.`,
+      );
+      continue;
+    }
+    const wantFree = claim.fmt(source.plans.free.limits[claim.key]);
+    const wantPro = claim.fmt(source.plans.pro.limits[claim.key]);
+    if (m[1] !== wantFree || m[2] !== wantPro) {
+      errors.push(
+        `${claim.file}: description says ${claim.what} are ${m[1]} vs ${m[2]} but source says ${wantFree} vs ${wantPro}`,
+      );
+    }
+  }
+
   if (errors.length) {
     console.error("✗ Plan-limit tables drifted from the source of truth:\n" + errors.map((e) => `  - ${e}`).join("\n"));
     console.error(`\nUpdate the tables to match ${SOURCE_URL} (edit price-tiers.ts in the monorepo to change a value).`);
     process.exitCode = 1;
     return;
   }
-  console.log("✓ Plan-limit tables match the source of truth.");
+  console.log("✓ Plan-limit tables and descriptions match the source of truth.");
 }
 
 main();
