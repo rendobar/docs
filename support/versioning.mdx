@@ -1,0 +1,82 @@
+---
+title: "API versioning and deprecations"
+sidebarTitle: "Versioning"
+description: "Read how the API evolves: additive changes only, no version in the URL, deprecated surfaces keep working, and removals batch into a rare SDK major."
+icon: "code-branch"
+keywords: ["rendobar api versioning", "api deprecation policy", "sdk semver", "breaking changes", "api stability"]
+canonical: "https://rendobar.com/docs/support/versioning"
+---
+
+There is no version in the URL. No `/v1`, no `Api-Version` header, no date
+pinning. That is a commitment, not an omission: the API only changes in ways
+that existing callers survive, so there is nothing to pin to.
+
+## What we will change without warning
+
+These are safe because a tolerant client ignores what it does not recognise.
+
+- A new field on a response
+- A new optional parameter on a request
+- A new endpoint, or a new method on the SDK
+- A new accepted value on a request enum
+- A new job type
+
+Write clients that ignore unknown response fields. Every SDK we publish already
+does.
+
+## What we treat as breaking
+
+- Removing or renaming a field, parameter, endpoint or method
+- Making a response field nullable, or changing its type
+- Narrowing what a request accepts
+- Moving a field into or out of a union
+
+When one of these looks necessary we look for the additive path first: a new
+sibling field, a default, a new endpoint alongside the old one. We break only
+when there is genuinely no additive option.
+
+## How something goes away
+
+Three steps, in order, and the middle one lasts.
+
+1. **Expand.** The replacement ships alongside the old surface. Both work.
+2. **Deprecate.** The old surface is marked and keeps working. It is not
+   slowed, throttled, or degraded.
+3. **Contract.** Removals are batched and released together in a single major.
+
+A deprecated surface is one you can keep using while you migrate, not one that
+is about to fail. `client.team.*` and the `/team/*` routes are deprecated today
+and call exactly the same code as their replacements.
+
+## How to tell what is deprecated
+
+- **OpenAPI**: the operation carries `"deprecated": true` in
+  [the spec](https://api.rendobar.com/openapi.json). Generators surface this.
+- **TypeScript**: the method carries `@deprecated`, so your editor strikes it
+  through and your build can warn.
+- **Changelog**: every deprecation is announced at
+  [rendobar.com/changelog](https://rendobar.com/changelog/).
+
+## SDK versions
+
+[`@rendobar/sdk`](/sdk) follows semantic versioning.
+
+| Change | Release |
+|---|---|
+| Bug fix | patch |
+| New method, new field, new optional argument | minor |
+| A removal from the deprecation backlog | major |
+
+Majors are rare and deliberate. Publishing one requires a human to approve that
+exact version number, and CI refuses to push a major to npm without it. That
+guard exists because an automated release once cut a major from a stray commit
+footer, and we would rather fail a release than surprise you with one.
+
+Pin what you depend on:
+
+```json
+{ "dependencies": { "@rendobar/sdk": "^5.7.0" } }
+```
+
+A caret is safe here. It accepts every patch and minor, which by the rules above
+cannot break you, and refuses the next major until you choose it.

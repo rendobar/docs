@@ -82,7 +82,8 @@
               "support/faq",
               "concepts/credits",
               "support/limits",
-              "support/errors"
+              "support/errors",
+              "support/versioning"
             ]
           }
         ]
@@ -310,4 +311,3 @@
     "suggestEdit": true
   }
 }
-
