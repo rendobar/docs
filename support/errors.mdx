@@ -1,7 +1,7 @@
 ---
 title: "API error codes reference"
 sidebarTitle: "Error codes"
-description: "View 13 API error codes, their HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on every endpoint."
+description: "View all 26 API error codes, their HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on every endpoint."
 icon: "triangle-exclamation"
 keywords: ["rendobar error codes", "api error reference", "ffmpeg error troubleshooting", "insufficient credits", "rate limited"]
 canonical: "https://rendobar.com/docs/support/errors"
@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/support/errors"
       "headline": "API error codes reference",
       "description": "Every API error code, its HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on all endpoints.",
       "datePublished": "2026-03-20",
-      "dateModified": "2026-05-24",
+      "dateModified": "2026-08-29",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -50,6 +50,19 @@ Check the HTTP status and `error.code` before reading `data`.
 | `RUNNER_TIMEOUT` | 504 | The job did not finish in time. No credits charged |
 | `ORG_SUSPENDED` | 403 | Contact `hello@rendobar.com` |
 | `INTERNAL_ERROR` | 500 | Server bug. Persist? Contact support with the request ID |
+| `STORAGE_QUOTA_EXCEEDED` | 402 | Stored assets exceed the plan quota. Delete assets or upgrade |
+| `FILE_TOO_LARGE` | 413 | Input is larger than the plan allows. Check `maxInputFileSize` on [/account/capabilities](/sdk) |
+| `QUEUE_FULL` | 429 | Too many jobs already waiting. Let some finish, then retry |
+| `QUEUE_EXPIRED` | 400 | The job waited too long to be dispatched. Submit it again |
+| `GONE` | 410 | The output has passed its retention window and was deleted |
+| `INPUT_URL_BLOCKED` | 400 | The input URL is not fetchable. Private and link-local addresses are refused |
+| `INPUT_FETCH_FAILED` | 400 | The input URL could not be downloaded. Check it is public and still there |
+| `INPUT_NOT_MEDIA` | 422 | The input downloaded but is not media |
+| `INPUT_UNSUPPORTED` | 422 | The input is media of a kind this job type cannot take |
+| `PROCESSING_FAILED` | 422 | The input was readable but the job could not produce an output |
+| `UPSTREAM_ERROR` | 502 | A third-party service the job depends on failed. Retry |
+| `NOT_CONFIGURED` | 503 | The capability is not configured on this deployment. Contact support |
+| `NOT_IMPLEMENTED` | 501 | The endpoint exists but does nothing yet |
 
 ## Handle the common ones
 
