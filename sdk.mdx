@@ -167,7 +167,7 @@ A WebSocket can't carry an `Authorization` header, so the SDK appends your API k
 
 `billing.state()` returns balance and plan. `billing.usage({ start, end })` totals spend for a window, `billing.usageByClient({ days })` groups that spend by what submitted each job (`dashboard`, `sdk`, `cli`, `mcp`, `n8n`, `api`), and `billing.transactions({ page, limit })` reads the ledger.
 
-`apiKeys`, `assets`, `orgs`, and `team` follow the same shape.
+`apiKeys`, `assets`, and `orgs` follow the same shape. Organization membership lives on `orgs.members` (`invite`, `changeRole`, `remove`) and `orgs.invitations` (`revoke`). The older `team` resource still works and is marked deprecated.
 
 ## Client options
 
