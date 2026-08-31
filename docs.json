@@ -36,6 +36,7 @@
             "pages": [
               "concepts/job",
               "concepts/generation",
+              "concepts/scopes",
               "guides/webhooks",
               "guides/callbacks"
             ]

@@ -1,0 +1,139 @@
+---
+title: "Scopes and access"
+sidebarTitle: "Scopes"
+description: "Configure an API key to hold only what your code needs, see what an app asks for before you allow it, and read the 403 that names a missing scope."
+icon: "key"
+keywords: ["api scopes", "oauth scopes", "api key permissions", "least privilege api", "insufficient_scope"]
+canonical: "https://rendobar.com/docs/concepts/scopes"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/concepts/scopes/#article",
+      "headline": "Scopes and access",
+      "description": "Configure an API key to hold only what your code needs, see what an app asks for before you allow it, and read the 403 that names a missing scope.",
+      "datePublished": "2026-09-01",
+      "dateModified": "2026-09-01",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Every credential carries scopes, and every endpoint states the one it needs. What a caller may do
+comes from what it was granted, not from whether it authenticated with an API key, an OAuth token
+or a dashboard session.
+
+## The scopes
+
+Six resources, each with a read and a write scope.
+
+| Resource | Read | Write | Write lets it |
+|---|---|---|---|
+| Jobs | `jobs:read` | `jobs:write` | Run jobs, which spends credits |
+| Assets | `assets:read` | `assets:write` | Upload and delete files |
+| Webhooks | `webhooks:read` | `webhooks:write` | Change where events are delivered |
+| Billing | `billing:read` | `billing:write` | Change the plan and what you are charged |
+| Organization | `orgs:read` | `orgs:write` | Add and remove members |
+| API keys | `keys:read` | `keys:write` | Create keys that act outside the session |
+
+Two rules cover the rest:
+
+- **`write` includes `read`.** A credential holding `jobs:write` can list jobs. You never need both.
+- **Self-description is never scoped.** Any credential can ask which workspace it acts for and what
+  limits apply, whatever else it holds.
+
+## Narrowing an API key
+
+Pass `scopes` when you create a key and it can do only that.
+
+<CodeGroup>
+
+```ts SDK
+const key = await rendobar.apiKeys.create({
+  name: "CI deploy key",
+  scopes: ["jobs:write", "assets:write"],
+});
+
+key.scopes; // what it actually got
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/api-keys \
+  -H "Authorization: Bearer $RENDOBAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"CI deploy key","scopes":["jobs:write","assets:write"]}'
+```
+
+</CodeGroup>
+
+Omit `scopes` and the key gets everything the credential creating it can pass on, which for a
+dashboard session is everything a key may hold. The response reports what the key actually
+received, which is not always what was asked for.
+
+Two limits apply to every key, however it was made:
+
+- **A key can never hold `keys:write`.** A key that can create keys survives its own revocation, so
+  one leak becomes permanent access. Create and revoke keys from the dashboard, or from an app you
+  granted key management to.
+- **A key is never broader than what created it.** Asking for more than the creating credential
+  holds is refused rather than quietly narrowed.
+
+## What an app is asking for
+
+When you connect an app over OAuth, the consent screen lists what it requested, area by area, with
+what each one lets it do. You can grant less than it asked for, and the app receives exactly what
+you allowed.
+
+A grant is bound to **one workspace**, the one named on the screen when you approved it. The same
+app connected to a second workspace is a second grant.
+
+[Account, Security](https://app.rendobar.com/account/security) lists every connected app with what
+it can reach and where. Revoking deletes the grant and every stored token, so the app cannot get new
+access or renew what it has. An access token it already holds stays valid until it expires, which is
+under an hour.
+
+## When a scope is missing
+
+A request outside a credential's scopes is refused with `403` and a header naming what was missing,
+per [RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750#section-3.1).
+
+```http
+HTTP/1.1 403 Forbidden
+WWW-Authenticate: Bearer error="insufficient_scope",
+  error_description="This endpoint requires the jobs:write scope.",
+  scope="jobs:write"
+```
+
+```json
+{
+  "error": {
+    "code": "INSUFFICIENT_SCOPE",
+    "message": "This endpoint requires the jobs:write scope."
+  }
+}
+```
+
+It is a `403`, not a `401`: the credential authenticated correctly and presenting it again cannot
+help. Read the `scope` parameter to see what to ask for, then create a key that carries it or
+reconnect the app and allow that area.
+
+## Keys and apps that predate scopes
+
+Keys created before scopes hold everything a key may hold and keep working unchanged.
+
+Apps connected before scopes asked for `media:full`, which covers jobs, assets and reading billing.
+That does not include key management, so those connections cannot create or revoke API keys.
+Reconnecting the app grants it the current set.
+
+## See also
+
+- [MCP server](/mcp-server): connecting an app over OAuth
+- [Error codes](/support/errors): every code the API returns
+- [Plan limits](/support/limits): what a plan allows, which is a separate question from what a
+  credential may do
