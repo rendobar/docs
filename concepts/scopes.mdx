@@ -123,14 +123,6 @@ It is a `403`, not a `401`: the credential authenticated correctly and presentin
 help. Read the `scope` parameter to see what to ask for, then create a key that carries it or
 reconnect the app and allow that area.
 
-## Keys and apps that predate scopes
-
-Keys created before scopes hold everything a key may hold and keep working unchanged.
-
-Apps connected before scopes asked for `media:full`, which covers jobs, assets and reading billing.
-That does not include key management, so those connections cannot create or revoke API keys.
-Reconnecting the app grants it the current set.
-
 ## See also
 
 - [MCP server](/mcp-server): connecting an app over OAuth
