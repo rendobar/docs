@@ -67,7 +67,7 @@ Every job is billed in nanodollars (one-billionth of a US dollar) drawn from you
 
 ## Negative balance
 
-Because the submit gate checks `balance > 0` rather than an estimate, a single long-running job can drive your balance briefly negative when the terminal debit lands. When that happens, your subscription flips to `past_due` and further submits are blocked with `402 INSUFFICIENT_CREDITS` until you top up. Once your balance is positive again, normal billing resumes.
+Because the submit gate checks `balance > 0` rather than an estimate, a single long-running job can drive your balance briefly negative when the terminal debit lands. When that happens, further submits are blocked with `402 INSUFFICIENT_CREDITS` until you top up. Once your balance is positive again, jobs are accepted immediately. Nothing else on the account changes.
 
 ## Cost model
 
@@ -76,7 +76,7 @@ Because the submit gate checks `balance > 0` rather than an estimate, a single l
 If your balance is at or below zero when you submit:
 
 ```json
-{ "error": { "code": "INSUFFICIENT_CREDITS", "message": "Not enough credits for this job" } }
+{ "error": { "code": "INSUFFICIENT_CREDITS", "message": "Balance is depleted. Add credits at https://app.rendobar.com/billing to keep submitting jobs." } }
 ```
 
 HTTP `402`. Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing).
