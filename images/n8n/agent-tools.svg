@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img"
+     aria-label="An n8n AI Agent with three Rendobar tools attached to its tool port: Account Get to read the balance before spending, Job Create to submit media work, and Job Get Logs to read FFmpeg's stderr when a job fails. A Rendobar Trigger on job.failed feeds the agent the failure so it can fix the command and resubmit.">
+  <style>
+    .t   { font: 600 19px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #0A0A0A }
+    .s   { font: 400 14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #52525B }
+    .m   { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #059669 }
+    .mg  { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #71717A }
+    .node { fill: #FFFFFF; stroke: #D4D4D8; stroke-width: 1.5 }
+    .tool { fill: #ECFDF5; stroke: #A7F3D0; stroke-width: 1.5 }
+    .nl  { font: 600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #0A0A0A }
+    .nd  { font: 400 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #52525B }
+    .wire { stroke: #D4D4D8; stroke-width: 2; fill: none }
+    .twire { stroke: #059669; stroke-width: 2; fill: none; stroke-dasharray: 4 6 }
+  </style>
+  <rect width="1200" height="480" fill="#FAFAFA"/>
+  <text class="t" x="48" y="56">The Rendobar node as an AI Agent tool</text>
+  <text class="s" x="48" y="80">The node is usableAsTool, so n8n builds the tool schema from its own parameters. Give a spending tool a reading tool next to it.</text>
+
+  <!-- main chain -->
+  <g transform="translate(48,150)">
+    <rect class="node" x="0" y="0" width="170" height="56" rx="10"/>
+    <text class="nl" x="16" y="24">Telegram Trigger</text>
+    <text class="nd" x="16" y="42">a message with a video</text>
+    <path class="wire" d="M170 28 H230"/>
+    <rect class="node" x="230" y="0" width="220" height="56" rx="10"/>
+    <text class="nl" x="246" y="24">AI Agent</text>
+    <text class="nd" x="246" y="42">decides which job to run</text>
+    <path class="wire" d="M450 28 H510"/>
+    <rect class="node" x="510" y="0" width="170" height="56" rx="10"/>
+    <text class="nl" x="526" y="24">Telegram</text>
+    <text class="nd" x="526" y="42">sends the result back</text>
+  </g>
+
+  <!-- tool port -->
+  <g transform="translate(278,206)">
+    <path class="twire" d="M60 0 V40"/>
+    <path class="twire" d="M60 40 H-140 V80"/>
+    <path class="twire" d="M60 40 V80"/>
+    <path class="twire" d="M60 40 H260 V80"/>
+    <text class="m" x="72" y="30">tools</text>
+  </g>
+
+  <!-- tools -->
+  <g transform="translate(88,286)">
+    <rect class="tool" x="0" y="0" width="200" height="64" rx="10"/>
+    <text class="nl" x="16" y="26">Rendobar: Account Get</text>
+    <text class="nd" x="16" y="46">how much can I spend?</text>
+  </g>
+  <g transform="translate(238,286)">
+    <rect class="tool" x="0" y="0" width="200" height="64" rx="10"/>
+    <text class="nl" x="16" y="26">Rendobar: Job Create</text>
+    <text class="nd" x="16" y="46">ffmpeg, captions, compress ...</text>
+  </g>
+  <g transform="translate(488,286)">
+    <rect class="tool" x="0" y="0" width="200" height="64" rx="10"/>
+    <text class="nl" x="16" y="26">Rendobar: Job Get Logs</text>
+    <text class="nd" x="16" y="46">what did FFmpeg say?</text>
+  </g>
+
+  <!-- failure loop -->
+  <g transform="translate(780,150)">
+    <rect class="node" x="0" y="0" width="200" height="56" rx="10"/>
+    <text class="nl" x="16" y="24">Rendobar Trigger</text>
+    <text class="nd" x="16" y="42">job.failed</text>
+    <path class="wire" d="M200 28 H260"/>
+    <rect class="node" x="260" y="0" width="112" height="56" rx="10"/>
+    <text class="nl" x="276" y="24">AI Agent</text>
+    <text class="nd" x="276" y="42">reads logs</text>
+  </g>
+  <text class="mg" x="780" y="240">A failed job wakes the agent with its own log, so it fixes</text>
+  <text class="mg" x="780" y="260">the command and resubmits instead of reporting "failed".</text>
+
+  <text class="s" x="48" y="420">Balance Low and Balance Depleted fire on the account, not on a job. Pair them with Account Get and the agent knows how low before it spends.</text>
+</svg>

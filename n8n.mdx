@@ -1,9 +1,9 @@
 ---
-title: "n8n community node"
+title: "Run media jobs from n8n"
 sidebarTitle: "n8n"
-description: "Install the Rendobar n8n community node, connect it with an API key, then submit, track, cancel, and upload from your workflows."
+description: "Install the verified Rendobar node on n8n Cloud or self-hosted n8n, add an API key, then run media jobs, wait without polling and hand the node to an AI Agent."
 icon: "circle-nodes"
-keywords: ["n8n", "n8n node", "rendobar n8n", "community node", "n8n integration", "video automation", "n8n workflow", "create job", "upload file", "rendobar trigger", "@rendobar/n8n-nodes-rendobar"]
+keywords: ["n8n", "n8n node", "rendobar n8n", "n8n cloud ffmpeg", "n8n video processing", "n8n compress video", "n8n captions", "verified community node", "n8n ai agent video", "@rendobar/n8n-nodes-rendobar"]
 canonical: "https://rendobar.com/docs/n8n"
 ---
 
@@ -14,8 +14,8 @@ canonical: "https://rendobar.com/docs/n8n"
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/n8n/#article",
-      "headline": "n8n community node",
-      "description": "Install the Rendobar n8n community node, connect it with an API key, then submit, track, cancel, and upload from your workflows.",
+      "headline": "Run media jobs from n8n",
+      "description": "Install the verified Rendobar node on n8n Cloud or self-hosted n8n, add an API key, then run media jobs, wait without polling and hand the node to an AI Agent.",
       "datePublished": "2026-06-22",
       "dateModified": "2026-09-13",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
@@ -25,114 +25,219 @@ canonical: "https://rendobar.com/docs/n8n"
   }}
 />
 
-The Rendobar n8n community node submits, tracks, and cancels video jobs from [n8n](https://n8n.io) workflows, and starts a workflow when a job finishes. The package ships two nodes: **Rendobar** runs operations against the API, and **Rendobar Trigger** fires on an event.
-
-## Install
-
-In n8n, open **Settings > Community Nodes** and install the package:
+The Rendobar node runs FFmpeg commands, compression, captions, composition and image generation from an n8n workflow, and a trigger node starts a workflow when a job finishes. It's verified by n8n, so on n8n Cloud you install it from the nodes panel with no self-hosting.
 
 ```text
 @rendobar/n8n-nodes-rendobar
 ```
 
-This follows n8n's standard flow. See [Install a community node](https://docs.n8n.io/integrations/community-nodes/installation/) for the full steps and the self-hosted environment variable that gates community-node installs.
+## Install on n8n Cloud
 
-## Credentials
+<Steps>
+  <Step title="Open the nodes panel">
+    Open a workflow and press <kbd>+</kbd>, or <kbd>Tab</kbd> on the canvas.
+  </Step>
+  <Step title="Search for Rendobar">
+    Type `Rendobar`. It's listed under **More from the community** with a verified badge.
+  </Step>
+  <Step title="Install">
+    Select it and choose **Install**. The node is now available to everyone on the instance.
+  </Step>
+</Steps>
 
-The node authenticates with a Rendobar API key. Create one in the [dashboard](https://app.rendobar.com), then add a credential in n8n with two fields.
+<Frame caption="The node details panel on a fresh instance. The verified badge means n8n reviewed the code and publishes the version itself. Install node makes the eight actions and the trigger available to everyone on the instance.">
+  <img src="/images/n8n/install-detail.png" alt="The n8n node details panel for Rendobar on an instance where it is not installed yet. A verified badge sits next to the name, an orange Install node button sits to the right, and below them the panel lists Verified, the download count, the author, and eight actions grouped under Account, File and Job." />
+</Frame>
 
-<ParamField body="API Key" type="string" required>
-  Your Rendobar API key. It starts with `rb_`. n8n validates the key against your account when you save the credential, so a bad key fails fast.
-</ParamField>
+If nothing appears under **More from the community**, an instance owner turns on **Verified Community Nodes** in the Cloud Admin Panel. A restart of the instance may be needed the first time.
 
-<ParamField body="Base URL" type="string" default="https://api.rendobar.com">
-  The Rendobar API host. Leave the default. Change it only to target another environment.
-</ParamField>
+## Install on self-hosted n8n
+
+The same search works on n8n 1.94.0 and later. Two environment variables gate it, and both default to `true`:
+
+```bash
+N8N_COMMUNITY_PACKAGES_ENABLED=true
+N8N_VERIFIED_PACKAGES_ENABLED=true
+```
+
+The older route also works. Open **Settings > Community Nodes**, choose **Install**, and enter `@rendobar/n8n-nodes-rendobar`. n8n's [verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation-and-management/install-verified-community-nodes) page covers both paths.
+
+## Add your API key
+
+The node authenticates with a Rendobar API key. Create one in the [dashboard](https://app.rendobar.com) under API keys, then add a **Rendobar API** credential in n8n and paste it in. The key starts with `rb_`. n8n checks it against your account when you save, so a wrong key fails at save time and not mid-workflow.
+
+Leave **Base URL** at `https://api.rendobar.com` unless you're pointing at another environment.
+
+## Run a job
+
+The package ships two nodes. **Rendobar** runs operations against the API and **Rendobar Trigger** starts a workflow on an event. The common chain is three Rendobar nodes:
+
+1. **File > Upload** streams a binary from the previous node and returns a `url`.
+2. **Job > Create** picks a job type and references that `url` in its inputs.
+3. **Job > Get** with **Download Output File** on fetches the finished file into a binary property.
+
+<Frame caption="The Create Job panel with caption.burn selected. The fields under Values to Send come from the job type's own schema, so a new job type appears here without a node update.">
+  <img src="/images/n8n/create-job-panel.png" alt="The Rendobar node panel in n8n. Resource is Job, Operation is Create, Job Type is caption.burn. Inputs are given as JSON from the previous node's url. Under Values to Send, Language is auto, Font and Font family are empty, and Font size is 56." />
+</Frame>
+
+The **Job Type** dropdown loads live from your account. For `ffmpeg` and `ffprobe`, which name their files inside the command, switch **Specify Inputs** to **Using JSON** and give the inputs by name:
+
+```json
+{ "source": "https://cdn.rendobar.com/assets/examples/sample.mp4" }
+```
+
+The command then refers to `source` and names its output:
+
+```text
+-i source -vf scale=-2:720 -c:v libx264 -crf 28 -preset fast output.mp4
+```
+
+### What comes out
+
+Every job type returns the same shape on completion, lifted to the top of the item. With **Output** set to **Simplified**, a finished job looks like this:
+
+```json
+{
+  "id": "job_6f2a9c1d4b8e4f30",
+  "type": "compress.target",
+  "status": "complete",
+  "cost": 0.0034,
+  "data": null,
+  "file": {
+    "url": "https://cdn.rendobar.com/outputs/...",
+    "path": "output.mp4",
+    "type": "video",
+    "size": 8123904
+  },
+  "files": [{ "url": "...", "path": "output.mp4", "type": "video", "size": 8123904 }],
+  "expiresAt": 1789300000000,
+  "createdAt": 1789213600000,
+  "completedAt": 1789213640000
+}
+```
+
+`file` is the headline result, or `null` for a job that computes data. `data` carries a probe report or a transcript, or `null` for a file-only job. `files` lists every output. **Raw** returns the full job and **Selected Fields** lets you pick.
+
+## Wait for a long job
+
+A transcode can take minutes and an hour-long render can take an hour. The node offers three ways to get the result, and only one of them is right for a long job.
+
+<Frame caption="Wait for Completion holds a worker. Callback URL plus a Wait node parks the execution for free. The trigger node waits for nothing because a second workflow starts when the job ends.">
+  <img src="/images/n8n/three-ways-to-wait.svg" alt="Three timelines. Wait for Completion repeats status calls and holds a worker for the whole job. Callback URL plus a Wait node submits once, shows a dashed paused span with no execution time, and resumes when Rendobar's callback arrives. Rendobar Trigger shows one workflow submitting and a second workflow starting on the job.completed event." />
+</Frame>
+
+**Wait for Completion**, under **Options** on Create, polls until the job ends and returns the result on the same item. It's the right choice for a clip of a few seconds and the wrong one for anything long, because the n8n worker is held for the whole job.
+
+**Callback URL plus a Wait node** is the pattern for long jobs. Set **Callback URL** to the resume URL of a Wait node placed right after Create:
+
+```text
+{{ $execution.resumeUrl }}
+```
+
+Then configure the Wait node:
+
+- **Resume** on **Webhook Call**, with **HTTP Method** set to **POST**. Rendobar POSTs the callback and the Wait node defaults to GET.
+- **Limit Wait Time** on, at ten hours. An execution whose callback never lands releases itself instead of parking forever.
+
+The execution parks with no worker held. When the job ends, Rendobar's callback resumes it with the job in `$json.body.data`. Run **Job > Get** on that `jobId` to re-fetch the job over your own credential and download the file, so the payload that woke the Wait node is never trusted.
+
+<Warning>
+  Leave **Wait for Completion** off when you set a Callback URL. The node refuses the combination rather than picking one, because a hidden field in n8n keeps its value.
+</Warning>
+
+## Start a workflow when a job ends
+
+**Rendobar Trigger** registers a webhook with Rendobar when the workflow activates and removes it on deactivation. Pick the events:
+
+| Event | Fires when |
+|---|---|
+| `job.created` | A job is accepted |
+| `job.started` | A runner picks it up |
+| `job.completed` | It finishes with output |
+| `job.failed` | It stops with an error |
+| `job.cancelled` | Someone cancels it |
+| `job.delivery_succeeded` | A destination write succeeds |
+| `job.delivery_failed` | A destination write fails |
+| `job.deliveries_settled` | Every destination has resolved |
+| `balance.low` | The account balance crosses the low mark |
+| `balance.depleted` | The balance reaches zero |
+
+Pair `job.failed` with **Job > Get Logs** and the item carries the runner's log, including FFmpeg's stderr, so a Slack or email node can post the actual error. Pair `balance.low` with **Account > Get** to read how low.
+
+Rendobar must reach the webhook URL over HTTPS. That's true on n8n Cloud and on any publicly hosted instance. A `localhost` n8n is not reachable, so test locally through a tunnel such as `cloudflared tunnel --url http://localhost:5678` and set `WEBHOOK_URL` to its hostname.
+
+## Use it as an AI Agent tool
+
+The node is marked usable as a tool, so it attaches to the AI Agent node's tool port and n8n builds the tool schema from the node's own parameters. Nothing else to define.
+
+<Frame caption="An agent with three Rendobar tools. Account Get reads the balance before the agent spends, Job Create runs the work, and Job Get Logs reads FFmpeg's stderr when a job fails.">
+  <img src="/images/n8n/agent-tools.svg" alt="A Telegram Trigger feeds an AI Agent node, which sends its result back through Telegram. Three Rendobar tools hang off the agent's tool port: Account Get, Job Create and Job Get Logs. To the right, a Rendobar Trigger on job.failed feeds a second AI Agent that reads the logs." />
+</Frame>
+
+Three tools cover most agents:
+
+- **Account > Get** before anything that spends. `balance.amount` tells the agent how much it has and `plan.limits` what a submission is measured against.
+- **Job > Create** for the work itself. The agent picks the job type and fills the parameters.
+- **Job > Get Logs** after a `job.failed` event, so the agent reads the real FFmpeg error, fixes the command and resubmits.
+
+Give an agent **Callback URL** and a Wait node rather than **Wait for Completion**, for the same reason as above. On self-hosted n8n, community tools need `N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true`.
 
 ## Operations
 
-The **Rendobar** action node has four operations.
-
-### Create Job
-
-Submit a job. The **Job Type** dropdown loads live from your account, and its parameter fields are discovered from the API, so new job types appear without updating the node.
-
-Each submission sends an idempotency key derived from the n8n execution, so a retried step never double-creates a job.
-
-Set **Wait for Completion** to poll until the job is done and return the result on the same item. This blocks the workflow, so it suits short jobs. The poll interval and a max-wait timeout are both configurable. For long jobs, use the trigger node instead.
-
-### Get Job
-
-Fetch a job by ID. The item carries the job status and, once complete, the result.
-
-Set **Download Output File** to fetch the headline result file (`file.url`) into a binary property for the next node. This applies only to completed jobs that produced a file.
-
-### Cancel Job
-
-Cancel a still-running job by ID.
-
-### Upload File
-
-Stream a binary file from a previous node to Rendobar and get back a `downloadUrl` to use as a job input. Uploaded files are ephemeral and auto-delete after 24 hours.
+| Resource | Operation | What it does |
+|---|---|---|
+| Job | Create | Submit a job. Sends an idempotency key per item, so a retried step never double-creates. |
+| Job | Get | Fetch a job by ID, optionally downloading the headline file. |
+| Job | Get Many | List jobs with filters on status, type, client and date. |
+| Job | Get Logs | Read what the runner reported for a job. |
+| Job | Download Output | Fetch a completed job's file into a binary property. |
+| Job | Cancel | Stop a running job. |
+| File | Upload | Stream a binary to Rendobar and get a `url` to use as a job input. Uploads expire after 24 hours. |
+| Account | Get | Read the balance and plan limits. |
+| Storage Connection | Get Many | List the buckets connected on the Storage page. |
+| Storage File | Get Many | List the folders and files in a connected bucket, each with a `storage://` URI a job input accepts. |
 
 ### Storage
 
 Create Job's **Destinations** option writes the output to buckets connected on the [Storage page](https://app.rendobar.com/storage): one row per bucket, each with an optional folder or path. The job's `deliveries` reports every write. **Storage Connection** lists the connections, and **Storage File** lists the folders and files in one, each with a `storage://` URI that a job input accepts. See [Storage connections](/storage).
 
-## Rendobar Trigger
+## Ready-made workflows
 
-The **Rendobar Trigger** node starts a workflow when a Rendobar event fires. Pick the events to listen for:
+Three workflows import as they are and run on n8n Cloud. Each carries its setup steps in a sticky note.
 
-- Job completed
-- Job failed
-- Job cancelled
-- Job created
-- Job started
-- Balance events
+- [Compress Google Drive videos under 25 MB and send them to Telegram](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/compress-drive-videos-to-25mb-telegram.json)
+- [Auto-caption Google Drive videos and post the link to Slack](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/auto-caption-drive-videos-slack.json)
+- [Run any FFmpeg command on n8n Cloud and save the output to Drive](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/run-ffmpeg-on-n8n-cloud.json)
 
-On activation, the node registers its webhook URL with Rendobar. On deactivation, it removes it.
+<Frame caption="The compression workflow on the canvas. Three Rendobar nodes do the work, the Wait node parks the execution, and Drive and Telegram receive the small copy.">
+  <img src="/images/n8n/template-compress.png" alt="An n8n canvas showing eight connected nodes: Google Drive Trigger, Google Drive download, Rendobar upload, Rendobar compress job, Wait, Rendobar get job, then Google Drive upload and Telegram in parallel. Sticky notes above and behind the nodes explain each section." />
+</Frame>
 
-<Warning>
-  Rendobar must reach the webhook URL over HTTPS, so the trigger needs n8n Cloud or a tunnelled or publicly hosted instance. A plain `localhost` n8n is not reachable. To test locally, run `n8n start --tunnel`.
-</Warning>
+## Troubleshooting
 
-## Job result
-
-The result shape is the same for every job type. When a job completes, Get Job and Create Job with Wait for Completion return the full job, and the node lifts the unified output onto the item so downstream nodes get clean fields no matter the job type.
-
-<ResponseField name="data" type="object | null">
-  The job-type-specific computed result, such as a probe report, moderation labels, or a transcript. `null` for jobs that only produce files.
-</ResponseField>
-
-<ResponseField name="file" type="object | null">
-  The headline result. A single output file or a stream manifest (`.m3u8` or `.mpd`). `null` for data-only jobs and pure file sets. Each file is `{ url, path, type, size, meta? }`.
-</ResponseField>
-
-<ResponseField name="files" type="array">
-  Every produced file, the complete list. `[]` for data-only jobs. Use it for sets or streams.
-</ResponseField>
-
-<ResponseField name="expiresAt" type="number | null">
-  Unix milliseconds when the file URLs expire, or `null` when the job produced no files.
-</ResponseField>
-
-The full job (`status`, `output`, `cost`, timings) stays on the same item, so nothing is lost. Each output file's `type` is one of:
-
-| `type` | Contents |
-|---|---|
-| `video` | A video file |
-| `image` | An image file |
-| `audio` | An audio file |
-| `captions` | A subtitle or caption file |
-| `playlist` | A stream manifest (`.m3u8` or `.mpd`) |
-| `data` | A data file such as a report |
-| `other` | Anything else |
-
-## Example workflow
-
-A common chain is three nodes. Upload File streams a binary from a previous node and returns a `downloadUrl`. Create Job references that `downloadUrl` in its inputs and runs the job. The next node reads the lifted `file` or `data` from the result and continues.
+<AccordionGroup>
+  <Accordion title="Rendobar does not appear in the nodes panel">
+    On n8n Cloud, an instance owner enables **Verified Community Nodes** in the Cloud Admin Panel. On self-hosted n8n, check `N8N_VERIFIED_PACKAGES_ENABLED` and that the version is 1.94.0 or later. The manual route under **Settings > Community Nodes** works either way.
+  </Accordion>
+  <Accordion title="The Wait node never resumes">
+    Its **HTTP Method** must be **POST**. Check that **Callback URL** on Create is exactly `{{ $execution.resumeUrl }}` and that **Wait for Completion** is off. On a self-hosted instance, the resume URL must be reachable from the internet, so set `WEBHOOK_URL` to your public hostname.
+  </Accordion>
+  <Accordion title="The item stops with INSUFFICIENT_CREDITS">
+    The account balance is below the job's estimated cost. Put **Account > Get** in front of the submission and branch on `balance.amount`, or top up in the dashboard.
+  </Accordion>
+  <Accordion title="Download Output File returns nothing">
+    A file exists once the job is `complete` and produced one. A data-only job such as `ffprobe` never produces a file and puts its result under `data`. A job past its retention window has had its files removed. Run **Job > Get** to see which applies.
+  </Accordion>
+  <Accordion title="The trigger registered but never fires">
+    Rendobar could not reach the webhook URL. A `localhost` URL is the usual cause. Use a tunnel and set `WEBHOOK_URL`, then deactivate and reactivate the workflow so the node re-registers.
+  </Accordion>
+</AccordionGroup>
 
 ## See also
 
 - [Job lifecycle](/concepts/job): the six statuses a job moves through
 - [Webhooks](/guides/webhooks): the events the trigger node subscribes to
+- [Rendobar on n8n.io](https://n8n.io/integrations/rendobar/): the verified listing
+- [Source on GitHub](https://github.com/rendobar/n8n-nodes-rendobar): MIT licensed, published from CI with npm provenance
+
+Next step: import the [compression workflow](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/compress-drive-videos-to-25mb-telegram.json) and drop a video into the folder it watches.
