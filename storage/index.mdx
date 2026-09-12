@@ -3,7 +3,7 @@ title: "Storage connections"
 description: "Connect your own bucket to Rendobar. Jobs read private inputs from it and deliver outputs back, addressed as storage://your-id instead of a URL."
 sidebarTitle: "Overview"
 icon: "database"
-keywords: ["storage connection", "storage protocol", "connect bucket", "private job input", "job output destination", "s3 bucket rendobar", "bring your own bucket"]
+keywords: ["storage connection", "connect bucket", "private job input", "job output destination", "output path template", "default destination", "bring your own bucket"]
 canonical: "https://rendobar.com/docs/storage"
 ---
 
@@ -31,7 +31,7 @@ Your media stays in your bucket. Connect it once and jobs read private inputs fr
 storage://<connection-id>/<path>
 ```
 
-Nothing in the bucket needs to be public. This page covers what is true of every connection. Each provider then has its own page for getting a credential.
+Nothing in the bucket needs to be public. This page is everything true of every connection. Each provider then has its own page for getting a credential.
 
 <Frame caption="A connection works in both directions. Jobs read inputs from the bucket and deliver outputs back to it, over the same credential.">
   <img src="/images/storage/hero-all.png" alt="Rendobar connected to Cloudflare R2, Amazon S3, Supabase Storage and any S3-compatible bucket, reading inputs from them and delivering outputs back" />
@@ -92,11 +92,9 @@ const job = await client.jobs.run({
 });
 ```
 
-A bare id delivers to `rendobar/{job_id}.{ext}`. A folder such as `storage://demo-bucket/exports` delivers to `exports/{job_id}.{ext}`. [Delivery settings](/storage/deliveries) covers naming outputs yourself.
-
 The same references work from the [SDK](/sdk), the [CLI](/cli) and the [MCP server](/mcp-server).
 
-## What happens when you connect
+### What happens when you connect
 
 Rendobar never saves a credential it has not proven. Before the connection exists, it:
 
@@ -109,25 +107,104 @@ All four must pass. A failure names the field or permission that caused it rathe
 
 You can re-run the same four checks on a live connection at any time, from the dashboard or with `client.storage.test(id)`.
 
-## What Rendobar stores
+## Where outputs land
 
-The S3 access key and secret for the bucket, sealed with AES-256-GCM before they reach the database. No endpoint returns them, including to you.
+A destination in the job payload wins. `storage://demo-bucket/exports` writes to `exports/{job_id}.{ext}`, and a bare `storage://demo-bucket` writes to `rendobar/{job_id}.{ext}`.
 
-Where a provider issues a richer credential than an S3 pair, that credential is used once to derive the pair and is then discarded. A Cloudflare R2 API token works this way.
+Everything else is per connection. Open one in [**Storage**](https://app.rendobar.com/storage) and click the pencil on the **Delivery** card.
 
-### Rotating a credential
+<Frame caption="Delivery settings: the output path template with a live example, what happens to a name clash, and whether jobs naming no destination come here.">
+  <img src="/images/storage/delivery-settings.png" alt="Delivery settings showing the output path template with a live example, name conflict handling, and the default destination toggle" />
+</Frame>
 
-Replace the credential on the existing connection, in the dashboard or with `client.storage.update(id, ...)`. The four access checks run again before the new one is accepted.
+### Output path
 
-The id does not change, so every `storage://<id>/<path>` reference you have already written keeps working. This is the reason the id exists.
+The output path is a template: an object key with `{tokens}` in it. Four tokens exist.
 
-### Revoking access
+| Token | Becomes |
+|---|---|
+| `{job_id}` | The job's id, such as `job_ee14ffeecc3f4a1b` |
+| `{ext}` | The output's extension, without the dot |
+| `{source_name}` | The input file's name, without the extension |
+| `{date}` | The UTC date, `YYYY-MM-DD` |
 
-Revoke at the provider, not here. Delete the token, key or role in their console and the connection stops working immediately. Each provider page has the exact path.
+A new connection gets **By date**, which for `raw/clip.mp4` renders like this:
 
-Deleting the Rendobar connection also ends access, but it does not invalidate the credential itself. If the credential might be held anywhere else, revoke it at the provider too.
+```text
+rendobar/{date}/{source_name}.{ext}   ->  rendobar/2026-09-12/clip.mp4
+```
 
-## When a delivery fails
+That reads well in a bucket listing, and it can collide. **Flat** drops the date:
+
+```text
+rendobar/{source_name}.{ext}          ->  rendobar/clip.mp4
+```
+
+**Custom template** takes anything you type. Include `{job_id}` and the key can never collide, because the id is unique per job:
+
+```text
+rendobar/{job_id}                     ->  rendobar/job_ee14ffeecc3f4a1b.mp4
+```
+
+### Name conflicts
+
+A template without `{job_id}` will eventually produce a key that already exists. **Name conflicts** decides what happens then.
+
+**Keep both** appends the last six characters of the job id to the name:
+
+```text
+clip.mp4      ->  clip-4a1b6e.mp4
+```
+
+**Replace** overwrites the object already at that key.
+
+<Warning>
+**Replace** is destructive and Rendobar cannot undo it. The previous object is gone unless the bucket has versioning on. Use it only where the bucket is a cache or a mirror of something you still hold elsewhere.
+</Warning>
+
+### Default destination
+
+Turn this on and every job that names no `destinations` delivers here. One connection per organization can hold it, so switching it on elsewhere moves it. Jobs that do name `destinations` ignore it and go where they were told.
+
+### Public URL
+
+Optional. Leave it blank and a delivered file's `url` points at Rendobar. Set it and the `url` points at your host instead:
+
+```text
+https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4
+```
+
+It must be `https`, and it cannot be a private or internal host. A private bucket has no public link, so leave the field blank and keep using it. The bucket still works for both inputs and outputs, and only the returned `url` differs.
+
+### Reading the result
+
+A completed job carries one `deliveries[]` entry per destination.
+
+```json
+{
+  "deliveries": [
+    {
+      "storage": "demo-bucket",
+      "status": "delivered",
+      "path": "exports/job_ee14ffeecc3f4a1b.mp4",
+      "url": "https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4"
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `storage` | The connection id it was delivered through |
+| `status` | `pending`, `delivered` or `failed` |
+| `path` | The object key written, after the template and any rename |
+| `url` | Your public URL when one is set, otherwise a Rendobar one |
+| `reason` | Present only on `failed`. See below |
+| `renamed` | `true` when the name was taken and **Keep both** freed it |
+
+`deliveries` appears on `GET /jobs/{id}`, not on the list endpoint, and is absent when the job had no destinations.
+
+### When a delivery fails
 
 A failed delivery carries a `reason`. This is the whole vocabulary, and it is the same for every provider.
 
@@ -142,6 +219,24 @@ A failed delivery carries a `reason`. This is the whole vocabulary, and it is th
 | `not_deliverable` | The job produced no file to deliver | Expected for data-only jobs such as `ffprobe` |
 
 [Error codes](/support/errors) lists the codes a connection can return at connect time.
+
+## Security
+
+Rendobar stores the S3 access key and secret for the bucket, sealed with AES-256-GCM before they reach the database. No endpoint returns them, including to you.
+
+Where a provider issues a richer credential than an S3 pair, that credential is used once to derive the pair and is then discarded. A Cloudflare R2 API token works this way.
+
+### Rotating a credential
+
+Replace the credential on the existing connection, in the dashboard or with `client.storage.update(id, ...)`. The four access checks run again before the new one is accepted.
+
+The id does not change, so every `storage://<id>/<path>` reference you have already written keeps working. This is the reason the id exists.
+
+### Revoking access
+
+Revoke at the provider, not here. Delete the token, key or role in their console and the connection stops working immediately. Each provider page has the exact path.
+
+Deleting the Rendobar connection also ends access, but it does not invalidate the credential itself. If the credential might be held anywhere else, revoke it at the provider too.
 
 ## From code
 
@@ -164,11 +259,11 @@ No method returns a stored credential.
   <Card title="Cloudflare R2" icon="cloudflare" href="/storage/cloudflare-r2">
     Connect an R2 bucket, with either credential kind.
   </Card>
-  <Card title="Delivery settings" icon="folder-tree" href="/storage/deliveries">
-    Name outputs, handle conflicts, set a default destination.
-  </Card>
   <Card title="Jobs" icon="play" href="/concepts/job">
     Where `inputs` and `destinations` sit in the payload.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Know the moment a delivery lands, without polling.
   </Card>
   <Card title="Errors" icon="triangle-exclamation" href="/support/errors">
     Every code a connection or a delivery can return.

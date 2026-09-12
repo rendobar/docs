@@ -157,7 +157,7 @@ curl https://api.rendobar.com/jobs \
 
 </CodeGroup>
 
-That writes `exports/job_ee14ffeecc3f4a1b.mp4`. To name outputs yourself, see [delivery settings](/storage/deliveries). If a delivery comes back failed, its `reason` is explained under [when a delivery fails](/storage#when-a-delivery-fails).
+That writes `exports/job_ee14ffeecc3f4a1b.mp4`. To name outputs yourself, see [where outputs land](/storage#where-outputs-land). If a delivery comes back failed, its `reason` is explained under [when a delivery fails](/storage#when-a-delivery-fails).
 
 ## R2-specific notes
 
@@ -167,7 +167,7 @@ That writes `exports/job_ee14ffeecc3f4a1b.mp4`. To name outputs yourself, see [d
 Deleting the bucket does not revoke the token. They are separate Cloudflare resources, and a token scoped to "all buckets in this account" still reaches every other bucket you own. Scope tokens to one bucket.
 </Note>
 
-**Public URLs.** R2's [r2.dev domain or a custom domain](https://developers.cloudflare.com/r2/buckets/public-buckets/) is what goes in the connection's Public URL field. A private bucket has no public link and works fine without one.
+**Public URLs.** R2's [r2.dev domain or a custom domain](https://developers.cloudflare.com/r2/buckets/public-buckets/) is what goes in the connection's [Public URL](/storage#public-url) field. A private bucket has no public link and works fine without one.
 
 **Jurisdictions.** A bucket created in the EU or FedRAMP jurisdiction lives on a different endpoint. Set it under **More options** at connect time and Rendobar builds the right one.
 
@@ -179,8 +179,8 @@ Deleting the bucket does not revoke the token. They are separate Cloudflare reso
   <Card title="Storage connections" icon="database" href="/storage">
     The model, the id, security, and the failure reasons.
   </Card>
-  <Card title="Delivery settings" icon="folder-tree" href="/storage/deliveries">
-    Name outputs, handle conflicts, set a default destination.
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Know the moment a delivery lands, without polling.
   </Card>
   <Card title="Jobs" icon="play" href="/concepts/job">
     Where `inputs` and `destinations` sit in the payload.
