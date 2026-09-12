@@ -44,7 +44,7 @@ storage://<connection-id>/<path>
 | [Cloudflare R2](/storage/cloudflare-r2) | R2 API token, or access key and secret |
 | [Amazon S3](/storage/amazon-s3) | One-click IAM role, which can be read only, or access key and secret |
 | [Supabase Storage](/storage/supabase) | Supabase sign-in, or S3 access keys |
-| S3-compatible | Endpoint, region, and access key pair |
+| [S3-compatible](/storage/s3-compatible) | Endpoint, region, and access key pair |
 
 Use **S3-compatible** for any service that implements the S3 API, such as MinIO, Backblaze B2, or Wasabi.
 
@@ -313,6 +313,9 @@ Deleting a Rendobar connection also stops access, but it does not invalidate the
   </Card>
   <Card title="Supabase Storage" icon="bolt" href="/storage/supabase">
     Connect a Supabase bucket by signing in or with S3 access keys.
+  </Card>
+  <Card title="S3-compatible" icon="server" href="/storage/s3-compatible">
+    Connect MinIO, Backblaze B2, Wasabi, or any other S3-compatible bucket.
   </Card>
   <Card title="Jobs" icon="play" href="/concepts/job">
     Where `inputs` and `destinations` appear in the job payload.

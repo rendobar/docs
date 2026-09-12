@@ -48,7 +48,8 @@
               "storage/index",
               "storage/cloudflare-r2",
               "storage/amazon-s3",
-              "storage/supabase"
+              "storage/supabase",
+              "storage/s3-compatible"
             ]
           },
           {
