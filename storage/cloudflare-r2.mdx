@@ -70,7 +70,7 @@ Cloudflare shows the token only once. Copy it before you leave the page, or you 
 
 1. In [**Storage**](https://app.rendobar.com/storage), select **Connect Storage**, then **Cloudflare R2**.
 2. In **API token**, paste the token. In **Bucket**, enter the bucket name.
-3. (Optional) Under **More options**, change the **id**. Jobs use it to reference the bucket.
+3. (Optional) Under **More options**, change the **ID**. Jobs use it to reference the bucket.
 4. Select **Connect**.
 
 You can paste the whole Cloudflare token page into **API token**. Rendobar finds the token in the text.
@@ -79,7 +79,7 @@ You can paste the whole Cloudflare token page into **API token**. Rendobar finds
   <img src="/images/storage/r2-dialog-filled.png" alt="The Cloudflare R2 connect dialog with the API token masked and the bucket name filled in" />
 </Frame>
 
-Rendobar runs its [access checks](/storage#access-checks) and saves the connection only if they pass. If the bucket does not exist, the dialog offers **Create the bucket and connect**.
+Rendobar runs its [access checks](/storage#connect-a-bucket) and saves the connection only if they pass. If the bucket does not exist, the dialog offers **Create the bucket and connect**.
 
 <Frame caption="A connected bucket, with the access checks passed and the storage URIs to use in jobs.">
   <img src="/images/storage/r2-connected.png" alt="The finish screen showing write, read, list and delete all passing, with copyable source and destinations snippets" />
@@ -94,13 +94,15 @@ Put an object in `inputs` to read it, and the connection in `destinations` to wr
 ```typescript SDK
 import { createClient, outputUrl } from "@rendobar/sdk";
 
-const client = createClient({ apiKey: process.env.RENDOBAR_API_KEY });
+const client = createClient({
+  apiKey: process.env.RENDOBAR_API_KEY,
+});
 
 const job = await client.jobs.run({
   type: "ffmpeg",
   inputs: { source: "storage://demo-bucket/raw/clip.mp4" },
   params: {
-    command: "ffmpeg -i source -vf scale=1280:-2 -c:v libx264 -crf 23 -c:a copy out.mp4",
+    command: "ffmpeg -i source -vf scale=1280:-2 out.mp4",
   },
   destinations: ["storage://demo-bucket/exports"],
 });
@@ -117,7 +119,7 @@ curl https://api.rendobar.com/jobs \
     "type": "ffmpeg",
     "inputs": { "source": "storage://demo-bucket/raw/clip.mp4" },
     "params": {
-      "command": "ffmpeg -i source -vf scale=1280:-2 -c:v libx264 -crf 23 -c:a copy out.mp4"
+      "command": "ffmpeg -i source -vf scale=1280:-2 out.mp4"
     },
     "destinations": ["storage://demo-bucket/exports"]
   }'

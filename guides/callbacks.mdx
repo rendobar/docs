@@ -54,6 +54,8 @@ await client.jobs.create({
 Terminal events (`complete`, `failed`, `cancelled`) always fire and cannot be filtered out, so a step waiting on a callback can never hang. `callback.events` only adds non-terminal pings on top. The one available today is `"job.started"`, a progress signal sent when the job begins running.
 </Note>
 
+A job with `destinations` also sends `job.deliveries_settled` to `callback.url` once every destination has resolved. It is the only [delivery event](/storage#delivery-events) a callback receives.
+
 Custom headers let the POST reach an authenticated endpoint with no receiver of your own. Framing headers and any `X-Rendobar-*` header are reserved. If you set one, the platform's value wins.
 
 <Warning>
