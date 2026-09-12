@@ -42,6 +42,13 @@
             ]
           },
           {
+            "group": "Storage",
+            "icon": "hard-drive",
+            "pages": [
+              "storage/cloudflare-r2"
+            ]
+          },
+          {
             "group": "Jobs",
             "pages": [
               "jobs/ffmpeg",

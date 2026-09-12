@@ -1,0 +1,132 @@
+---
+title: "Connect a Cloudflare R2 bucket"
+description: "Connect an R2 bucket to Rendobar with one API token. Jobs read inputs from it and deliver outputs back, referenced as storage://your-id."
+sidebarTitle: "Cloudflare R2"
+icon: "cloudflare"
+keywords: ["cloudflare r2", "r2 bucket", "connect r2", "r2 api token", "r2 s3 credentials", "deliver to r2", "storage destination"]
+canonical: "https://rendobar.com/docs/storage/cloudflare-r2"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/storage/cloudflare-r2/#article",
+      "headline": "Connect a Cloudflare R2 bucket",
+      "description": "Connect an R2 bucket to Rendobar with one API token, then read inputs from it and deliver outputs back to it.",
+      "datePublished": "2026-09-12",
+      "dateModified": "2026-09-12",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Connect an R2 bucket and jobs can read inputs from it and write outputs back, addressed as `storage://<id>`. You need a Cloudflare account with an R2 bucket, and about two minutes.
+
+## Create the API token
+
+R2 speaks the S3 API, but the credentials come from an R2 API token rather than from an IAM user.
+
+1. In Cloudflare, open **R2 Object Storage**, then **Manage API tokens**, then **Create Account API token**.
+2. Under **Permissions**, choose **Object Read & Write**. Not Admin: Rendobar never needs to create or delete a bucket, and Admin includes both.
+3. Under **Specify bucket(s)**, choose **Apply to specific buckets only** and pick the one bucket.
+
+<Frame caption="Object Read and Write, scoped to one bucket. Admin Read and Write would also let the token delete buckets.">
+  <img src="/images/storage/r2-token-scope.png" alt="Cloudflare's Create Account API Token page with Object Read and Write selected and a single bucket chosen" />
+</Frame>
+
+Click **Create Account API Token**. Cloudflare shows the token value once.
+
+<Frame caption="The token value. Cloudflare shows it exactly once, so copy it before leaving the page.">
+  <img src="/images/storage/r2-token-created.png" alt="The created token page in Cloudflare, with the token value shown once" />
+</Frame>
+
+<Warning>
+Leave this page without copying and the token is gone. Cloudflare cannot show it again, and you will have to create another.
+</Warning>
+
+## Connect it in Rendobar
+
+Open [**Storage**](https://app.rendobar.com/storage), click **Connect Storage**, and choose **Cloudflare R2**.
+
+<Frame>
+  <img src="/images/storage/connect-providers.png" alt="The Connect Storage dialog with four providers: Cloudflare R2, Supabase Storage, Amazon S3 and S3-compatible" />
+</Frame>
+
+Paste the token into **API token** and type the bucket name. You can paste the whole Cloudflare token page rather than the single value: Rendobar picks the token out of it and fills the provider at the same time.
+
+<Frame caption="Pasting the whole token page fills both fields.">
+  <img src="/images/storage/r2-dialog-filled.png" alt="The Cloudflare R2 connect dialog with the API token masked and the bucket name filled in" />
+</Frame>
+
+Click **Connect**. Rendobar exchanges the token for the S3 key pair it stands for, writes a test object, reads it back, lists the bucket and deletes the test object, then saves. The token itself is never stored.
+
+If the bucket does not exist yet, the dialog says so and offers **Create the bucket and connect**.
+
+<Frame caption="Connected. The snippets are the exact strings a job takes.">
+  <img src="/images/storage/r2-connected.png" alt="The finish screen showing write, read, list and delete all passing, with copyable source and destinations snippets" />
+</Frame>
+
+## Use it in a job
+
+The connection has an id. Every reference to the bucket goes through it, so a rotated credential never changes a job payload.
+
+```json Read from it, write back to it
+{
+  "type": "compress.target",
+  "inputs": { "source": "storage://demo-bucket/raw/clip.mp4" },
+  "destinations": ["storage://demo-bucket/exports/{date}/{source_name}.{ext}"]
+}
+```
+
+`storage://` works anywhere a URL does, including from the [SDK](/sdk), the [CLI](/cli) and the [MCP server](/mcp-server).
+
+## Where outputs land
+
+Open a connection and click the pencil on the **Delivery** card to change any of this.
+
+<Frame>
+  <img src="/images/storage/delivery-settings.png" alt="Delivery settings showing the output path template with a live example, name conflict handling, and the default destination toggle" />
+</Frame>
+
+**Output path** is a template. Four tokens are available:
+
+| Token | Becomes |
+|---|---|
+| `{job_id}` | The job's id |
+| `{ext}` | The output's extension, without the dot |
+| `{source_name}` | The input file's name, without the extension |
+| `{date}` | The UTC date, `YYYY-MM-DD` |
+
+The default is `rendobar/{job_id}`, which cannot collide. The dialog suggests `rendobar/{date}/{source_name}.{ext}`, which reads better and can.
+
+**Name conflicts** decides what happens when it does collide. **Keep both** appends the last six characters of the job id, so `clip.mp4` becomes `clip-4a1b6e.mp4`. **Replace** overwrites.
+
+**Default destination** sends every job that names no `destinations` to this bucket. One connection per organization can hold it.
+
+**Public URL** is optional. Set it and delivered files get a link on that host instead of a Rendobar one.
+
+## What Rendobar stores
+
+The derived S3 access key and secret, sealed with AES-256-GCM before they reach the database. No endpoint returns them, including to you. The R2 API token you pasted is used once to derive the pair and is then dropped.
+
+Revoking is a Cloudflare action, not a Rendobar one: delete the token in **R2 → Manage API tokens** and the connection stops working immediately.
+
+<Note>
+Deleting the bucket does not revoke the token. They are separate objects, and a token scoped to "all buckets in this account" still reaches every other bucket you own.
+</Note>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Jobs" icon="play" href="/concepts/job">
+    How a job runs, and where `destinations` sits in the payload.
+  </Card>
+  <Card title="SDK" icon="npm" href="/sdk">
+    Submit the job above in TypeScript.
+  </Card>
+</CardGroup>
