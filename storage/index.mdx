@@ -268,7 +268,7 @@ A failed delivery includes one of these `reason` codes. Rendobar never forwards 
 | `bucket_not_found` | No bucket with that name exists at the endpoint | Reconnect using the bucket's current name |
 | `already_exists` | An object already exists at that key | Add `{job_id}` to the output path, or use **Keep both** |
 | `object_too_large` | The bucket rejected the object as too large | Check the bucket's object size limit, or reduce the output size |
-| `destination_unavailable` | The bucket returned a 429 or 5xx, or did not respond | Rendobar retries automatically. Retry manually if it stays failed |
+| `destination_unavailable` | The bucket returned a 429 or 5xx, did not respond, or an attempt stopped without finishing for 30 minutes | Rendobar retries automatically. Retry manually if it stays failed |
 | `not_deliverable` | The job produced no file | Expected for jobs that return data only, such as `ffprobe` |
 
 Errors returned when you create a connection are listed in [error codes](/support/errors).
