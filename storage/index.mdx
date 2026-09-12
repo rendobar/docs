@@ -25,58 +25,50 @@ canonical: "https://rendobar.com/docs/storage"
   }}
 />
 
-A storage connection is a bucket you own, a credential for that bucket, and an id that you choose. Jobs read input files from a connected bucket and write their outputs back to it.
+A storage connection links a bucket you own to Rendobar. Jobs read inputs from the bucket and write outputs back to it, so your files never need to be public.
 
-By default, Rendobar stores job outputs on its own infrastructure and returns a temporary URL. A storage connection changes where those outputs are written, and allows jobs to read files that are not publicly accessible.
-
-Once a bucket is connected, you reference objects in it with a `storage://` URI:
+After you connect a bucket, reference objects in it with the connection id you chose:
 
 ```text
 storage://<connection-id>/<path>
 ```
 
-This page covers behavior that is the same for every connection. Each provider has its own page describing the credentials it accepts.
-
-<Frame caption="Rendobar connected to Cloudflare R2, Amazon S3, Supabase Storage and an S3-compatible bucket, reading inputs from them and delivering outputs back.">
+<Frame caption="Rendobar reads inputs from connected buckets and writes outputs back to them.">
   <img src="/images/storage/hero-all.png" alt="Rendobar connected to Cloudflare R2, Amazon S3, Supabase Storage and any S3-compatible bucket, reading inputs from them and delivering outputs back" />
 </Frame>
 
 ## Supported providers
 
-Rendobar connects to four kinds of storage. Each one accepts more than one type of credential.
-
 | Provider | Credentials |
 |---|---|
-| [Cloudflare R2](/storage/cloudflare-r2) | An R2 API token, or an access key and secret |
-| Amazon S3 | A one-click IAM role, or an access key and secret. Either can be read-only |
-| Supabase Storage | A Supabase sign-in, or S3 access keys |
-| S3-compatible | An endpoint, a region, and an access key pair |
+| [Cloudflare R2](/storage/cloudflare-r2) | R2 API token, or access key and secret |
+| Amazon S3 | One-click IAM role, or access key and secret. Either can be read-only |
+| Supabase Storage | Supabase sign-in, or S3 access keys |
+| S3-compatible | Endpoint, region, and access key pair |
 
-Use **S3-compatible** for any service that implements the S3 API, including MinIO, Backblaze B2, and Wasabi.
+Use **S3-compatible** for any service that implements the S3 API, such as MinIO, Backblaze B2, or Wasabi.
 
-## How storage connections work
+## How connections work
 
-Jobs reference a connection by its id. They never receive the credential.
+A connection stores a bucket, a credential, and an id. Jobs reference the id and never receive the credential.
 
-<Frame caption="A job reads its input through a signed, time-limited request and writes its output back over the same credential.">
+When a job is dispatched, Rendobar signs a time-limited request for the input, and the runner streams it. The output is written back with the same credential. Nothing in the bucket is made public.
+
+<Frame caption="Reading an input from your bucket and writing the output back.">
   <img src="/images/storage/diagram-flow.png" alt="Four steps left to right: your bucket, a signed time-limited request, the job running, and the output written back to your bucket" />
 </Frame>
 
-When a job is dispatched, Rendobar signs a time-limited GET request against your bucket, and the runner streams the input file from that URL. Outputs are written back with the same credential. No object in the bucket is made public at any stage.
-
 ### Connection IDs
 
-You set the id when you connect a bucket, and Rendobar suggests one based on the bucket name. An id must match `[a-z0-9-]{2,40}`.
+You choose the id when you connect a bucket, and Rendobar suggests one from the bucket name. An id must match `[a-z0-9-]{2,40}`. Because jobs reference the id, you can [rotate a credential](#rotate-a-credential) without changing any job payload.
 
-The id appears in every `storage://` URI, so job payloads never contain credentials. You can [rotate a credential](#rotate-a-credential) without changing any code that references the bucket.
-
-<Frame caption="A storage URI: the scheme, the connection id, and the object key within the bucket.">
+<Frame caption="A storage URI: the scheme, the connection id, and the object key.">
   <img src="/images/storage/diagram-uri.png" alt="The reference storage://demo-bucket/raw/clip.mp4 broken into three labelled parts: the scheme, the connection id you chose, and the object key in the bucket" />
 </Frame>
 
-### Reference a bucket in a job
+### Use a bucket in a job
 
-A `storage://` URI is valid anywhere a job accepts a file URL. Use it in `inputs` to read an object, and in `destinations` to write the output:
+A `storage://` URI works anywhere a job accepts a file URL. Put it in `inputs` to read an object, and in `destinations` to write the output:
 
 ```typescript
 import { createClient } from "@rendobar/sdk";
@@ -93,93 +85,73 @@ const job = await client.jobs.run({
 });
 ```
 
-The same URIs work from the [SDK](/sdk), the [CLI](/cli), and the [MCP server](/mcp-server).
+The same URIs work in the [CLI](/cli) and the [MCP server](/mcp-server).
 
 ### Access checks
 
-Rendobar verifies a credential before it saves a connection. It performs four operations against the bucket:
+Before saving a connection, Rendobar writes a test object, reads it back, lists the bucket, and deletes the test object. If a check fails, the connection is not created, and the error names the field or permission to fix.
 
-1. Write a temporary test object.
-2. Read the object back.
-3. List the bucket.
-4. Delete the test object.
+To run the checks again, select **Test Connection** from the connection's actions menu in [**Storage**](https://app.rendobar.com/storage), or call `client.storage.test(id)`.
 
-All four must succeed. If one fails, Rendobar does not create the connection, and the response identifies the field or permission responsible.
+## Delivery settings
 
-To run the same checks against an existing connection, select **Test Connection** from the connection's actions menu in [**Storage**](https://app.rendobar.com/storage), or call `client.storage.test(id)`.
+Each connection has four delivery settings. To change them, select the connection in [**Storage**](https://app.rendobar.com/storage), then select the edit icon on the **Delivery** card.
 
-## Configure output delivery
-
-A `destinations` value in the job payload takes precedence over the connection settings. `storage://demo-bucket/exports` writes to `exports/{job_id}.{ext}`, and `storage://demo-bucket` writes to `rendobar/{job_id}.{ext}`.
-
-To change the connection defaults:
-
-1. In [**Storage**](https://app.rendobar.com/storage), select a connection.
-2. On the **Delivery** card, select the edit icon.
-
-<Frame caption="The Delivery settings: output path template, name conflict handling, default destination, and public URL.">
+<Frame caption="Delivery settings: output path, name conflicts, default destination, and public URL.">
   <img src="/images/storage/delivery-settings.png" alt="Delivery settings showing the output path template with a live example, name conflict handling, and the default destination toggle" />
 </Frame>
 
 ### Output path
 
-The output path is a template. Rendobar replaces each token when the job completes.
+The output path is a template. New connections use **By date**, which is `rendobar/{date}/{source_name}.{ext}`. The dialog also offers **Flat**, which is `rendobar/{source_name}.{ext}`, and **Custom template**.
 
 | Token | Value |
 |---|---|
-| `{job_id}` | The job id, for example `job_ee14ffeecc3f4a1b` |
+| `{job_id}` | The job id, such as `job_ee14ffeecc3f4a1b` |
 | `{ext}` | The output file extension, without the dot |
 | `{source_name}` | The input file name, without its extension |
-| `{date}` | The UTC date, in `YYYY-MM-DD` format |
+| `{date}` | The UTC date, as `YYYY-MM-DD` |
 
-New connections use **By date**.
-
-<Frame caption="The By date template and the object key it produces for an input file named clip.mp4.">
+<Frame caption="The By date template and the key it produces for an input named clip.mp4.">
   <img src="/images/storage/diagram-template.png" alt="The template rendobar/{date}/{source_name}.{ext} with each token mapped to its value, and the resulting key rendobar/2026-09-12/clip.mp4" />
 </Frame>
 
-Three options are available:
+The destination in a job decides how much of the template applies. For a connection using **By date**, and an input named `clip.mp4`:
 
-| Option | Template | Example output |
+| Destination | Uses | Writes |
 |---|---|---|
-| **By date** | `rendobar/{date}/{source_name}.{ext}` | `rendobar/2026-09-12/clip.mp4` |
-| **Flat** | `rendobar/{source_name}.{ext}` | `rendobar/clip.mp4` |
-| **Custom template** | Any value you enter | |
+| `storage://demo-bucket` | The connection's template | `rendobar/2026-09-12/clip.mp4` |
+| `storage://demo-bucket/exports` | The folder, then the template's file name | `exports/clip.mp4` |
+| `storage://demo-bucket/exports/{job_id}.{ext}` | The path as written | `exports/job_ee14ffeecc3f4a1b.mp4` |
 
-A template that contains `{job_id}` cannot produce a duplicate object key, because job ids are unique.
+A path that contains a token, or ends in a file name, is used as written. Any other path is treated as a folder.
 
 ### Name conflicts
 
-A template without `{job_id}` can produce an object key that already exists in the bucket. **Name conflicts** determines what Rendobar does in that case.
+A template without `{job_id}`, including **By date**, can produce a key that already exists. **Name conflicts** decides what happens.
 
 | Setting | Behavior |
 |---|---|
-| **Keep both** | Appends the last six characters of the job id to the file name. `clip.mp4` is written as `clip-4a1b6e.mp4` |
+| **Keep both** | The default. Appends the last six characters of the job id, so `clip.mp4` is written as `clip-4a1b6e.mp4` |
 | **Replace** | Overwrites the existing object |
 
 <Warning>
-**Replace** permanently overwrites the existing object. Rendobar cannot recover it unless the bucket has versioning turned on.
+**Replace** permanently overwrites the existing object unless the bucket has versioning turned on. **Keep both** needs a bucket that supports conditional writes. On a bucket that does not, Rendobar replaces instead.
 </Warning>
 
 ### Default destination
 
-When **Default destination** is on, jobs that do not specify `destinations` write their outputs to this connection. One connection per organization can be the default destination, so turning it on for a second connection turns it off for the first.
-
-Jobs that specify `destinations` are not affected.
+When **Default destination** is on, jobs that do not set `destinations` write their outputs to this connection. Only one connection per organization can be the default, so turning it on for one connection turns it off for the others.
 
 ### Public URL
 
-By default, the `url` field of a delivery points to Rendobar. Set a public URL on the connection to return links on your own host instead:
+By default, a delivery's `url` points to Rendobar. Set a public URL to return links on your own host instead, such as `https://media.example.com/exports/clip.mp4`. It must use `https` and cannot point to a private or internal host.
 
-```text
-https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4
-```
-
-The value must be an `https` URL, and it cannot resolve to a private or internal host. Leave the field empty for a private bucket. A private bucket works normally for both inputs and outputs, and only the returned `url` differs.
+Leave it empty for a private bucket. Inputs and outputs still work, and only the returned `url` changes.
 
 ## Delivery results
 
-A completed job includes one `deliveries[]` entry for each destination.
+A completed job lists one entry in `deliveries` for each destination:
 
 ```json
 {
@@ -187,8 +159,8 @@ A completed job includes one `deliveries[]` entry for each destination.
     {
       "storageId": "demo-bucket",
       "status": "delivered",
-      "path": "exports/job_ee14ffeecc3f4a1b.mp4",
-      "url": "https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4"
+      "path": "exports/clip.mp4",
+      "url": "https://media.example.com/exports/clip.mp4"
     }
   ]
 }
@@ -196,80 +168,76 @@ A completed job includes one `deliveries[]` entry for each destination.
 
 | Field | Description |
 |---|---|
-| `storageId` | The id of the connection used |
+| `storageId` | The connection id |
 | `status` | `pending`, `delivered`, or `failed` |
-| `path` | The object key written, after the template is applied |
-| `url` | The connection's public URL when one is set, otherwise a Rendobar URL |
-| `reason` | The failure reason. Present only when `status` is `failed` |
-| `renamed` | `true` when **Keep both** appended a job id suffix |
+| `path` | The key written, after the template and any rename |
+| `url` | The public URL if one is set, otherwise a Rendobar URL |
+| `reason` | Why the delivery failed. Present only when `status` is `failed` |
+| `renamed` | `true` when **Keep both** added a suffix |
 
-A delivered job returns two URLs for the same content. `output.file.url` is a Rendobar URL that expires at `output.expiresAt`. The `url` in `deliveries[]` points to the copy in your own bucket, which does not expire and which Rendobar does not modify after writing it.
+`output.file.url` and `deliveries[].url` point to the same content. The first is a Rendobar URL that expires at `output.expiresAt`. The second points to the copy in your bucket, which Rendobar does not delete.
 
-`deliveries` is returned by `GET /jobs/{id}`. It is not included in the job list response, and it is absent when the job specified no destinations.
+`deliveries` is returned by `GET /jobs/{id}`. It is not in the job list response, and it is absent when a job has no destinations.
 
 ### Delivery events
 
-Deliveries resolve after the job completes. A job can reach `complete` with its `output` populated while a delivery is still `pending`, and a delivery that fails does not change the status of the job.
+Deliveries finish after the job does. A job can be `complete` while a delivery is still `pending`, and a failed delivery does not change the job's status.
 
 | Event | Fires |
 |---|---|
-| `job.completed` | The output exists. Destinations may still be pending |
-| `job.delivery_succeeded` | Once per destination that received the output |
-| `job.delivery_failed` | Once per destination that could not receive it |
-| `job.deliveries_settled` | Once, when the last destination resolves |
+| `job.completed` | When the output exists. Deliveries may still be pending |
+| `job.delivery_succeeded` | Once for each destination that received the output |
+| `job.delivery_failed` | Once for each destination that did not |
+| `job.deliveries_settled` | Once, after the last delivery finishes |
 
-Wait for `job.deliveries_settled` to know that every destination is finished. It carries the same `deliveries[]` array described above, and it is the only delivery event a per-job `callback.url` receives. A job that specifies no `destinations` does not emit it, because `job.completed` is already its end.
+Wait for `job.deliveries_settled` to know every destination is done. It includes the full `deliveries` array, and it is the only delivery event a per-job `callback.url` receives. Jobs with no destinations do not send it.
 
-`POST /jobs/{id}/deliveries/retry` queues the failed deliveries of a job again.
+To retry failed deliveries, call `client.jobs.retryDeliveries(id)` or `POST /jobs/{id}/deliveries/retry`.
 
 ## Delivery errors
 
-A failed delivery includes a `reason`. Rendobar does not forward error text from the bucket, so the following table is the complete set of values.
+A failed delivery includes one of these `reason` codes. Rendobar never forwards the bucket's own error text.
 
-| Reason | Description | Fix |
+| Reason | Cause | Fix |
 |---|---|---|
-| `destination_denied` | The credential is not permitted to perform this operation on the bucket or path | Grant the credential read and write access to objects, and confirm that it covers this bucket |
-| `signature_mismatch` | The bucket rejected the request signature | Check the access key, the secret, and the region, or issue a new credential |
-| `bucket_not_found` | No bucket with that name exists at the endpoint | The bucket was renamed or deleted. Reconnect using the current name |
-| `already_exists` | An object already exists at that key | Add `{job_id}` to the output path, or set name conflicts to **Keep both** |
-| `object_too_large` | The output exceeds the destination's single-upload limit | Reduce the size of the output. The connection does not need to change |
-| `destination_unavailable` | The bucket returned a 429 or 5xx response, or did not respond | Rendobar retries automatically. Retry manually from the job if it remains failed |
-| `not_deliverable` | The job produced no file to deliver | Expected for jobs that return data only, such as `ffprobe` |
+| `destination_denied` | The credential cannot perform this operation on the bucket or path | Grant read and write access to objects in this bucket |
+| `signature_mismatch` | The bucket rejected the request signature | Check the access key, secret, and region, or issue a new credential |
+| `bucket_not_found` | No bucket with that name exists at the endpoint | Reconnect using the bucket's current name |
+| `already_exists` | An object already exists at that key | Add `{job_id}` to the output path, or use **Keep both** |
+| `object_too_large` | The bucket rejected the object as too large | Check the bucket's object size limit, or reduce the output size |
+| `destination_unavailable` | The bucket returned a 429 or 5xx, or did not respond | Rendobar retries automatically. Retry manually if it stays failed |
+| `not_deliverable` | The job produced no file | Expected for jobs that return data only, such as `ffprobe` |
 
-For errors returned when you create a connection, refer to [error codes](/support/errors).
+Errors returned when you create a connection are listed in [error codes](/support/errors).
 
-## Credential storage
+## Credentials
 
-Rendobar stores the S3 access key and secret for the bucket, encrypted with AES-256-GCM before they are written to the database. No API endpoint returns them.
+Rendobar stores the bucket's access key and secret, encrypted with AES-256-GCM. No API endpoint returns them.
 
-Some providers issue a credential that is not an S3 key pair. Rendobar uses it once to derive the key pair, then discards it. Cloudflare R2 API tokens work this way.
+Some providers issue a different kind of credential, such as a Cloudflare R2 API token. Rendobar uses it once to get an S3 key pair, then discards it.
 
 ### Rotate a credential
 
-To replace a credential on an existing connection, select **Replace Keys** from the connection's actions menu in [**Storage**](https://app.rendobar.com/storage), or call `client.storage.update(id, ...)`. Rendobar runs the four access checks against the new credential before it accepts it.
-
-The connection id does not change, so existing `storage://<id>/<path>` references continue to work.
+Select **Replace Keys** from the connection's actions menu in [**Storage**](https://app.rendobar.com/storage), or call `client.storage.update(id, { credentials })`. Rendobar runs the access checks on the new credential before saving it. The connection id stays the same.
 
 ### Revoke access
 
-To revoke access, delete the token, key, or role in the provider's console. The connection stops working immediately. Each provider page gives the location.
+Delete the token, key, or role in the provider's console. The connection stops working immediately.
 
-Deleting a Rendobar connection also ends access, but it does not invalidate the credential itself. If the credential is stored anywhere else, revoke it at the provider as well.
+Deleting a Rendobar connection also stops access, but it does not invalidate the credential. If you use the credential anywhere else, revoke it at the provider too.
 
-## Available API methods
+## SDK methods
 
 | Method | Description |
 |---|---|
-| `client.storage.list()` | Lists every connection in the organization |
-| `client.storage.get(id)` | Returns one connection |
-| `client.storage.create(params)` | Connects a bucket. Returns a validation error if the access checks fail, or a conflict error if the id is taken |
-| `client.storage.update(id, params)` | Rotates the credential, or sets the public URL |
-| `client.storage.test(id)` | Runs the four access checks again |
-| `client.storage.listObjects(id, params)` | Lists folders and objects in the bucket |
-| `client.storage.stats(id)` | Returns delivery activity for the connection |
-| `client.storage.delete(id)` | Removes the connection. The bucket is not modified |
-
-No method returns a stored credential.
+| `client.storage.list()` | List the connections in the organization |
+| `client.storage.get(id)` | Get one connection |
+| `client.storage.create(params)` | Connect a bucket. Fails if an access check fails or the id is taken |
+| `client.storage.update(id, params)` | Replace the credential or change delivery settings |
+| `client.storage.test(id)` | Run the access checks again |
+| `client.storage.listObjects(id, params)` | List folders and objects in the bucket |
+| `client.storage.stats(id)` | Get delivery activity for the connection |
+| `client.storage.delete(id)` | Remove the connection. The bucket is not changed |
 
 ## Related resources
 
