@@ -185,7 +185,7 @@ A completed job includes one `deliveries[]` entry for each destination.
 {
   "deliveries": [
     {
-      "storage": "demo-bucket",
+      "storageId": "demo-bucket",
       "status": "delivered",
       "path": "exports/job_ee14ffeecc3f4a1b.mp4",
       "url": "https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4"
@@ -196,7 +196,7 @@ A completed job includes one `deliveries[]` entry for each destination.
 
 | Field | Description |
 |---|---|
-| `storage` | The id of the connection used |
+| `storageId` | The id of the connection used |
 | `status` | `pending`, `delivered`, or `failed` |
 | `path` | The object key written, after the template is applied |
 | `url` | The connection's public URL when one is set, otherwise a Rendobar URL |
@@ -205,9 +205,22 @@ A completed job includes one `deliveries[]` entry for each destination.
 
 A delivered job returns two URLs for the same content. `output.file.url` is a Rendobar URL that expires at `output.expiresAt`. The `url` in `deliveries[]` points to the copy in your own bucket, which does not expire and which Rendobar does not modify after writing it.
 
-Deliveries are also asynchronous. A job can reach `complete` with its `output` populated while a delivery is still `pending`, and a delivery that fails does not change the status of the job. Rendobar sends a `job.delivered` or `job.delivery_failed` [webhook](/guides/webhooks) for each destination, and `POST /jobs/{id}/deliveries/retry` queues the failed deliveries again.
-
 `deliveries` is returned by `GET /jobs/{id}`. It is not included in the job list response, and it is absent when the job specified no destinations.
+
+### Delivery events
+
+Deliveries resolve after the job completes. A job can reach `complete` with its `output` populated while a delivery is still `pending`, and a delivery that fails does not change the status of the job.
+
+| Event | Fires |
+|---|---|
+| `job.completed` | The output exists. Destinations may still be pending |
+| `job.delivery_succeeded` | Once per destination that received the output |
+| `job.delivery_failed` | Once per destination that could not receive it |
+| `job.deliveries_settled` | Once, when the last destination resolves |
+
+Wait for `job.deliveries_settled` to know that every destination is finished. It carries the same `deliveries[]` array described above, and it is the only delivery event a per-job `callback.url` receives. A job that specifies no `destinations` does not emit it, because `job.completed` is already its end.
+
+`POST /jobs/{id}/deliveries/retry` queues the failed deliveries of a job again.
 
 ## Delivery errors
 
