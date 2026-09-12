@@ -46,7 +46,9 @@
             "icon": "hard-drive",
             "pages": [
               "storage/index",
-              "storage/cloudflare-r2"
+              "storage/cloudflare-r2",
+              "storage/amazon-s3",
+              "storage/supabase"
             ]
           },
           {
