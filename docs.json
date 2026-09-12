@@ -45,7 +45,8 @@
             "group": "Storage",
             "icon": "hard-drive",
             "pages": [
-              "storage/cloudflare-r2"
+              "storage/cloudflare-r2",
+              "storage/deliveries"
             ]
           },
           {

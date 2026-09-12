@@ -1,0 +1,152 @@
+---
+title: "Configure where job outputs land"
+description: "Set the output path template, name conflict handling, default destination and public URL on a Rendobar storage connection."
+sidebarTitle: "Delivery settings"
+icon: "folder-tree"
+keywords: ["output path template", "storage delivery", "job output destination", "name conflict", "default destination", "public url", "job_id token"]
+canonical: "https://rendobar.com/docs/storage/deliveries"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/storage/deliveries/#article",
+      "headline": "Configure where job outputs land",
+      "description": "Set the output path template, name conflict handling, default destination and public URL on a Rendobar storage connection.",
+      "datePublished": "2026-09-12",
+      "dateModified": "2026-09-12",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Every connected bucket decides four things about the outputs it receives. What they are named, what happens to a name clash, whether jobs naming no destination come here, and what URL the delivered file gets. These settings work the same on [Cloudflare R2](/storage/cloudflare-r2), Amazon S3, Supabase Storage and anything S3-compatible.
+
+Open a connection in [**Storage**](https://app.rendobar.com/storage) and click the pencil on the **Delivery** card.
+
+<Frame caption="Delivery settings: the output path template with a live example, what happens to a name clash, and whether jobs naming no destination come here.">
+  <img src="/images/storage/delivery-settings.png" alt="Delivery settings showing the output path template with a live example, name conflict handling, and the default destination toggle" />
+</Frame>
+
+## Output path
+
+The output path is a template: an object key with `{tokens}` in it. Four tokens exist.
+
+| Token | Becomes |
+|---|---|
+| `{job_id}` | The job's id, such as `job_ee14ffeecc3f4a1b` |
+| `{ext}` | The output's extension, without the dot |
+| `{source_name}` | The input file's name, without the extension |
+| `{date}` | The UTC date, `YYYY-MM-DD` |
+
+A new connection is given:
+
+```text
+rendobar/{date}/{source_name}.{ext}
+```
+
+which for `raw/clip.mp4` renders as:
+
+```text
+rendobar/2026-09-12/clip.mp4
+```
+
+That reads well in a bucket listing, and it can collide, which is what the conflict policy below is for.
+
+The dialog offers that shape as **By date**. **Flat** drops the date:
+
+```text
+rendobar/{source_name}.{ext}      ->  rendobar/clip.mp4
+```
+
+**Custom template** takes anything you type. Include `{job_id}` and the key can never collide, because the id is unique per job:
+
+```text
+rendobar/{job_id}                 ->  rendobar/job_ee14ffeecc3f4a1b.mp4
+```
+
+A destination given in the job payload overrides all of this: `storage://demo-bucket/exports` writes to `exports/{job_id}.{ext}` regardless of what the connection is set to.
+
+## Name conflicts
+
+A template without `{job_id}` will eventually produce a key that already exists. **Name conflicts** decides what happens then.
+
+**Keep both** appends the last six characters of the job id to the name:
+
+```text
+clip.mp4      ->  clip-4a1b6e.mp4
+```
+
+**Replace** overwrites the object already at that key. The previous version is gone unless the bucket has versioning on.
+
+<Warning>
+**Replace** is destructive and Rendobar cannot undo it. Use it only where the bucket is a cache or a mirror of something you still hold elsewhere.
+</Warning>
+
+## Default destination
+
+Turn this on and every job that names no `destinations` delivers here. One connection per organization can hold it, so switching it on elsewhere moves it.
+
+Jobs that do name `destinations` ignore it and go where they were told.
+
+## Public URL
+
+Optional. Leave it blank and a delivered file's `url` points at Rendobar. Set it and the `url` points at your host instead:
+
+```text
+https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4
+```
+
+It must be `https`, and it cannot be a private or internal host. For R2 that is the bucket's [r2.dev domain or a custom domain](https://developers.cloudflare.com/r2/buckets/public-buckets/).
+
+A private bucket has no public link. Leave the field blank and keep using it: the bucket still works for both inputs and outputs, and only the returned `url` differs.
+
+## Reading the result
+
+A completed job carries one `deliveries[]` entry per destination.
+
+```json
+{
+  "deliveries": [
+    {
+      "storage": "demo-bucket",
+      "status": "delivered",
+      "path": "exports/job_ee14ffeecc3f4a1b.mp4",
+      "url": "https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4"
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `storage` | The connection id it was delivered through |
+| `status` | `pending`, `delivered` or `failed` |
+| `path` | The object key written, after the template and any rename |
+| `url` | Your public URL when one is set, otherwise a Rendobar one |
+| `reason` | Present only on `failed`. See [when a delivery fails](/storage/cloudflare-r2#when-a-delivery-fails) |
+| `renamed` | `true` when the name was taken and **Keep both** freed it |
+
+`deliveries` appears on `GET /jobs/{id}`, not on the list endpoint, and is absent when the job had no destinations.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Cloudflare R2" icon="cloudflare" href="/storage/cloudflare-r2">
+    Connect a bucket, then come back here to name its outputs.
+  </Card>
+  <Card title="Jobs" icon="play" href="/concepts/job">
+    Where `destinations` sits in the job payload.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Know the moment a delivery lands, without polling.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation" href="/support/errors">
+    Every code a connection or a delivery can return.
+  </Card>
+</CardGroup>
