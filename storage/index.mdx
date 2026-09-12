@@ -54,24 +54,21 @@ Anything that speaks the S3 API works through the last row, whether or not it is
 
 A connection is a bucket, a credential, and the id you file them under. The id is the only part a job ever names.
 
-```text
-  your bucket                                Rendobar job
-  -----------                                ------------
+<Frame caption="A job never receives your credential. Rendobar signs a time-limited GET against your bucket at dispatch, the runner streams from that, and the output goes back over the same credential.">
+  <img src="/images/storage/diagram-flow.png" alt="Four steps left to right: your bucket, a signed time-limited request, the job running, and the output written back to your bucket" />
+</Frame>
 
-  raw/clip.mp4   ---- input ------------->   downloads it privately
-                                                    |
-                                                  ffmpeg
-                                                    |
-  exports/...    <--- destination --------   uploads the output
-```
-
-Reading and delivering both go over the same credential. A job never receives it, and no input is ever made public: Rendobar signs a time-limited GET against your bucket when the job dispatches, and the runner streams from that.
+Reading and delivering both go over the same credential, and no input is ever made public.
 
 ### The id
 
 You pick it when you connect, and Rendobar suggests one from the bucket name. It must match `[a-z0-9-]{2,40}`.
 
 It is the only public handle for the bucket, which is the point. Because payloads name the id and never the credential, [rotating a credential](#rotating-a-credential) changes nothing in code you have already written.
+
+<Frame caption="The id sits between the scheme and the object key. Everything after it is a path inside the bucket.">
+  <img src="/images/storage/diagram-uri.png" alt="The reference storage://demo-bucket/raw/clip.mp4 broken into three labelled parts: the scheme, the connection id you chose, and the object key in the bucket" />
+</Frame>
 
 ### Using it in a job
 
@@ -128,13 +125,13 @@ The output path is a template: an object key with `{tokens}` in it. Four tokens 
 | `{source_name}` | The input file's name, without the extension |
 | `{date}` | The UTC date, `YYYY-MM-DD` |
 
-A new connection gets **By date**, which for `raw/clip.mp4` renders like this:
+A new connection gets **By date**.
 
-```text
-rendobar/{date}/{source_name}.{ext}   ->  rendobar/2026-09-12/clip.mp4
-```
+<Frame caption="Each token is replaced when the job completes. This template reads well in a bucket listing, and because it carries no job id it can collide.">
+  <img src="/images/storage/diagram-template.png" alt="The template rendobar/{date}/{source_name}.{ext} with each token mapped to its value, and the resulting key rendobar/2026-09-12/clip.mp4" />
+</Frame>
 
-That reads well in a bucket listing, and it can collide. **Flat** drops the date:
+**Flat** drops the date:
 
 ```text
 rendobar/{source_name}.{ext}          ->  rendobar/clip.mp4
