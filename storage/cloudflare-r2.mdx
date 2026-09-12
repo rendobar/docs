@@ -81,11 +81,55 @@ If the bucket does not exist yet, the dialog says so and offers **Create the buc
 
 The connection has an id. Every reference to the bucket goes through it, so a rotated credential never changes a job payload.
 
-```json Read from it, write back to it
+`storage://<id>/<key>` reads an object. `destinations` writes the output back. Both sides of the same connection, in one job:
+
+<CodeGroup>
+
+```typescript SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: process.env.RENDOBAR_API_KEY });
+
+const job = await client.jobs.run({
+  type: "ffmpeg",
+  inputs: { source: "storage://demo-bucket/raw/clip.mp4" },
+  params: {
+    command: "ffmpeg -i source -vf scale=1280:-2 -c:v libx264 -crf 23 -c:a copy out.mp4",
+  },
+  destinations: ["storage://demo-bucket/exports/{date}/{source_name}.{ext}"],
+});
+
+console.log(outputUrl(job));
+console.log(job.deliveries);
+```
+
+```bash cURL
+curl https://api.rendobar.com/jobs   -H "Authorization: Bearer $RENDOBAR_API_KEY"   -H "Content-Type: application/json"   -d '{
+    "type": "ffmpeg",
+    "inputs": { "source": "storage://demo-bucket/raw/clip.mp4" },
+    "params": {
+      "command": "ffmpeg -i source -vf scale=1280:-2 -c:v libx264 -crf 23 -c:a copy out.mp4"
+    },
+    "destinations": ["storage://demo-bucket/exports/{date}/{source_name}.{ext}"]
+  }'
+```
+
+</CodeGroup>
+
+The input never touches a public URL. Rendobar presigns a GET against your bucket at dispatch, the runner streams it, and the output goes back over the same credential.
+
+A completed job carries a `deliveries[]` entry per destination, each with the key it wrote and a link:
+
+```json
 {
-  "type": "compress.target",
-  "inputs": { "source": "storage://demo-bucket/raw/clip.mp4" },
-  "destinations": ["storage://demo-bucket/exports/{date}/{source_name}.{ext}"]
+  "deliveries": [
+    {
+      "storage": "demo-bucket",
+      "status": "delivered",
+      "path": "exports/2026-09-12/clip.mp4",
+      "url": "https://media.example.com/exports/2026-09-12/clip.mp4"
+    }
+  ]
 }
 ```
 
