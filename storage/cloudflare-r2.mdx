@@ -25,68 +25,13 @@ canonical: "https://rendobar.com/docs/storage/cloudflare-r2"
   }}
 />
 
-Jobs read inputs from your R2 bucket and write outputs back to it. Once connected, the bucket has an id you pick, and every job addresses it through that id:
+Your media stays in your bucket. You give Rendobar one credential and pick a short id. Every job then addresses the bucket through that id, never through a URL.
 
-```text
-inputs        storage://demo-bucket/raw/clip.mp4
-destinations  storage://demo-bucket/exports
-```
-
-You need a Cloudflare account with a bucket. Two steps: scope a token in Cloudflare, paste it into Rendobar.
-
-<Frame caption="Rendobar reads job inputs from a connected bucket and delivers outputs back to it. R2 is one of four kinds it connects to.">
+<Frame caption="Rendobar reads job inputs from a connected bucket and delivers outputs back to it, over the same credential. R2 is one of four kinds it connects to.">
   <img src="/images/storage/hero-r2.png" alt="Rendobar reading inputs from and delivering outputs to a Cloudflare R2 bucket, alongside the other storage kinds it connects to" />
 </Frame>
 
-## Create the API token
-
-R2 speaks the [S3 API](https://developers.cloudflare.com/r2/api/s3/api/), but the credentials come from an [R2 API token](https://developers.cloudflare.com/r2/api/tokens/) rather than from an IAM user.
-
-1. In Cloudflare, open **R2 Object Storage**, then **Manage API tokens**, then **Create Account API token**.
-2. Under **Permissions**, choose **Object Read & Write**. Not Admin: Rendobar never needs to create or delete a bucket, and Admin includes both.
-3. Under **Specify bucket(s)**, choose **Apply to specific buckets only** and pick the one bucket.
-
-<Frame caption="Object Read and Write, scoped to one bucket. Admin Read and Write would also let the token delete buckets.">
-  <img src="/images/storage/r2-token-scope.png" alt="Cloudflare's Create Account API Token page with Object Read and Write selected and a single bucket chosen" />
-</Frame>
-
-Click **Create Account API Token**. Cloudflare shows the token value once.
-
-<Frame caption="The token value. Cloudflare shows it exactly once, so copy it before leaving the page.">
-  <img src="/images/storage/r2-token-created.png" alt="The created token page in Cloudflare, with the token value shown once" />
-</Frame>
-
-<Warning>
-Leave this page without copying and the token is gone. Cloudflare cannot show it again, and you will have to create another.
-</Warning>
-
-## Connect it in Rendobar
-
-Open [**Storage**](https://app.rendobar.com/storage), click **Connect Storage**, and choose **Cloudflare R2**.
-
-<Frame caption="Four providers. R2, Supabase Storage and Amazon S3 each take their own credential; anything else that speaks the S3 API goes through S3-compatible.">
-  <img src="/images/storage/connect-providers.png" alt="The Connect Storage dialog with four providers: Cloudflare R2, Supabase Storage, Amazon S3 and S3-compatible" />
-</Frame>
-
-Paste the token into **API token** and type the bucket name. You can paste the whole Cloudflare token page instead of the single value. Rendobar picks the token out of it and fills the provider at the same time.
-
-<Frame caption="Pasting the whole token page fills both fields.">
-  <img src="/images/storage/r2-dialog-filled.png" alt="The Cloudflare R2 connect dialog with the API token masked and the bucket name filled in" />
-</Frame>
-
-You also choose the **id** here. It is the only public handle for the bucket, it appears in every `storage://` reference, and it must match `[a-z0-9-]{2,40}`. Rendobar suggests one from the bucket name.
-
-Click **Connect**. Rendobar exchanges the token for the S3 key pair it stands for. It then writes a test object, reads it back, lists the bucket and deletes the test object, before saving. If the bucket does not exist yet, the dialog says so and offers **Create the bucket and connect**.
-
-<Frame caption="Connected. Write, read, list and delete all passed, and the snippets are the exact strings a job takes.">
-  <img src="/images/storage/r2-connected.png" alt="The finish screen showing write, read, list and delete all passing, with copyable source and destinations snippets" />
-</Frame>
-
-`client.storage.list()` returns the same connections from code.
-
-## Use it in a job
-
-`storage://<id>/<key>` reads an object. `destinations` writes the output back. Both sides of the same connection, in one job:
+This is what you are working toward.
 
 <CodeGroup>
 
@@ -124,46 +69,73 @@ curl https://api.rendobar.com/jobs \
 
 </CodeGroup>
 
-Because the reference goes through the id, rotating the credential never changes a job payload.
+`demo-bucket` is the id. `storage://<id>/<key>` reads an object, `destinations` writes the output back, and both travel over the credential you are about to give it. Rotating that credential never changes a job payload, because the payload only ever names the id.
 
-A folder destination writes `<folder>/{job_id}.{ext}`, which cannot collide. [Where outputs land](#where-outputs-land) covers the tokens for naming it yourself.
+## Connect the bucket
 
-A completed job carries a `deliveries[]` entry per destination, each with the key it wrote and a link:
+Start in Rendobar, not in Cloudflare. Open [**Storage**](https://app.rendobar.com/storage), click **Connect Storage**, and choose **Cloudflare R2**.
 
-```json
-{
-  "deliveries": [
-    {
-      "storage": "demo-bucket",
-      "status": "delivered",
-      "path": "exports/job_ee14ffeecc3f4a1b.mp4",
-      "url": "https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4"
-    }
-  ]
-}
-```
+<Frame caption="Four providers. R2, Supabase Storage and Amazon S3 each take their own credential. Anything else that speaks the S3 API goes through S3-compatible.">
+  <img src="/images/storage/connect-providers.png" alt="The Connect Storage dialog with four providers: Cloudflare R2, Supabase Storage, Amazon S3 and S3-compatible" />
+</Frame>
 
-`storage://` works anywhere a URL does, including from the [SDK](/sdk), the [CLI](/cli) and the [MCP server](/mcp-server). The [quickstart](/quickstart) covers the job shape itself.
+The dialog opens on a **Key type** switch, because R2 accepts two kinds of credential. Take the first unless you already hold the second.
 
-## When a delivery fails
+### Key type: API token
 
-A failed delivery carries a `reason`. These are the whole vocabulary, and nothing the bucket said is ever forwarded.
+One value, and the shortest path. R2 speaks the [S3 API](https://developers.cloudflare.com/r2/api/s3/api/), but its credentials come from an [R2 API token](https://developers.cloudflare.com/r2/api/tokens/), not an IAM user. Rendobar exchanges the token for the S3 pair it stands for.
 
-| Reason | What happened | Fix |
-|---|---|---|
-| `destination_denied` | The credentials may not do this on the bucket or path | Widen the token to Object Read & Write, or check it covers this bucket |
-| `signature_mismatch` | The destination rejected the signature | Re-create the token. An R2 token cannot be edited into a different scope |
-| `bucket_not_found` | No bucket by that name at this endpoint | The bucket was renamed or deleted. Reconnect against the current name |
-| `already_exists` | An object already sits at that path | Add `{job_id}` to the output path, or set name conflicts to **Keep both** |
-| `object_too_large` | The output exceeds the single-upload limit | Nothing to change on the connection. The output itself is too big |
-| `destination_unavailable` | R2 returned 429 or 5xx | Retried automatically. Retry by hand from the job if it stays failed |
-| `not_deliverable` | The job produced no file to deliver | Expected for data-only jobs such as `ffprobe` |
+In a second tab:
 
-[Error codes](/support/errors) lists the codes a connection can return at connect time.
+1. Open **R2 Object Storage**, then **Manage API tokens**, then **Create Account API token**.
+2. Under **Permissions**, choose **Object Read & Write**. Not Admin: Rendobar never needs to create or delete a bucket, and Admin includes both.
+3. Under **Specify bucket(s)**, choose **Apply to specific buckets only** and pick the one bucket.
+
+<Frame caption="Object Read and Write, scoped to one bucket. Admin Read and Write would also let the token delete buckets.">
+  <img src="/images/storage/r2-token-scope.png" alt="Cloudflare's Create Account API Token page with Object Read and Write selected and a single bucket chosen" />
+</Frame>
+
+Click **Create Account API Token**. Cloudflare shows the token value once.
+
+<Frame caption="The token value. Cloudflare shows it exactly once, so copy it before leaving the page.">
+  <img src="/images/storage/r2-token-created.png" alt="The created token page in Cloudflare, with the token value shown once" />
+</Frame>
+
+<Warning>
+Leave that page without copying and the token is gone. Cloudflare cannot show it again, and you will have to create another.
+</Warning>
+
+Back in Rendobar, paste it into **API token** and type the bucket name. You can paste the whole Cloudflare token page instead of the single value. Rendobar picks the token out of it and fills the provider at the same time.
+
+<Frame caption="Pasting the whole token page fills both fields.">
+  <img src="/images/storage/r2-dialog-filled.png" alt="The Cloudflare R2 connect dialog with the API token masked and the bucket name filled in" />
+</Frame>
+
+### Key type: access key and secret
+
+Take this one if you already hold an S3 pair for the bucket. It asks for three things instead of one. The **Account ID** is 32 hex characters, from the R2 overview page. Then the access key id and the secret.
+
+<Frame caption="The key pair path. Account ID, bucket, then the pair. Rendobar builds the R2 endpoint from the account id.">
+  <img src="/images/storage/r2-dialog-keys.png" alt="The Cloudflare R2 connect dialog on the access key and secret tab, with the account ID, access key ID and secret masked" />
+</Frame>
+
+Both paths end in the same place: a stored S3 key pair. The token path just derives one for you and then drops the token.
+
+### Name it and connect
+
+Under **More options**, **id** is the short name the bucket answers to. It is the only public handle, it appears in every `storage://` reference, and it must match `[a-z0-9-]{2,40}`. Rendobar suggests one from the bucket name.
+
+Click **Connect**. Rendobar writes a test object, reads it back, lists the bucket and deletes the test object. Only then does it save. If the bucket does not exist yet, the dialog says so and offers **Create the bucket and connect**.
+
+<Frame caption="Connected. Write, read, list and delete all passed, and the snippets are the exact strings a job takes.">
+  <img src="/images/storage/r2-connected.png" alt="The finish screen showing write, read, list and delete all passing, with copyable source and destinations snippets" />
+</Frame>
+
+`client.storage.list()` returns the same connections from code.
 
 ## Where outputs land
 
-Open a connection and click the pencil on the **Delivery** card to change how outputs are named and where they go.
+A folder destination such as `storage://demo-bucket/exports` writes `exports/{job_id}.{ext}`, which cannot collide. To name outputs yourself, open the connection and click the pencil on the **Delivery** card.
 
 <Frame caption="Delivery settings: the output path template with a live example, what happens to a name clash, and whether jobs naming no destination come here.">
   <img src="/images/storage/delivery-settings.png" alt="Delivery settings showing the output path template with a live example, name conflict handling, and the default destination toggle" />
@@ -184,11 +156,42 @@ The default is `rendobar/{job_id}`, which cannot collide. The dialog suggests `r
 
 **Default destination** sends every job that names no `destinations` to this bucket. One connection per organization can hold it.
 
-**Public URL** is optional. Set it and delivered files get a link on that host instead of a Rendobar one. Use the bucket's [r2.dev domain or a custom domain](https://developers.cloudflare.com/r2/buckets/public-buckets/); a private bucket has no public link and should be left blank.
+**Public URL** is optional. Set it and delivered files get a link on that host instead of a Rendobar one. Use the bucket's [r2.dev domain or a custom domain](https://developers.cloudflare.com/r2/buckets/public-buckets/). Leave it blank for a private bucket, which has no public link.
+
+A completed job carries a `deliveries[]` entry per destination, each with the key it wrote and a link:
+
+```json
+{
+  "deliveries": [
+    {
+      "storage": "demo-bucket",
+      "status": "delivered",
+      "path": "exports/job_ee14ffeecc3f4a1b.mp4",
+      "url": "https://media.example.com/exports/job_ee14ffeecc3f4a1b.mp4"
+    }
+  ]
+}
+```
+
+## When a delivery fails
+
+A failed delivery carries a `reason`. These are the whole vocabulary, and nothing the bucket said is ever forwarded.
+
+| Reason | What happened | Fix |
+|---|---|---|
+| `destination_denied` | The credentials may not do this on the bucket or path | Widen the token to Object Read & Write, or check it covers this bucket |
+| `signature_mismatch` | The destination rejected the signature | Re-create the credential. An R2 token cannot be edited into a different scope |
+| `bucket_not_found` | No bucket by that name at this endpoint | The bucket was renamed or deleted. Reconnect against the current name |
+| `already_exists` | An object already sits at that path | Add `{job_id}` to the output path, or set name conflicts to **Keep both** |
+| `object_too_large` | The output exceeds the single-upload limit | Nothing to change on the connection. The output itself is too big |
+| `destination_unavailable` | R2 returned 429 or 5xx | Retried automatically. Retry by hand from the job if it stays failed |
+| `not_deliverable` | The job produced no file to deliver | Expected for data-only jobs such as `ffprobe` |
+
+[Error codes](/support/errors) lists the codes a connection can return at connect time.
 
 ## What Rendobar stores
 
-Rendobar stores the derived S3 access key and secret, sealed with AES-256-GCM before they reach the database. No endpoint returns them, including to you. The R2 API token you pasted is used once to derive the pair and is then dropped.
+Rendobar stores the S3 access key and secret, sealed with AES-256-GCM before they reach the database. No endpoint returns them, including to you. An R2 API token you pasted is used once to derive the pair and is then dropped.
 
 Job inputs are never made public either. Rendobar presigns a GET against your bucket at dispatch, the runner streams it, and the output goes back over the same credential.
 
