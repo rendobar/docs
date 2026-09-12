@@ -52,11 +52,19 @@ Use **S3-compatible** for any service that implements the S3 API, such as MinIO,
 
 A connection stores a bucket, a credential, and an id. Jobs reference the id and never receive the credential.
 
-When a job is dispatched, Rendobar signs a time-limited request for the input, and the runner streams it. The output is written back with the same credential. Nothing in the bucket is made public.
+```mermaid
+sequenceDiagram
+    participant Rendobar
+    participant Runner
+    participant Bucket as Your bucket
+    Rendobar->>Runner: Dispatch the job with a signed URL for the input
+    Runner->>Bucket: Read the input through the signed URL
+    Runner->>Runner: Run the job
+    Runner->>Rendobar: Upload the output to Rendobar storage
+    Rendobar->>Bucket: Write the output with the connection's credential
+```
 
-<Frame caption="Reading an input from your bucket and writing the output back.">
-  <img src="/images/storage/diagram-flow.png" alt="Four steps left to right: your bucket, a signed time-limited request, the job running, and the output written back to your bucket" />
-</Frame>
+The signed URL covers one object and expires, so the runner never holds your credential. The output is stored on Rendobar first, then written to your bucket. Nothing in the bucket is made public.
 
 ### Connection IDs
 
@@ -181,16 +189,25 @@ A completed job lists one entry in `deliveries` for each destination:
 
 ### Delivery events
 
-Deliveries finish after the job does. A job can be `complete` while a delivery is still `pending`, and a failed delivery does not change the job's status.
+A job is `complete` before its deliveries start, and a failed delivery does not change the job's status. Webhooks can arrive in any order, including `job.completed`.
 
-| Event | Fires |
-|---|---|
-| `job.completed` | When the output exists. Deliveries may still be pending |
-| `job.delivery_succeeded` | Once for each destination that received the output |
-| `job.delivery_failed` | Once for each destination that did not |
-| `job.deliveries_settled` | Once, after the last delivery finishes |
+```mermaid
+sequenceDiagram
+    participant Rendobar
+    participant A as Bucket A
+    participant B as Bucket B
+    participant Hook as Your webhook
+    par Each destination is written independently
+        Rendobar->>A: Write the output
+        Rendobar-->>Hook: job.delivery_succeeded
+    and
+        Rendobar->>B: Write the output
+        Rendobar-->>Hook: job.delivery_failed
+    end
+    Rendobar-->>Hook: job.deliveries_settled
+```
 
-Wait for `job.deliveries_settled` to know every destination is done. It includes the full `deliveries` array, and it is the only delivery event a per-job `callback.url` receives. Jobs with no destinations do not send it.
+Wait for `job.deliveries_settled` to know every destination is done. It is sent once, after the last destination resolves, and carries every outcome, so the order of the other events does not matter. It is the only delivery event a per-job `callback.url` receives. Jobs with no destinations do not send it.
 
 To retry failed deliveries, call `client.jobs.retryDeliveries(id)` or `POST /jobs/{id}/deliveries/retry`.
 
@@ -212,7 +229,7 @@ Errors returned when you create a connection are listed in [error codes](/suppor
 
 ## Credentials
 
-Rendobar stores the bucket's access key and secret, encrypted with AES-256-GCM. No API endpoint returns them.
+For connections that use keys, Rendobar stores the access key and secret, encrypted with AES-256-GCM. No API endpoint returns them. A one-click AWS role stores no keys, because Rendobar assumes the role when it needs access.
 
 Some providers issue a different kind of credential, such as a Cloudflare R2 API token. Rendobar uses it once to get an S3 key pair, then discards it.
 
