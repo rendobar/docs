@@ -203,6 +203,10 @@ A completed job includes one `deliveries[]` entry for each destination.
 | `reason` | The failure reason. Present only when `status` is `failed` |
 | `renamed` | `true` when **Keep both** appended a job id suffix |
 
+A delivered job returns two URLs for the same content. `output.file.url` is a Rendobar URL that expires at `output.expiresAt`. The `url` in `deliveries[]` points to the copy in your own bucket, which does not expire and which Rendobar does not modify after writing it.
+
+Deliveries are also asynchronous. A job can reach `complete` with its `output` populated while a delivery is still `pending`, and a delivery that fails does not change the status of the job. Rendobar sends a `job.delivered` or `job.delivery_failed` [webhook](/guides/webhooks) for each destination, and `POST /jobs/{id}/deliveries/retry` queues the failed deliveries again.
+
 `deliveries` is returned by `GET /jobs/{id}`. It is not included in the job list response, and it is absent when the job specified no destinations.
 
 ## Delivery errors
