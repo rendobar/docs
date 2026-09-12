@@ -1,0 +1,176 @@
+---
+title: "Storage connections"
+description: "Connect your own bucket to Rendobar. Jobs read private inputs from it and deliver outputs back, addressed as storage://your-id instead of a URL."
+sidebarTitle: "Overview"
+icon: "database"
+keywords: ["storage connection", "storage protocol", "connect bucket", "private job input", "job output destination", "s3 bucket rendobar", "bring your own bucket"]
+canonical: "https://rendobar.com/docs/storage"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/storage/#article",
+      "headline": "Storage connections",
+      "description": "Connect your own bucket to Rendobar so jobs read private inputs from it and deliver outputs back to it.",
+      "datePublished": "2026-09-12",
+      "dateModified": "2026-09-12",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Your media stays in your bucket. Connect it once and jobs read private inputs from it and write outputs back to it, addressed through a short id you choose:
+
+```text
+storage://<connection-id>/<path>
+```
+
+Nothing in the bucket needs to be public. This page covers what is true of every connection. Each provider then has its own page for getting a credential.
+
+<Frame caption="A connection works in both directions. Jobs read inputs from the bucket and deliver outputs back to it, over the same credential.">
+  <img src="/images/storage/hero-all.png" alt="Rendobar connected to Cloudflare R2, Amazon S3, Supabase Storage and any S3-compatible bucket, reading inputs from them and delivering outputs back" />
+</Frame>
+
+## Providers
+
+Four kinds connect, and each accepts more than one sort of credential.
+
+| Provider | Credentials it takes |
+|---|---|
+| [Cloudflare R2](/storage/cloudflare-r2) | An R2 API token, or an access key and secret |
+| Amazon S3 | A one-click IAM role, or access keys. Either can be read-only |
+| Supabase Storage | Sign in to Supabase, or bring S3 keys |
+| S3-compatible | An endpoint, a region and a key pair. MinIO, Backblaze B2, Wasabi |
+
+Anything that speaks the S3 API works through the last row, whether or not it is listed by name.
+
+## How a connection works
+
+A connection is a bucket, a credential, and the id you file them under. The id is the only part a job ever names.
+
+```text
+  your bucket                                Rendobar job
+  -----------                                ------------
+
+  raw/clip.mp4   ---- input ------------->   downloads it privately
+                                                    |
+                                                  ffmpeg
+                                                    |
+  exports/...    <--- destination --------   uploads the output
+```
+
+Reading and delivering both go over the same credential. A job never receives it, and no input is ever made public: Rendobar signs a time-limited GET against your bucket when the job dispatches, and the runner streams from that.
+
+### The id
+
+You pick it when you connect, and Rendobar suggests one from the bucket name. It must match `[a-z0-9-]{2,40}`.
+
+It is the only public handle for the bucket, which is the point. Because payloads name the id and never the credential, [rotating a credential](#rotating-a-credential) changes nothing in code you have already written.
+
+### Using it in a job
+
+`storage://` works anywhere a job takes a file URL, on both sides:
+
+```typescript
+import { createClient } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: process.env.RENDOBAR_API_KEY });
+
+const job = await client.jobs.run({
+  type: "ffmpeg",
+  inputs: { source: "storage://demo-bucket/raw/clip.mp4" },
+  params: {
+    command: "ffmpeg -i source -vf scale=1280:-2 -c:v libx264 -crf 23 -c:a copy out.mp4",
+  },
+  destinations: ["storage://demo-bucket/exports"],
+});
+```
+
+A bare id delivers to `rendobar/{job_id}.{ext}`. A folder such as `storage://demo-bucket/exports` delivers to `exports/{job_id}.{ext}`. [Delivery settings](/storage/deliveries) covers naming outputs yourself.
+
+The same references work from the [SDK](/sdk), the [CLI](/cli) and the [MCP server](/mcp-server).
+
+## What happens when you connect
+
+Rendobar never saves a credential it has not proven. Before the connection exists, it:
+
+1. Writes a temporary test object
+2. Reads it back
+3. Lists the bucket
+4. Deletes the test object
+
+All four must pass. A failure names the field or permission that caused it rather than forwarding whatever the bucket said, so the dialog can tell you which one to fix.
+
+You can re-run the same four checks on a live connection at any time, from the dashboard or with `client.storage.test(id)`.
+
+## What Rendobar stores
+
+The S3 access key and secret for the bucket, sealed with AES-256-GCM before they reach the database. No endpoint returns them, including to you.
+
+Where a provider issues a richer credential than an S3 pair, that credential is used once to derive the pair and is then discarded. A Cloudflare R2 API token works this way.
+
+### Rotating a credential
+
+Replace the credential on the existing connection, in the dashboard or with `client.storage.update(id, ...)`. The four access checks run again before the new one is accepted.
+
+The id does not change, so every `storage://<id>/<path>` reference you have already written keeps working. This is the reason the id exists.
+
+### Revoking access
+
+Revoke at the provider, not here. Delete the token, key or role in their console and the connection stops working immediately. Each provider page has the exact path.
+
+Deleting the Rendobar connection also ends access, but it does not invalidate the credential itself. If the credential might be held anywhere else, revoke it at the provider too.
+
+## When a delivery fails
+
+A failed delivery carries a `reason`. This is the whole vocabulary, and it is the same for every provider.
+
+| Reason | What happened | Fix |
+|---|---|---|
+| `destination_denied` | The credentials may not do this on the bucket or path | Widen the credential to read and write objects, and check it covers this bucket |
+| `signature_mismatch` | The destination rejected the signature | Check the access key, the secret and the region, or issue a new credential |
+| `bucket_not_found` | No bucket by that name at this endpoint | The bucket was renamed or deleted. Reconnect against the current name |
+| `already_exists` | An object already sits at that path | Add `{job_id}` to the output path, or set name conflicts to **Keep both** |
+| `object_too_large` | The output exceeds the destination's single-upload limit | Nothing to change on the connection. The output itself is too big |
+| `destination_unavailable` | The bucket returned 429 or 5xx, or did not answer | Retried automatically. Retry by hand from the job if it stays failed |
+| `not_deliverable` | The job produced no file to deliver | Expected for data-only jobs such as `ffprobe` |
+
+[Error codes](/support/errors) lists the codes a connection can return at connect time.
+
+## From code
+
+| Method | Does |
+|---|---|
+| `client.storage.list()` | Every connection in the organization |
+| `client.storage.get(id)` | One connection |
+| `client.storage.create(params)` | Connect a bucket. Fails validation if the probe fails, conflict if the id is taken |
+| `client.storage.update(id, params)` | Rotate the credential, or set the public URL |
+| `client.storage.test(id)` | Re-run the four access checks |
+| `client.storage.listObjects(id, params)` | Browse folders and objects in the bucket |
+| `client.storage.stats(id)` | Delivery activity for the connection |
+| `client.storage.delete(id)` | Remove the connection. Does not touch the bucket |
+
+No method returns a stored credential.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Cloudflare R2" icon="cloudflare" href="/storage/cloudflare-r2">
+    Connect an R2 bucket, with either credential kind.
+  </Card>
+  <Card title="Delivery settings" icon="folder-tree" href="/storage/deliveries">
+    Name outputs, handle conflicts, set a default destination.
+  </Card>
+  <Card title="Jobs" icon="play" href="/concepts/job">
+    Where `inputs` and `destinations` sit in the payload.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation" href="/support/errors">
+    Every code a connection or a delivery can return.
+  </Card>
+</CardGroup>

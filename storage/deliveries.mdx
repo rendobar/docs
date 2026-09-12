@@ -25,7 +25,7 @@ canonical: "https://rendobar.com/docs/storage/deliveries"
   }}
 />
 
-Every connected bucket decides four things about the outputs it receives. What they are named, what happens to a name clash, whether jobs naming no destination come here, and what URL the delivered file gets. These settings work the same on [Cloudflare R2](/storage/cloudflare-r2), Amazon S3, Supabase Storage and anything S3-compatible.
+Every connected bucket decides four things about the outputs it receives. What they are named, what happens to a name clash, whether jobs naming no destination come here, and what URL the delivered file gets. These settings work the same on every [storage connection](/storage): Cloudflare R2, Amazon S3, Supabase Storage and anything S3-compatible.
 
 Open a connection in [**Storage**](https://app.rendobar.com/storage) and click the pencil on the **Delivery** card.
 
@@ -129,7 +129,7 @@ A completed job carries one `deliveries[]` entry per destination.
 | `status` | `pending`, `delivered` or `failed` |
 | `path` | The object key written, after the template and any rename |
 | `url` | Your public URL when one is set, otherwise a Rendobar one |
-| `reason` | Present only on `failed`. See [when a delivery fails](/storage/cloudflare-r2#when-a-delivery-fails) |
+| `reason` | Present only on `failed`. See [when a delivery fails](/storage#when-a-delivery-fails) |
 | `renamed` | `true` when the name was taken and **Keep both** freed it |
 
 `deliveries` appears on `GET /jobs/{id}`, not on the list endpoint, and is absent when the job had no destinations.
@@ -137,8 +137,8 @@ A completed job carries one `deliveries[]` entry per destination.
 ## See also
 
 <CardGroup cols={2}>
-  <Card title="Cloudflare R2" icon="cloudflare" href="/storage/cloudflare-r2">
-    Connect a bucket, then come back here to name its outputs.
+  <Card title="Storage connections" icon="database" href="/storage">
+    The model, the id, security, and the failure reasons.
   </Card>
   <Card title="Jobs" icon="play" href="/concepts/job">
     Where `destinations` sits in the job payload.
