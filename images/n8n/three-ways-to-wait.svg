@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" role="img"
+     aria-label="Three ways an n8n workflow can wait for a Rendobar job. Wait for Completion polls and holds a worker for the whole job. Callback URL plus a Wait node submits once, parks the execution, and resumes on Rendobar's callback. The Rendobar Trigger starts a separate workflow when the job ends, so nothing waits at all.">
+  <style>
+    .t   { font: 600 19px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #0A0A0A }
+    .s   { font: 400 14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #52525B }
+    .m   { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #059669 }
+    .mg  { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #71717A }
+    .mr  { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #EA4B71 }
+    .ax  { stroke: #E4E4E7; stroke-width: 2 }
+    .node { fill: #FFFFFF; stroke: #D4D4D8; stroke-width: 1.5 }
+    .nl  { font: 600 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #0A0A0A }
+  </style>
+  <rect width="1200" height="560" fill="#FAFAFA"/>
+
+  <!-- 1. Wait for Completion -->
+  <text class="t" x="48" y="56">Wait for Completion</text>
+  <text class="s" x="48" y="80">The node polls until the job ends. The worker is held for the whole job. Fine for a clip, wrong for an hour.</text>
+  <line class="ax" x1="48" y1="130" x2="1152" y2="130"/>
+  <rect x="48" y="116" width="1104" height="28" rx="14" fill="#F4F4F5" stroke="#E4E4E7"/>
+  <g fill="#A1A1AA">
+    <circle cx="48" cy="130" r="7"/>
+    <circle cx="186" cy="130" r="5"/><circle cx="324" cy="130" r="5"/><circle cx="462" cy="130" r="5"/>
+    <circle cx="600" cy="130" r="5"/><circle cx="738" cy="130" r="5"/><circle cx="876" cy="130" r="5"/>
+    <circle cx="1014" cy="130" r="5"/>
+  </g>
+  <circle cx="1152" cy="130" r="7" fill="#71717A"/>
+  <text class="mg" x="48" y="170">submit</text>
+  <text class="mg" x="470" y="170">status, status, status, status ...</text>
+  <text class="mg" x="1112" y="170">done</text>
+
+  <!-- 2. Callback URL + Wait node -->
+  <text class="t" x="48" y="238">Callback URL + Wait node</text>
+  <text class="s" x="48" y="262">Submit once with the Wait node's resume URL as the callback. The execution parks. Rendobar's call brings it back.</text>
+  <line class="ax" x1="48" y1="312" x2="1152" y2="312"/>
+  <rect x="48" y="298" width="1104" height="28" rx="14" fill="#ECFDF5" stroke="#A7F3D0"/>
+  <path d="M62 312 H1138" stroke="#A7F3D0" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>
+  <circle cx="48" cy="312" r="7" fill="#059669"/>
+  <circle cx="1152" cy="312" r="7" fill="#059669"/>
+  <path d="M1152 270 v28" stroke="#059669" stroke-width="2"/>
+  <path d="M1146 290 l6 8 6 -8" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="m" x="48" y="352">submit</text>
+  <text class="m" x="500" y="352">parked, no execution time</text>
+  <text class="m" x="1080" y="352">callback</text>
+  <text class="m" x="1080" y="286">Rendobar</text>
+
+  <!-- 3. Rendobar Trigger -->
+  <text class="t" x="48" y="420">Rendobar Trigger</text>
+  <text class="s" x="48" y="444">Nothing waits. One workflow submits, a second one starts when the job ends. The right shape when the workflow is the reaction.</text>
+  <g transform="translate(48,470)">
+    <rect class="node" x="0" y="0" width="150" height="44" rx="8"/>
+    <text class="nl" x="14" y="27">Workflow A: Create</text>
+    <path d="M150 22 H200" stroke="#D4D4D8" stroke-width="2"/>
+    <text class="mg" x="212" y="27">job runs on Rendobar</text>
+  </g>
+  <g transform="translate(720,470)">
+    <path d="M-40 22 H0" stroke="#EA4B71" stroke-width="2"/>
+    <path d="M-8 16 l8 6 -8 6" fill="none" stroke="#EA4B71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect class="node" x="0" y="0" width="184" height="44" rx="8"/>
+    <text class="nl" x="14" y="27">Rendobar Trigger: job.completed</text>
+    <path d="M184 22 H232" stroke="#D4D4D8" stroke-width="2"/>
+    <rect class="node" x="232" y="0" width="200" height="44" rx="8"/>
+    <text class="nl" x="246" y="27">Workflow B: Get + download</text>
+  </g>
+  <text class="mr" x="640" y="530">event</text>
+</svg>
