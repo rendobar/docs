@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/cli"
       "headline": "Run FFmpeg from your terminal",
       "description": "Install the rb binary, sign in, and run any ffmpeg command in the cloud from your shell. Local files upload and download for you.",
       "datePublished": "2026-06-22",
-      "dateModified": "2026-06-22",
+      "dateModified": "2026-09-13",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -91,6 +91,8 @@ Get an API key from [app.rendobar.com](https://app.rendobar.com) under Settings,
 | Command | What it does |
 |---|---|
 | `rb ffmpeg <args>` | Run FFmpeg in the cloud. Pass real `ffmpeg` flags. Local `-i` inputs upload automatically |
+| `rb storage list` | List the buckets connected on the [Storage page](https://app.rendobar.com/storage) |
+| `rb storage ls <id>[/folder]` | List folders and files in a connected bucket, each with its `storage://` URI. `--all` reads every page |
 | `rb login [--key <key>]` | Sign in via browser OAuth, or save an API key with `--key` |
 | `rb logout` | Revoke the token and delete the credential file |
 | `rb whoami` | Print the current org, plan, and balance |
@@ -108,15 +110,18 @@ These flags belong to `rb ffmpeg`. Everything else after the subcommand passes t
 | `--quiet` | Print nothing. Read the exit code |
 | `--no-wait` | Submit and exit, printing the job ID |
 | `--timeout N` | Server-side execution timeout in seconds. Range 1 to 900, default 120 |
+| `--deliver <uri>` | Also write the output to connected storage, for example `storage://prod-media/exports`. Repeat for more buckets. Also on `rb generate` and `rb edit` |
 
 Local inputs (`-i ./clip.mp4`) upload before submission and are rewritten to short-lived URLs. Remote inputs (`-i https://...`) pass through untouched. The trailing output filename is where the result downloads to.
+
+A delivery starts after the job completes. rb waits up to five minutes for it and prints where each one landed.
 
 ### Exit codes
 
 | Code | Meaning |
 |---|---|
 | `0` | Success |
-| `1` | Job failed, or a generic runtime error |
+| `1` | Job failed, a delivery did not land, or a generic runtime error |
 | `2` | Not authenticated, bad arguments, port in use, or insufficient credits |
 | `130` | Cancelled with `Ctrl+C`. The CLI tries to cancel the in-flight job first |
 
