@@ -6,7 +6,7 @@
  * - title: 13-52 chars, sentence case, no em/en-dash, no pipe, no --, no "Rendobar"
  * - description: 100-160 chars, starts with allowed action verb, no em-dash, no "Rendobar" prefix
  * - description must be present on every page (except snippets)
- * - canonical: must equal https://rendobar.com/docs/<page-path>. Mintlify's
+ * - canonical: must equal https://rendobar.com/docs/<page-path>, and a folder's index.mdx is the folder itself. Mintlify's
  *   auto-canonical drops the /docs subpath on the rendobar.mintlify.app
  *   subdomain (points at a 404), so every page pins its canonical explicitly.
  *
@@ -153,8 +153,9 @@ function validate(filePath, fm, violations) {
   }
 
   // --- Canonical checks ---
+  // A folder's index.mdx is served at the folder itself: storage/index.mdx is /docs/storage.
   const expectedCanonical =
-    'https://rendobar.com/docs/' + rel.replace(/\\/g, '/').replace(/\.mdx$/, '');
+    'https://rendobar.com/docs/' + rel.replace(/\\/g, '/').replace(/\.mdx$/, '').replace(/\/index$/, '');
   if (!fm.canonical) {
     violations.push({
       file: rel, field: 'canonical',
