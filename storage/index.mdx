@@ -74,6 +74,8 @@ To run the checks again, select **Test Connection** from the connection's action
 
 Put the connection id in a `storage://` URI, followed by the object's path in the bucket. For example, `storage://demo-bucket/raw/clip.mp4` is the object `raw/clip.mp4` in the connection `demo-bucket`.
 
+If the path contains `%`, `?` or `#`, write those characters as `%25`, `%3F` and `%23`. For example, `storage://demo-bucket/raw/clip%231.mp4` is the object `raw/clip#1.mp4`. The Storage page, the Playground and the Rendobar clients write them this way for you.
+
 Rendobar suggests an id from the bucket name, and any id must match `[a-z0-9-]{2,40}`. Jobs use the id, not the credential, so you can [rotate a credential](#rotate-a-credential) without changing any job.
 
 ### Use it in a job
