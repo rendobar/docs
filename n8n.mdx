@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/n8n"
       "headline": "n8n community node",
       "description": "Install the Rendobar n8n community node, connect it with an API key, then submit, track, cancel, and upload from your workflows.",
       "datePublished": "2026-06-22",
-      "dateModified": "2026-06-22",
+      "dateModified": "2026-09-13",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -74,6 +74,10 @@ Cancel a still-running job by ID.
 ### Upload File
 
 Stream a binary file from a previous node to Rendobar and get back a `downloadUrl` to use as a job input. Uploaded files are ephemeral and auto-delete after 24 hours.
+
+### Storage
+
+Create Job's **Destinations** option writes the output to buckets connected on the [Storage page](https://app.rendobar.com/storage): one row per bucket, each with an optional folder or path. The job's `deliveries` reports every write. **Storage Connection** lists the connections, and **Storage File** lists the folders and files in one, each with a `storage://` URI that a job input accepts. See [Storage connections](/storage).
 
 ## Rendobar Trigger
 
