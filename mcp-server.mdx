@@ -158,6 +158,8 @@ Blocks up to 45 seconds, then returns `output.file.url`.
 
 The hosted server can't read your disk, so even a shell-capable agent goes through the presigned-URL handshake above. `@rendobar/mcp`, the local stdio server, skips that: its `upload_file` tool reads a file off disk and uploads it in a single call.
 
+It has the same storage tools as the hosted server, plus `list_storage_files` for finding a path inside a connected bucket.
+
 Get an API key at [app.rendobar.com](https://app.rendobar.com), Settings, API keys.
 
 <Tabs>
