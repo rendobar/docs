@@ -16,8 +16,8 @@ canonical: "https://rendobar.com/docs/storage"
       "@id": "https://rendobar.com/docs/storage/#article",
       "headline": "Storage connections",
       "description": "Use your own object storage bucket with Rendobar. Jobs read input files from a connected bucket and write their outputs back to it.",
-      "datePublished": "2026-09-12",
-      "dateModified": "2026-09-12",
+      "datePublished": "2026-09-13",
+      "dateModified": "2026-09-13",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -290,6 +290,9 @@ Delete the token, key, or role in the provider's console. The connection stops w
 Deleting a Rendobar connection also stops access, but it does not invalidate the credential. If you use the credential anywhere else, revoke it at the provider too.
 
 ## SDK methods
+
+Listing and reading connections needs the `storage:read` scope. Connecting, testing, changing and
+deleting them needs `storage:write` and the owner or admin role. See [scopes](/concepts/scopes).
 
 | Method | Description |
 |---|---|
