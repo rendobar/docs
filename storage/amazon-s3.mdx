@@ -194,7 +194,7 @@ For a role you created another way, delete the role in IAM. Deleting the connect
 
 **Incomplete uploads.** When a large upload fails, Rendobar aborts it so its parts are not left in the bucket. As a safety net for every client that writes to the bucket, add a [lifecycle rule that deletes incomplete multipart uploads](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html).
 
-**Temporary credentials.** For a role, Rendobar gets temporary credentials from AWS STS that last up to 12 hours. A link to an input file stops working when the credentials that signed it expire, so a role limited to AWS's default one-hour session gives jobs input links that last one hour. Each delivery's credentials are limited to the one object it writes.
+**Temporary credentials.** For a role, Rendobar gets temporary credentials from AWS STS that last up to 12 hours. A link to an input file stops working when the credentials that signed it expire, so a role limited to AWS's default one-hour session gives jobs input links that last one hour. Each delivery's credentials are limited to the one object it writes. [Why S3 presigned URLs expire early](https://rendobar.com/blog/s3-presigned-url-expires-early/) measures this, and [giving a service S3 access without an access key](https://rendobar.com/blog/s3-access-without-access-keys/) walks through the role's trust and permission policies.
 
 **Encryption.** For a bucket encrypted with SSE-KMS, the role or user also needs `kms:GenerateDataKey` to write and `kms:Decrypt` to read, on the bucket's key.
 
