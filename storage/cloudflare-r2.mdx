@@ -1,0 +1,181 @@
+---
+title: "Connect a Cloudflare R2 bucket"
+description: "Connect a Cloudflare R2 bucket to Rendobar with an R2 API token, so that jobs can read files from it and write their outputs back to it."
+sidebarTitle: "Cloudflare R2"
+icon: "cloudflare"
+keywords: ["cloudflare r2", "r2 bucket", "connect r2", "r2 api token", "r2 s3 credentials", "deliver to r2", "storage destination"]
+canonical: "https://rendobar.com/docs/storage/cloudflare-r2"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/storage/cloudflare-r2/#article",
+      "headline": "Connect a Cloudflare R2 bucket",
+      "description": "Connect a Cloudflare R2 bucket to Rendobar with an R2 API token or an access key pair, then reference it in jobs.",
+      "datePublished": "2026-09-13",
+      "dateModified": "2026-09-13",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Connect a Cloudflare R2 bucket so jobs can read files from it and write outputs back to it. For how connections work across providers, see [storage connections](/storage).
+
+<Frame caption="Rendobar reading inputs from an R2 bucket and writing outputs back.">
+  <img src="/images/storage/hero-r2.png" alt="Rendobar reading inputs from and delivering outputs to a Cloudflare R2 bucket, alongside the other storage kinds it connects to" />
+</Frame>
+
+## Prerequisites
+
+You need a Cloudflare account with an R2 bucket.
+
+R2 accepts two kinds of credential. Choose one with **Key type** in the connect dialog:
+
+| Key type | Use when | You enter |
+|---|---|---|
+| **API token** | You have no credentials for the bucket yet | API token, bucket name |
+| **Access key and secret** | You already have an S3 key pair | Account ID, bucket name, access key ID, secret access key |
+
+This page uses an API token. To use a key pair instead, see [Connect with an access key and secret](#connect-with-an-access-key-and-secret).
+
+## 1. Create an R2 API token
+
+1. In the Cloudflare dashboard, go to **R2 Object Storage** > **Manage API tokens**.
+2. Select **Create Account API token**.
+3. Under **Permissions**, select **Object Read & Write**.
+4. Under **Specify bucket(s)**, select **Apply to specific buckets only**, then select your bucket.
+5. Select **Create Account API Token**.
+
+Rendobar reads, writes, lists, and deletes objects. It never creates or deletes buckets, so **Admin Read & Write** is more access than it needs.
+
+<Frame caption="Object Read and Write, applied to one bucket.">
+  <img src="/images/storage/r2-token-scope.png" alt="Cloudflare's Create Account API Token page with Object Read and Write selected and a single bucket chosen" />
+</Frame>
+
+<Warning>
+Cloudflare shows the token only once. Copy it before you leave the page, or you will need to create a new one.
+</Warning>
+
+<Frame caption="The created token.">
+  <img src="/images/storage/r2-token-created.png" alt="The created token page in Cloudflare, with the token value shown once" />
+</Frame>
+
+## 2. Connect the bucket
+
+1. In [**Storage**](https://app.rendobar.com/storage), select **Connect Storage**, then **Cloudflare R2**.
+2. In **API token**, paste the token. In **Bucket**, enter the bucket name.
+3. (Optional) Under **More options**, change the **ID**. Jobs use it to reference the bucket.
+4. Select **Connect**.
+
+You can paste the whole Cloudflare token page into **API token**. Rendobar finds the token in the text.
+
+<Frame caption="The R2 connect dialog with a token and bucket name entered.">
+  <img src="/images/storage/r2-dialog-filled.png" alt="The Cloudflare R2 connect dialog with the API token masked and the bucket name filled in" />
+</Frame>
+
+Rendobar runs its [access checks](/storage#connect-a-bucket) and saves the connection only if they pass. If the bucket does not exist, the dialog offers **Create the bucket and connect**.
+
+<Frame caption="A connected bucket, with the access checks passed and the storage URIs to use in jobs.">
+  <img src="/images/storage/r2-connected.png" alt="The finish screen showing write, read, list and delete all passing, with copyable source and destinations snippets" />
+</Frame>
+
+## 3. Use the bucket in a job
+
+Put an object in `inputs` to read it, and the connection in `destinations` to write the output:
+
+<CodeGroup>
+
+```typescript SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({
+  apiKey: process.env.RENDOBAR_API_KEY,
+});
+
+const job = await client.jobs.run({
+  type: "ffmpeg",
+  inputs: { source: "storage://demo-bucket/raw/clip.mp4" },
+  params: {
+    command: "ffmpeg -i source -vf scale=1280:-2 out.mp4",
+  },
+  destinations: ["storage://demo-bucket/exports"],
+});
+
+console.log(outputUrl(job));
+console.log(job.deliveries);
+```
+
+```bash cURL
+curl https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer $RENDOBAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ffmpeg",
+    "inputs": { "source": "storage://demo-bucket/raw/clip.mp4" },
+    "params": {
+      "command": "ffmpeg -i source -vf scale=1280:-2 out.mp4"
+    },
+    "destinations": ["storage://demo-bucket/exports"]
+  }'
+```
+
+</CodeGroup>
+
+With the default output path, this writes `exports/clip.mp4`. Delivery finishes after the job, so `job.deliveries` can still show `pending` when `run` returns.
+
+To change how outputs are named, see [delivery settings](/storage#delivery-settings). If a delivery fails, see [delivery errors](/storage#delivery-errors).
+
+## Revoke access
+
+1. In the Cloudflare dashboard, go to **R2 Object Storage** > [**Manage API tokens**](https://developers.cloudflare.com/r2/api/tokens/).
+2. Delete the token used by the connection.
+
+The connection stops working immediately. To replace the credential without changing job payloads, [rotate it](/storage#rotate-a-credential) instead.
+
+<Warning>
+Deleting a bucket does not revoke its token. A token scoped to all buckets still reaches every other bucket in the account, so scope tokens to one bucket.
+</Warning>
+
+## Connect with an access key and secret
+
+If you already have an S3 key pair for the bucket, set **Key type** to **Access key and secret**, then enter:
+
+- **Account ID**: 32 hexadecimal characters, shown on the R2 overview page
+- **Access Key ID** and **Secret Access Key**: from the key pair
+
+Rendobar builds the endpoint from the account ID: `https://<account-id>.r2.cloudflarestorage.com`.
+
+<Frame caption="The R2 connect dialog on the Access key and secret tab.">
+  <img src="/images/storage/r2-dialog-keys.png" alt="The Cloudflare R2 connect dialog on the access key and secret tab, with the account ID, access key ID and secret masked" />
+</Frame>
+
+## R2-specific behavior
+
+**Jurisdictions.** Buckets in the EU or FedRAMP jurisdiction use a different endpoint. Set the jurisdiction under **More options** when you connect.
+
+**Public URLs.** Use the bucket's [r2.dev domain or a custom domain](https://developers.cloudflare.com/r2/buckets/public-buckets/) as the connection's [public URL](/storage#public-url).
+
+**Egress.** R2 does not charge for egress. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/), and [running FFmpeg on files in R2](https://rendobar.com/ffmpeg/r2/) for how that compares with S3.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Storage connections" icon="database" href="/storage">
+    Connection ids, delivery settings, credentials, and error codes.
+  </Card>
+  <Card title="Jobs" icon="play" href="/concepts/job">
+    Where `inputs` and `destinations` appear in the job payload.
+  </Card>
+  <Card title="SDK" icon="npm" href="/sdk">
+    Submit the job above in TypeScript.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Receive an event when a job completes.
+  </Card>
+</CardGroup>

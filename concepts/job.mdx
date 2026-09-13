@@ -54,6 +54,14 @@ Every job is a `type` plus the `inputs` and `params` that type expects:
 
 `type` picks the operation, `inputs` maps names to source URLs, and `params` carries the options for that type. `POST` it to `/jobs` and you get back an id and a `waiting` status. Each [job type](/jobs/ffmpeg) documents its own `inputs` and `params`.
 
+To also write the output to a bucket you own, add `destinations`. An input can come from that bucket too, as a `storage://` URI:
+
+```json
+{ "type": "ffmpeg", "inputs": { "source": "storage://demo-bucket/raw/clip.mp4" }, "params": { "command": "ffmpeg -i source out.mp4" }, "destinations": ["storage://demo-bucket/exports"] }
+```
+
+See [storage connections](/storage) for connecting a bucket and how outputs are named.
+
 ## The lifecycle
 
 A job moves through six statuses. Three are terminal.

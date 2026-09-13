@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/mcp-server"
       "headline": "Connect AI agents with the MCP server",
       "description": "Connect Claude Code, claude.ai, or any MCP client to Rendobar over OAuth, then submit jobs, upload files, and chain job outputs from the chat.",
       "datePublished": "2026-06-22",
-      "dateModified": "2026-07-26",
+      "dateModified": "2026-09-13",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -68,7 +68,7 @@ Call `list_job_types` first. It returns every active job type fresh, so it never
 | Tool | What it does | Returns |
 |---|---|---|
 | `list_job_types` | Every active job type: use cases, what it chains with, a params digest, and an example payload. With `type`, the full annotated parameter schema for that one type. | `{ jobTypes[], guidance }` or `{ type, paramsJsonSchema, example, guidance }` |
-| `submit_job` | Submit a job. `inputs` accepts a URL string, `{ url }`, `{ content }` (inline text), or `{ job: "job_..." }` for chaining. | `{ jobId, status }` |
+| `submit_job` | Submit a job. `inputs` accepts a URL string, `{ url }`, `{ content }` (inline text), or `{ job: "job_..." }` for chaining. A URL can be a `storage://` URI, and `destinations` writes the output to a connected bucket. | `{ jobId, status }` |
 | `get_job` | Check status and results. `wait: true` blocks up to 45 seconds instead of polling. A completed video job includes an inline poster image. | `{ id, status, output?, cost?, error? }` |
 | `list_jobs` | Recent jobs, filterable by `status` and `type`. | `{ jobs[], total }` |
 | `probe_media` | Run ffprobe against a media URL as an async job. Poll `get_job` for the normalized summary and full report. | `{ jobId, status }` |
@@ -77,6 +77,7 @@ Call `list_job_types` first. It returns every active job type fresh, so it never
 | `upload_media` | Open an upload session. Presigned URLs for shell-capable callers, or a `pageUrl` for the user to upload from their own device. | `{ session, pageUrl, files[] }` |
 | `complete_upload` | Finalize an asset after its bytes land in storage. | `{ asset: { id, url, status } }` |
 | `get_upload` | Check an upload session's progress. `wait: true` blocks up to 45 seconds. | `{ status, assets[] }` |
+| `list_storage` | The organization's [connected buckets](/storage). Use an id as `storage://<id>/<path>` in `inputs`, or as `storage://<id>` in `destinations` unless its `access` is `"read"`. Credentials are never returned. | `{ storage[], note }` |
 
 `{ job: "job_..." }` inside `submit_job`'s `inputs` chains a completed job straight into the next one today for `ffmpeg` inputs. For any other job type, pass the prior job's output URL (from `get_job`) as a plain URL input instead.
 
@@ -207,6 +208,9 @@ and forces it to ask again from the start.
 One caveat worth knowing: revoking deletes the grant and every stored token, so the app cannot get
 new access or renew what it has, but an access token it is already holding stays valid until it
 expires. That is under an hour.
+
+An app connected before 2026-09-13 cannot call `list_storage`, because storage scopes did not exist
+when you approved it. Revoke it and connect again to allow Storage.
 
 ## See also
 

@@ -130,6 +130,21 @@ await client.jobs.create({
 
 Each `inputs` key is the filename staged in the working directory, and the command refers to it by that bare name. `asset.url` resolves to a presigned read at dispatch.
 
+## Storage
+
+Use `storage://` URIs to read from and write to a [connected bucket](/storage):
+
+```ts
+await client.jobs.create({
+  type: "ffmpeg",
+  inputs: { source: "storage://demo-bucket/raw/clip.mp4" },
+  params: { command: "ffmpeg -i source out.mp4" },
+  destinations: ["storage://demo-bucket/exports"],
+});
+```
+
+`jobs.get(id)` returns `deliveries`, one entry per destination, and `jobs.retryDeliveries(id)` retries the failed ones. `client.storage` manages the connections. See [SDK methods](/storage#sdk-methods).
+
 ## Webhooks
 
 `webhooks.create({ name, url, subscribedEvents })` registers an endpoint. `rotateSecret`, `test`, `listDeliveries`, and `retryDelivery` operate it.

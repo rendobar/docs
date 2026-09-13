@@ -42,6 +42,17 @@
             ]
           },
           {
+            "group": "Storage",
+            "icon": "hard-drive",
+            "pages": [
+              "storage/index",
+              "storage/cloudflare-r2",
+              "storage/amazon-s3",
+              "storage/supabase",
+              "storage/s3-compatible"
+            ]
+          },
+          {
             "group": "Jobs",
             "pages": [
               "jobs/ffmpeg",

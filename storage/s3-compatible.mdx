@@ -1,0 +1,140 @@
+---
+title: "Connect an S3-compatible bucket"
+description: "Connect a bucket on any S3-compatible service, such as MinIO, Backblaze B2 or Wasabi, so Rendobar jobs can read files from it and write outputs back."
+sidebarTitle: "S3-compatible"
+icon: "server"
+keywords: ["s3 compatible storage", "minio", "backblaze b2", "wasabi", "hetzner object storage", "s3 api bucket", "deliver to s3 compatible"]
+canonical: "https://rendobar.com/docs/storage/s3-compatible"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/storage/s3-compatible/#article",
+      "headline": "Connect an S3-compatible bucket",
+      "description": "Connect a bucket on any service that implements the Amazon S3 API with an endpoint, region and access key pair, then reference it in jobs.",
+      "datePublished": "2026-09-13",
+      "dateModified": "2026-09-13",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Connect a bucket on any service that implements the Amazon S3 API, such as MinIO, Backblaze B2, Wasabi, or Hetzner Object Storage. For how connections work across providers, see [storage connections](/storage).
+
+## Prerequisites
+
+From your provider, you need:
+
+| Value | Where it comes from |
+|---|---|
+| Endpoint | The provider's S3 API URL. It must use `https` and a public host |
+| Region | The region your provider's documentation gives for S3 requests |
+| Bucket name | An existing bucket, or a name for a new one |
+| Access key ID and secret access key | A key that can read and write objects in the bucket |
+
+The key does not need permission to delete objects. Listing objects is needed only to browse the bucket from the dashboard.
+
+## 1. Connect the bucket
+
+1. In [**Storage**](https://app.rendobar.com/storage), select **Connect Storage**, then **S3-compatible**.
+2. Enter the **Endpoint**, **Region**, and **Bucket**.
+3. Set **Path-style URLs** to match your provider. See [Path-style URLs](#path-style-urls).
+4. Enter the **Access Key ID** and **Secret Access Key**.
+5. (Optional) Under **More options**, change the **ID** or set a public URL.
+6. Select **Connect**.
+
+Rendobar runs its [access checks](/storage#connect-a-bucket) and saves the connection only if they pass. If the bucket does not exist, the dialog offers **Create the bucket and connect**.
+
+## 2. Use the bucket in a job
+
+Put an object in `inputs` to read it, and the connection in `destinations` to write the output:
+
+<CodeGroup>
+
+```typescript SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({
+  apiKey: process.env.RENDOBAR_API_KEY,
+});
+
+const job = await client.jobs.run({
+  type: "ffmpeg",
+  inputs: { source: "storage://demo-bucket/raw/clip.mp4" },
+  params: {
+    command: "ffmpeg -i source -vf scale=1280:-2 out.mp4",
+  },
+  destinations: ["storage://demo-bucket/exports"],
+});
+
+console.log(outputUrl(job));
+console.log(job.deliveries);
+```
+
+```bash cURL
+curl https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer $RENDOBAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ffmpeg",
+    "inputs": { "source": "storage://demo-bucket/raw/clip.mp4" },
+    "params": {
+      "command": "ffmpeg -i source -vf scale=1280:-2 out.mp4"
+    },
+    "destinations": ["storage://demo-bucket/exports"]
+  }'
+```
+
+</CodeGroup>
+
+With the default output path, this writes `exports/clip.mp4`. Delivery finishes after the job, so `job.deliveries` can still show `pending` when `run` returns.
+
+To change how outputs are named, see [delivery settings](/storage#delivery-settings). If a delivery fails, see [delivery errors](/storage#delivery-errors).
+
+## Path-style URLs
+
+**Path-style URLs** decides where the bucket name goes in each request. Use the style your provider documents.
+
+| Setting | Request URL |
+|---|---|
+| On | `https://<endpoint>/<bucket>/<key>` |
+| Off | `https://<bucket>.<endpoint-host>/<key>` |
+
+If the access checks fail with a signature or bucket error and the keys are correct, try the other setting.
+
+## Behavior that depends on the provider
+
+**Name conflicts.** When you connect, Rendobar checks whether the endpoint refuses to overwrite an existing object. If it does not, **Name conflicts** is fixed to **Replace**, and an output with the same path replaces the existing object. To keep every output, add `{job_id}` to the [output path](/storage#output-path).
+
+**Deletes.** A key without delete permission works. The empty test object from the access checks then stays in the bucket at `.rendobar/probe-<uuid>`, and you can delete it.
+
+**Public URLs.** Set your provider's public or CDN domain as the connection's [public URL](/storage#public-url), so deliveries return links on that domain.
+
+## Revoke access
+
+Delete or deactivate the access key in your provider's console. The connection stops working immediately.
+
+Deleting the connection in Rendobar removes the stored key, but does not invalidate it.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Storage connections" icon="database" href="/storage">
+    Connection ids, delivery settings, credentials, and error codes.
+  </Card>
+  <Card title="Jobs" icon="play" href="/concepts/job">
+    Where `inputs` and `destinations` appear in the job payload.
+  </Card>
+  <Card title="SDK" icon="npm" href="/sdk">
+    Submit the job above in TypeScript.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Receive an event when a job completes.
+  </Card>
+</CardGroup>

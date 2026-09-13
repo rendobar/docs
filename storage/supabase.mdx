@@ -1,0 +1,186 @@
+---
+title: "Connect a Supabase Storage bucket"
+description: "Connect a Supabase Storage bucket to Rendobar by signing in with Supabase or with S3 access keys, so jobs can read files from it and write outputs back."
+sidebarTitle: "Supabase Storage"
+icon: "bolt"
+keywords: ["supabase storage", "supabase bucket", "connect supabase", "supabase s3", "supabase s3 access keys", "deliver to supabase", "storage destination"]
+canonical: "https://rendobar.com/docs/storage/supabase"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/storage/supabase/#article",
+      "headline": "Connect a Supabase Storage bucket",
+      "description": "Connect a Supabase Storage bucket to Rendobar by signing in with Supabase or with S3 access keys, then reference it in jobs.",
+      "datePublished": "2026-09-13",
+      "dateModified": "2026-09-13",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Connect a Supabase Storage bucket so jobs can read files from it and write outputs back to it. For how connections work across providers, see [storage connections](/storage).
+
+<Frame caption="Rendobar reading inputs from a Supabase Storage bucket and writing outputs back.">
+  <img src="/images/storage/hero-supabase.png" alt="Rendobar reading inputs from and delivering outputs to a Supabase Storage bucket, alongside the other storage kinds it connects to" />
+</Frame>
+
+## Prerequisites
+
+You need a Supabase project.
+
+Supabase offers two ways to connect. Choose one with **Access** in the connect dialog:
+
+| Access | Use when | You enter |
+|---|---|---|
+| **Sign in** | You can sign in to the Supabase organization that owns the project | Nothing. You pick the project and bucket after signing in |
+| **S3 keys** | You want a credential that reaches Storage only | Endpoint, region, bucket name, access key ID, secret access key |
+
+Both reach every bucket in the project, not only the one you connect. See [what Rendobar stores](#what-rendobar-stores).
+
+**Sign in** needs the project's legacy `anon` and `service_role` API keys to be active, because Supabase Storage's S3 endpoint accepts only those keys. If they are turned off, turn them on under **Project Settings** > **API Keys**, or use S3 keys.
+
+This page uses **Sign in**. To use S3 keys instead, see [Connect with S3 access keys](#connect-with-s3-access-keys).
+
+## 1. Sign in with Supabase
+
+1. In [**Storage**](https://app.rendobar.com/storage), select **Connect Storage**, then **Supabase Storage**.
+2. Under **Access**, select **Sign in**, then select **Sign in with Supabase**.
+
+<Frame caption="The Supabase connect dialog on the Sign in tab.">
+  <img src="/images/storage/supabase-signin.png" alt="The Supabase Storage connect dialog on the Sign in tab, listing what the sign-in does, with the Sign in with Supabase button" />
+</Frame>
+
+3. On the Supabase authorization page, choose the **Organization** that owns the project, then select **Authorize Rendobar**.
+
+<Frame caption="Supabase asks you to approve read access to the organization's projects and secrets.">
+  <img src="/images/storage/supabase-authorize.png" alt="Supabase's Authorize Rendobar page with the organization selected, Secrets and Projects read permissions, and the Authorize Rendobar button" />
+</Frame>
+
+Rendobar uses the approval to list your projects and read one project's API keys, then discards it. Supabase returns you to Rendobar. Finish the next step within 10 minutes, or sign in again.
+
+## 2. Pick the project and bucket
+
+1. In **Project**, select the project.
+2. In **Bucket**, select a bucket, or enter a new name. Rendobar creates a new bucket as private before it runs the access checks.
+3. (Optional) Under **More options**, change the **ID**. Jobs use it to reference the bucket.
+4. Select **Connect**.
+
+<Frame caption="The project and bucket, picked after signing in.">
+  <img src="/images/storage/supabase-project.png" alt="The Supabase Storage dialog after signing in, with a project selected and a new bucket name that will be created as private" />
+</Frame>
+
+Rendobar runs its [access checks](/storage#connect-a-bucket) and saves the connection only if they pass.
+
+<Frame caption="A connected bucket, with the access checks passed and the storage URIs to use in jobs.">
+  <img src="/images/storage/supabase-connected.png" alt="The finish screen for a Supabase bucket showing write, read, list and delete all passing, with copyable source and destinations snippets" />
+</Frame>
+
+## 3. Use the bucket in a job
+
+Put an object in `inputs` to read it, and the connection in `destinations` to write the output:
+
+<CodeGroup>
+
+```typescript SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({
+  apiKey: process.env.RENDOBAR_API_KEY,
+});
+
+const job = await client.jobs.run({
+  type: "ffmpeg",
+  inputs: { source: "storage://bucket-demo/raw/clip.mp4" },
+  params: {
+    command: "ffmpeg -i source -vf scale=1280:-2 out.mp4",
+  },
+  destinations: ["storage://bucket-demo/exports"],
+});
+
+console.log(outputUrl(job));
+console.log(job.deliveries);
+```
+
+```bash cURL
+curl https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer $RENDOBAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ffmpeg",
+    "inputs": { "source": "storage://bucket-demo/raw/clip.mp4" },
+    "params": {
+      "command": "ffmpeg -i source -vf scale=1280:-2 out.mp4"
+    },
+    "destinations": ["storage://bucket-demo/exports"]
+  }'
+```
+
+</CodeGroup>
+
+With the default output path, this writes `exports/clip.mp4`. Delivery finishes after the job, so `job.deliveries` can still show `pending` when `run` returns.
+
+To change how outputs are named, see [delivery settings](/storage#delivery-settings). If a delivery fails, see [delivery errors](/storage#delivery-errors).
+
+## What Rendobar stores
+
+| Access | Stored, encrypted | Reaches |
+|---|---|---|
+| **Sign in** | The project's `anon` and `service_role` keys | Every bucket in the project, and the project's database through the `service_role` role |
+| **S3 keys** | The access key ID and secret access key | Every bucket in the project, through Storage only |
+
+Both credentials bypass Row Level Security, so your storage policies do not limit what Rendobar can read or write. The Supabase sign-in itself is not stored.
+
+<Warning>
+The `service_role` key has full access to the project's data, not only Storage. If that is more access than you want to give, connect with S3 keys.
+</Warning>
+
+## Revoke access
+
+**S3 keys.** In the Supabase dashboard, go to **Storage** > [**S3**](https://supabase.com/dashboard/project/_/storage/s3) and delete the access key. The connection stops working immediately.
+
+**Sign in.** Removing Rendobar's authorization in Supabase does not stop the connection, because the connection uses the project's keys, not the sign-in. To stop it, deactivate the legacy API keys under **Project Settings** > **API Keys**. This also stops every other client that uses the legacy `anon` or `service_role` key.
+
+Deleting the connection in Rendobar removes the stored keys, but does not invalidate them.
+
+## Connect with S3 access keys
+
+1. In the Supabase dashboard, go to **Storage** > [**S3**](https://supabase.com/dashboard/project/_/storage/s3).
+2. Create an access key, and copy the access key ID and secret access key. Copy the **Endpoint** and **Region** from the same page.
+3. In the Rendobar connect dialog, set **Access** to **S3 keys**, then enter the endpoint, region, bucket name, and the key pair.
+4. Select **Connect**.
+
+The endpoint has the form `https://<project-ref>.storage.supabase.co/storage/v1/s3`.
+
+## Supabase-specific behavior
+
+**Name conflicts.** Supabase Storage does not refuse an overwrite, so **Name conflicts** is always **Replace** on a Supabase connection. An output with the same path replaces the existing object. To keep every output, add `{job_id}` to the [output path](/storage#output-path).
+
+<Frame caption="Name conflicts is fixed to Replace on a Supabase connection.">
+  <img src="/images/storage/supabase-output-path.png" alt="Delivery settings for a Supabase bucket with the By date output path and Name conflicts set to Replace, unavailable to change" />
+</Frame>
+
+**Public buckets.** When you pick a public bucket after signing in, Rendobar sets the connection's [public URL](/storage#public-url) to `https://<project-ref>.supabase.co/storage/v1/object/public/<bucket>`, so deliveries return links on Supabase.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Storage connections" icon="database" href="/storage">
+    Connection ids, delivery settings, credentials, and error codes.
+  </Card>
+  <Card title="Jobs" icon="play" href="/concepts/job">
+    Where `inputs` and `destinations` appear in the job payload.
+  </Card>
+  <Card title="SDK" icon="npm" href="/sdk">
+    Submit the job above in TypeScript.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Receive an event when a job completes.
+  </Card>
+</CardGroup>

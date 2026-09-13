@@ -17,7 +17,7 @@ canonical: "https://rendobar.com/docs/concepts/scopes"
       "headline": "Scopes and access",
       "description": "Configure an API key to hold only what your code needs, see what an app asks for before you allow it, and read the 403 that names a missing scope.",
       "datePublished": "2026-09-01",
-      "dateModified": "2026-09-01",
+      "dateModified": "2026-09-13",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -31,7 +31,7 @@ or a dashboard session.
 
 ## The scopes
 
-Six resources, each with a read and a write scope.
+Seven resources, each with a read and a write scope.
 
 | Resource | Read | Write | Write lets it |
 |---|---|---|---|
@@ -41,6 +41,7 @@ Six resources, each with a read and a write scope.
 | Billing | `billing:read` | `billing:write` | Change the plan and what you are charged |
 | Organization | `orgs:read` | `orgs:write` | Add and remove members |
 | API keys | `keys:read` | `keys:write` | Create keys that act outside the session |
+| Storage | `storage:read` | `storage:write` | Connect, change and remove buckets |
 
 Two rules cover the rest:
 
@@ -122,6 +123,11 @@ WWW-Authenticate: Bearer error="insufficient_scope",
 It is a `403`, not a `401`: the credential authenticated correctly and presenting it again cannot
 help. Read the `scope` parameter to see what to ask for, then create a key that carries it or
 reconnect the app and allow that area.
+
+Storage scopes were added on 2026-09-13. Keys created and apps connected before then do not hold
+them, so the [storage](/storage) endpoints and `client.storage` answer them with this `403`. Create a
+new key, or reconnect the app and allow Storage. A job that reads from or delivers to a connected
+bucket needs only `jobs:write`, so existing keys still run those.
 
 ## See also
 

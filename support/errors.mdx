@@ -64,6 +64,19 @@ Check the HTTP status and `error.code` before reading `data`.
 | `NOT_CONFIGURED` | 503 | The capability is not configured on this deployment. Contact support |
 | `NOT_IMPLEMENTED` | 501 | The endpoint exists but does nothing yet |
 
+## Storage connections
+
+Creating, testing, or updating a [storage connection](/storage) returns these codes:
+
+| Code | When |
+|---|---|
+| `VALIDATION_ERROR` | An access check failed, or the change is not allowed, such as making a read-only connection the default destination. `details.field` names the field to fix, and `details.reason` gives the cause, such as `bucket_not_found` or `signature_mismatch` |
+| `CONFLICT` | The connection id is taken, or you deleted a connection that still has deliveries in progress |
+| `UPSTREAM_ERROR` | The storage provider did not respond, or failed while listing objects. Retry |
+| `NOT_CONFIGURED` | Sign in with Supabase is not available. Connect with S3 access keys instead |
+
+A failed delivery does not return an error code. The job reports a `reason` for that destination instead. See [delivery errors](/storage#delivery-errors).
+
 ## Handle the common ones
 
 The three you'll hit most: `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATION_ERROR`.

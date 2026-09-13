@@ -1,0 +1,216 @@
+---
+title: "Connect an Amazon S3 bucket"
+description: "Connect an Amazon S3 bucket to Rendobar with a one-click IAM role or an access key pair, so jobs can read files from it and write outputs back."
+sidebarTitle: "Amazon S3"
+icon: "aws"
+keywords: ["amazon s3", "s3 bucket", "connect s3", "aws iam role", "cloudformation stack", "openid connect", "s3 access key", "deliver to s3"]
+canonical: "https://rendobar.com/docs/storage/amazon-s3"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/storage/amazon-s3/#article",
+      "headline": "Connect an Amazon S3 bucket",
+      "description": "Connect an Amazon S3 bucket to Rendobar with a one-click IAM role or an access key pair, then reference it in jobs.",
+      "datePublished": "2026-09-13",
+      "dateModified": "2026-09-13",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Connect an Amazon S3 bucket so jobs can read files from it and write outputs back to it. For how connections work across providers, see [storage connections](/storage).
+
+<Frame caption="Rendobar reading inputs from an S3 bucket and writing outputs back.">
+  <img src="/images/storage/hero-s3.png" alt="Rendobar reading inputs from and delivering outputs to an Amazon S3 bucket, alongside the other storage kinds it connects to" />
+</Frame>
+
+## Prerequisites
+
+You need an AWS account with permission to create CloudFormation stacks and IAM roles. The bucket can already exist, or the stack can create it.
+
+Amazon S3 offers two ways to connect. Choose one in the connect dialog:
+
+| Way | Use when | Rendobar stores |
+|---|---|---|
+| **One-click role** | You can create a CloudFormation stack in the account that owns the bucket | The role's ARN. No keys |
+| **Access keys** | You cannot create stacks, or one-click connect does not support the bucket's region | An access key ID and secret access key, encrypted |
+
+This page uses **One-click role**. To use keys instead, see [Connect with access keys](#connect-with-access-keys).
+
+## 1. Prepare the role in Rendobar
+
+1. In [**Storage**](https://app.rendobar.com/storage), select **Connect Storage**, then **Amazon S3**.
+2. Select **One-click role**.
+3. In **Bucket**, select or enter the bucket name. Rendobar looks up the bucket and shows its region. Bucket names are global, so check that the bucket is in your AWS account.
+4. Under **Access**, choose what the role can do:
+   - **Deliver and read**: write job outputs to the bucket, and read files from it.
+   - **Read only**: read files only, for a bucket you use for job inputs. A read-only connection cannot be a destination.
+
+   Neither lets the role delete objects.
+5. (Optional) Under **More options**, turn on **Create the bucket**, or change the **ID**, region, or public URL.
+6. Select **Create the Role in AWS**. The AWS console opens in a new tab.
+
+<Frame caption="The bucket, the role's access, and Create the Role in AWS.">
+  <img src="/images/storage/s3-role-dialog.png" alt="The Amazon S3 connect dialog on the One-click role tab, with a bucket found in us-east-1, Deliver and read access selected, and the Create the Role in AWS button" />
+</Frame>
+
+## 2. Create the stack
+
+The AWS console opens the stack with every value filled in. Check that the console is signed in to the AWS account that owns the bucket, and leave the values as they are.
+
+<Frame caption="The quick create page, with Rendobar's template and the stack name filled in.">
+  <img src="/images/storage/s3-quick-create.png" alt="AWS CloudFormation's Quick create stack page showing Rendobar's template URL, the stack description, and the stack name rendobar-test-1" />
+</Frame>
+
+1. Under **Capabilities**, select **I acknowledge that AWS CloudFormation might create IAM resources with customised names.**
+2. Select **Create stack**.
+
+<Frame caption="The acknowledgement and Create stack.">
+  <img src="/images/storage/s3-capabilities.png" alt="The Capabilities section of the quick create page with the IAM acknowledgement checked, and the Create stack button" />
+</Frame>
+
+The stack creates these resources:
+
+| Resource | Purpose |
+|---|---|
+| IAM role `rendobar-<id>` | The role Rendobar assumes. It trusts only Rendobar's identity for this connection, and allows sessions of up to 12 hours |
+| OpenID Connect provider for `https://api.rendobar.com/federation` | Lets the role trust Rendobar without keys. The first stack in an account creates it, and it stays when the stack is deleted |
+| S3 bucket | Only when **Create the bucket** is on. It blocks public access, and stays when the stack is deleted |
+
+The role's policy allows these actions:
+
+| Actions | Resource |
+|---|---|
+| `s3:GetObject`, `s3:PutObject`, `s3:AbortMultipartUpload` | Objects in the bucket |
+| `s3:ListBucket` | The bucket |
+| `s3:ListAllMyBuckets`, `s3:GetBucketLocation` | Bucket names and regions in the account, not their contents |
+
+With **Read only**, the role does not get `s3:PutObject` or `s3:AbortMultipartUpload`.
+
+## 3. Wait for the connection
+
+Return to Rendobar. The dialog follows the stack, which usually finishes in under two minutes. When the stack reports, Rendobar assumes the role, runs the [access checks](/storage#connect-a-bucket), and saves the connection. If you close the dialog, the connection still finishes.
+
+<Frame caption="Rendobar waiting for the stack to report.">
+  <img src="/images/storage/s3-waiting.png" alt="The Amazon S3 dialog with Prepared done, Running in AWS in progress, and Connected still to come" />
+</Frame>
+
+If the stack reports a problem, the dialog shows it and nothing is saved. Delete the stack in CloudFormation before you try again, because the stack name stays taken.
+
+<Frame caption="A connected bucket. Delete is not checked, because the role cannot delete objects.">
+  <img src="/images/storage/s3-connected.png" alt="The finish screen for an S3 bucket with write, read and list passed, delete not granted, and copyable source and destinations snippets" />
+</Frame>
+
+**Delete** shows a dash because the role has no delete permission, which Rendobar does not need. The empty test object from the access checks stays in the bucket at `.rendobar/probe-<uuid>`. You can delete it.
+
+A read-only connection writes nothing to the bucket, not even a test object, so **Write** also shows a dash.
+
+## 4. Use the bucket in a job
+
+Put an object in `inputs` to read it, and the connection in `destinations` to write the output:
+
+<CodeGroup>
+
+```typescript SDK
+import { createClient, outputUrl } from "@rendobar/sdk";
+
+const client = createClient({
+  apiKey: process.env.RENDOBAR_API_KEY,
+});
+
+const job = await client.jobs.run({
+  type: "ffmpeg",
+  inputs: { source: "storage://test-1/raw/clip.mp4" },
+  params: {
+    command: "ffmpeg -i source -vf scale=1280:-2 out.mp4",
+  },
+  destinations: ["storage://test-1/exports"],
+});
+
+console.log(outputUrl(job));
+console.log(job.deliveries);
+```
+
+```bash cURL
+curl https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer $RENDOBAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ffmpeg",
+    "inputs": { "source": "storage://test-1/raw/clip.mp4" },
+    "params": {
+      "command": "ffmpeg -i source -vf scale=1280:-2 out.mp4"
+    },
+    "destinations": ["storage://test-1/exports"]
+  }'
+```
+
+</CodeGroup>
+
+With the default output path, this writes `exports/clip.mp4`. Delivery finishes after the job, so `job.deliveries` can still show `pending` when `run` returns.
+
+To change how outputs are named, see [delivery settings](/storage#delivery-settings). If a delivery fails, see [delivery errors](/storage#delivery-errors).
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| The stack rolls back because the identity provider already exists | Delete the rolled-back stack. In the Rendobar dialog, select **open AWS without creating it** |
+| The stack rolls back because the identity provider does not exist | Rendobar skips the provider after your organization's first stack, and assumes the same AWS account. Delete the rolled-back stack, then select **open AWS and create it** |
+| The dialog says one-click connect does not reach the bucket's region | [Connect with access keys](#connect-with-access-keys) |
+| The stack is still running after a few minutes | Open the stack's **Events** tab in CloudFormation. A stack that fails before it reports cannot tell Rendobar |
+
+## Create the role another way
+
+To create the role with Terraform or by hand, open **Trust policy and Terraform** in the waiting dialog and copy either one. Create the role with a maximum session duration of 12 hours, which the Terraform already sets. Then select **I created the role another way**, and paste the role's ARN. Rendobar runs the access checks as soon as you finish.
+
+## Revoke access
+
+Delete the stack in CloudFormation. This deletes the role, and Rendobar removes the connection. The OpenID Connect provider, and any bucket the stack created, stay in the account.
+
+For a role you created another way, delete the role in IAM. Deleting the connection in Rendobar does not delete the role.
+
+## Connect with access keys
+
+1. In the AWS console, create an IAM user, and attach the policy that the connect dialog shows under **IAM policy for this bucket**.
+2. Create an access key for the user.
+3. In the connect dialog, select **Access keys**, then enter the bucket name, **Access Key ID**, and **Secret Access Key**. Rendobar finds the bucket's region.
+4. Select **Connect**.
+
+## S3-specific behavior
+
+**Name conflicts.** S3 refuses a conditional write to a key that exists, so **Keep both** works. When two outputs share a name, Rendobar adds the end of the job id to the new one.
+
+<Frame caption="Keep both, available on an S3 bucket.">
+  <img src="/images/storage/s3-output-path.png" alt="Delivery settings for an S3 bucket with the By date output path and Name conflicts set to Keep both" />
+</Frame>
+
+**Incomplete uploads.** When a large upload fails, Rendobar aborts it so its parts are not left in the bucket. As a safety net for every client that writes to the bucket, add a [lifecycle rule that deletes incomplete multipart uploads](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html).
+
+**Temporary credentials.** For a role, Rendobar gets temporary credentials from AWS STS that last up to 12 hours. A link to an input file stops working when the credentials that signed it expire, so a role limited to AWS's default one-hour session gives jobs input links that last one hour. Each delivery's credentials are limited to the one object it writes. [Why S3 presigned URLs expire early](https://rendobar.com/blog/s3-presigned-url-expires-early/) measures this, and [giving a service S3 access without an access key](https://rendobar.com/blog/s3-access-without-access-keys/) walks through the role's trust and permission policies.
+
+**Encryption.** For a bucket encrypted with SSE-KMS, the role or user also needs `kms:GenerateDataKey` to write and `kms:Decrypt` to read, on the bucket's key.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Storage connections" icon="database" href="/storage">
+    Connection ids, delivery settings, credentials, and error codes.
+  </Card>
+  <Card title="Jobs" icon="play" href="/concepts/job">
+    Where `inputs` and `destinations` appear in the job payload.
+  </Card>
+  <Card title="SDK" icon="npm" href="/sdk">
+    Submit the job above in TypeScript.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Receive an event when a job completes.
+  </Card>
+</CardGroup>

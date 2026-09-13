@@ -54,6 +54,9 @@ Hit **Send Test** on the card to fire a sample event and confirm your receiver r
 | `job.completed` | Job finished successfully. Carries the unified `output` and `cost` |
 | `job.failed` | Job failed. Carries the unified `error` (`code`, `message`, `detail`, `retryable`) |
 | `job.cancelled` | Job was cancelled |
+| `job.delivery_succeeded` | The output was written to one [storage destination](/storage#delivery-events). Carries `storageId`, `path`, and `url` |
+| `job.delivery_failed` | Writing the output to one storage destination failed. Carries `storageId` and the [`reason`](/storage#delivery-errors) |
+| `job.deliveries_settled` | Every storage destination of the job has resolved. Sent once, with every outcome |
 | `balance.low` | Credit balance crossed the low threshold |
 | `balance.depleted` | Credit balance reached zero |
 
