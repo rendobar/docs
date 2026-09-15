@@ -79,13 +79,23 @@
             ]
           },
           {
-            "group": "Integrations",
-            "icon": "puzzle-piece",
+            "group": "Automation",
+            "icon": "diagram-project",
+            "pages": [
+              "automation/index",
+              "automation/n8n",
+              "automation/activepieces",
+              "automation/templates",
+              "automation/http"
+            ]
+          },
+          {
+            "group": "Developer tools",
+            "icon": "code",
             "pages": [
               "sdk",
               "cli",
-              "mcp-server",
-              "n8n"
+              "mcp-server"
             ]
           },
           {
@@ -187,7 +197,7 @@
     },
     {
       "source": "/n8n/:slug*",
-      "destination": "/n8n"
+      "destination": "/automation/n8n"
     },
     {
       "source": "/guides/ffmpeg",

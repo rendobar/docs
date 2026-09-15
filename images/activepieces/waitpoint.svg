@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 430" width="1200" height="430" role="img"
+     aria-label="Two timelines compared. Polling holds a worker open and repeats status calls for the whole job. A waitpoint submits once, the flow parks, and Rendobar's callback resumes it.">
+  <style>
+    .t   { font: 600 19px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #0A0A0A }
+    .s   { font: 400 14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #52525B }
+    .m   { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #059669 }
+    .mg  { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #71717A }
+    .ax  { stroke: #E4E4E7; stroke-width: 2 }
+  </style>
+  <rect width="1200" height="430" fill="#FAFAFA"/>
+
+  <!-- polling -->
+  <text class="t" x="48" y="66">Polling</text>
+  <text class="s" x="48" y="90">A step loops on status. The worker is held for the whole job.</text>
+  <line class="ax" x1="48" y1="140" x2="1152" y2="140"/>
+  <rect x="48" y="126" width="1104" height="28" rx="14" fill="#F4F4F5" stroke="#E4E4E7"/>
+  <g fill="#A1A1AA">
+    <circle cx="48" cy="140" r="7"/>
+    <circle cx="186" cy="140" r="5"/><circle cx="324" cy="140" r="5"/><circle cx="462" cy="140" r="5"/>
+    <circle cx="600" cy="140" r="5"/><circle cx="738" cy="140" r="5"/><circle cx="876" cy="140" r="5"/>
+    <circle cx="1014" cy="140" r="5"/>
+  </g>
+  <circle cx="1152" cy="140" r="7" fill="#71717A"/>
+  <text class="mg" x="48" y="180">submit</text>
+  <text class="mg" x="470" y="180">status, status, status, status ...</text>
+  <text class="mg" x="1096" y="180">done</text>
+
+  <!-- waitpoint -->
+  <text class="t" x="48" y="268">Waitpoint</text>
+  <text class="s" x="48" y="292">Submit once, park the flow, resume on the callback. Nothing runs in between.</text>
+  <line class="ax" x1="48" y1="342" x2="1152" y2="342"/>
+  <rect x="48" y="328" width="1104" height="28" rx="14" fill="#ECFDF5" stroke="#A7F3D0"/>
+  <path d="M62 342 H1138" stroke="#A7F3D0" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>
+  <circle cx="48" cy="342" r="7" fill="#059669"/>
+  <circle cx="1152" cy="342" r="7" fill="#059669"/>
+  <path d="M1152 300 v28" stroke="#059669" stroke-width="2"/>
+  <path d="M1146 320 l6 8 6 -8" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="m" x="48" y="382">submit</text>
+  <text class="m" x="520" y="382">paused, no execution time</text>
+  <text class="m" x="1046" y="382">callback</text>
+  <text class="m" x="1046" y="316" text-anchor="start">Rendobar</text>
+</svg>
