@@ -4,7 +4,7 @@ sidebarTitle: "n8n"
 description: "Install the verified Rendobar node on n8n Cloud or self-hosted n8n, add an API key, then run media jobs, wait without polling and hand the node to an AI Agent."
 icon: "circle-nodes"
 keywords: ["n8n", "n8n node", "rendobar n8n", "n8n cloud ffmpeg", "n8n video processing", "n8n compress video", "n8n captions", "verified community node", "n8n ai agent video", "@rendobar/n8n-nodes-rendobar"]
-canonical: "https://rendobar.com/docs/n8n"
+canonical: "https://rendobar.com/docs/automation/n8n"
 ---
 
 <script
@@ -13,11 +13,11 @@ canonical: "https://rendobar.com/docs/n8n"
     __html: JSON.stringify({
       "@context": "https://schema.org",
       "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/n8n/#article",
+      "@id": "https://rendobar.com/docs/automation/n8n/#article",
       "headline": "Run media jobs from n8n",
       "description": "Install the verified Rendobar node on n8n Cloud or self-hosted n8n, add an API key, then run media jobs, wait without polling and hand the node to an AI Agent.",
       "datePublished": "2026-06-22",
-      "dateModified": "2026-09-13",
+      "dateModified": "2026-09-15",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "isPartOf": { "@id": "https://rendobar.com/#website" }
@@ -30,6 +30,16 @@ The Rendobar node runs FFmpeg commands, compression, captions, composition and i
 ```text
 @rendobar/n8n-nodes-rendobar
 ```
+
+<Frame caption="The Rendobar node submits a job from a workflow, and the job's callback resumes the workflow when it ends.">
+  <img src="/images/automation/hero-n8n.png" alt="The Rendobar mark joined by a submit arrow and a callback arrow to the n8n logo. The caption reads: A verified node for n8n Cloud and self-hosted n8n." />
+</Frame>
+
+## Before you start
+
+- A Rendobar API key. Create one in the [dashboard](https://app.rendobar.com) under **Settings > API keys**.
+- n8n Cloud, or self-hosted n8n 1.94.0 or later.
+- On self-hosted n8n, a public HTTPS address, so the trigger node and the Wait node can receive Rendobar's calls. See [Start a workflow when a job ends](#start-a-workflow-when-a-job-ends).
 
 ## Install on n8n Cloud
 
@@ -201,17 +211,18 @@ Give an agent **Callback URL** and a Wait node rather than **Wait for Completion
 
 Create Job's **Destinations** option writes the output to buckets connected on the [Storage page](https://app.rendobar.com/storage): one row per bucket, each with an optional folder or path. The job's `deliveries` reports every write. **Storage Connection** lists the connections, and **Storage File** lists the folders and files in one, each with a `storage://` URI that a job input accepts. See [Storage connections](/storage).
 
-## Ready-made workflows
+## Templates
 
-Three workflows import as they are and run on n8n Cloud. Each carries its setup steps in a sticky note.
+Two workflows import as they are and run on n8n Cloud, each with its setup steps in a sticky note. [Templates](/automation/templates) lists what each one needs.
 
-- [Compress Google Drive videos under 25 MB and send them to Telegram](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/compress-drive-videos-to-25mb-telegram.json)
-- [Auto-caption Google Drive videos and post the link to Slack](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/auto-caption-drive-videos-slack.json)
-- [Run any FFmpeg command on n8n Cloud and save the output to Drive](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/run-ffmpeg-on-n8n-cloud.json)
-
-<Frame caption="The compression workflow on the canvas. Three Rendobar nodes do the work, the Wait node parks the execution, and Drive and Telegram receive the small copy.">
-  <img src="/images/n8n/template-compress.png" alt="An n8n canvas showing eight connected nodes: Google Drive Trigger, Google Drive download, Rendobar upload, Rendobar compress job, Wait, Rendobar get job, then Google Drive upload and Telegram in parallel. Sticky notes above and behind the nodes explain each section." />
-</Frame>
+<CardGroup cols={2}>
+  <Card title="Create YouTube quote videos in any language from Google Sheets" img="/images/templates/quote-videos-languages.png" href="/automation/templates#create-youtube-quote-videos-in-any-language-from-google-sheets">
+    A new sheet row becomes a 9:16 quote video with music, set in a font made for its language.
+  </Card>
+  <Card title="Run FFmpeg commands on n8n Cloud with Google Drive and Slack" img="/images/templates/run-ffmpeg-canvas.png" href="/automation/templates#run-ffmpeg-commands-on-n8n-cloud-with-google-drive-and-slack">
+    A form takes a video URL and a command. Failed jobs post the FFmpeg error to Slack.
+  </Card>
+</CardGroup>
 
 ## Troubleshooting
 
@@ -240,4 +251,4 @@ Three workflows import as they are and run on n8n Cloud. Each carries its setup 
 - [Rendobar on n8n.io](https://n8n.io/integrations/rendobar/): the verified listing
 - [Source on GitHub](https://github.com/rendobar/n8n-nodes-rendobar): MIT licensed, published from CI with npm provenance
 
-Next step: import the [compression workflow](https://github.com/rendobar/n8n-nodes-rendobar/blob/main/templates/compress-drive-videos-to-25mb-telegram.json) and drop a video into the folder it watches.
+Next step: import the [FFmpeg workflow](/automation/templates#run-ffmpeg-commands-on-n8n-cloud-with-google-drive-and-slack) and run a command from its form.

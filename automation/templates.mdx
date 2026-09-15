@@ -1,0 +1,89 @@
+---
+title: "Workflow templates for video automation"
+sidebarTitle: "Templates"
+description: "Start from n8n workflows that render quote videos in any language and run FFmpeg commands on n8n Cloud, with setup steps inside each one."
+icon: "layer-group"
+keywords: ["n8n templates", "n8n video templates", "n8n ffmpeg template", "n8n quote video", "youtube shorts automation", "google sheets to video", "n8n cloud ffmpeg", "rendobar templates"]
+canonical: "https://rendobar.com/docs/automation/templates"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/automation/templates/#article",
+      "headline": "Workflow templates for video automation",
+      "description": "Start from n8n workflows that render quote videos in any language and run FFmpeg commands on n8n Cloud, with setup steps inside each one.",
+      "datePublished": "2026-09-15",
+      "dateModified": "2026-09-15",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Each template is a finished n8n workflow built on the [Rendobar node](/automation/n8n). Import it, connect the accounts it names, and run it on n8n Cloud. None of them needs FFmpeg installed or the Execute Command node.
+
+## Import a template
+
+1. Copy the workflow JSON link from the template's section below.
+2. In n8n, open a new workflow, open the workflow menu, and choose **Import from URL**. You can also download the file and choose **Import from File**.
+3. Add your Rendobar API credential on every Rendobar node, then connect the other apps the workflow uses.
+4. Follow the yellow sticky note. It lists the choices left to you, such as the folder to watch or the Slack channel.
+
+## Create YouTube quote videos in any language from Google Sheets
+
+<Frame caption="Three rows rendered with the template's default fonts: Cairo for Arabic, Kanit for Thai and Noto Sans JP for Japanese. The row's language picks the font.">
+  <img src="/images/templates/quote-videos-languages.png" alt="Three vertical video frames side by side, each over the same river and stone bridge at dusk. The first shows an Arabic proverb, the second a Thai quote and the third a Japanese proverb, each with a smaller attribution line below it." />
+</Frame>
+
+A new row in a Google Sheet becomes a 10-second 1080x1920 video. The background clip pushes in slowly, the quote fades in line by line over a music bed, and the video uploads to YouTube as private. The workflow then marks the row done.
+
+The quote wraps into balanced lines in a font made for the row's language. Defaults cover 28 languages, and text shaping keeps Arabic letters joined.
+
+| Column | Required | Holds |
+|---|---|---|
+| `quote` | Yes | The text |
+| `background_url` | Yes | A public https link to a clip of at least 10 seconds |
+| `music_url` | Yes | A public https link to the music track |
+| `author` | No | The attribution line under the quote |
+| `language` | No | The language code that picks the default font, such as `ar`, `th` or `ja` |
+| `font` | No | Any Google Fonts family, in place of the default |
+| `font_url`, `font_family` | No | A font file that is not on Google Fonts, and the family name inside that file |
+| `status`, `video_id` | No | Written back by the workflow |
+
+If a Google font does not show, set `font_family` to the name inside the font file. A few files differ from their Google Fonts name. Nanum Gothic's file, for example, says `NanumGothic`.
+
+The workflow uses Google Sheets and YouTube, and the Rendobar operations Job Create (`ffmpeg`) and Job Get.
+
+[Workflow JSON](https://raw.githubusercontent.com/rendobar/n8n-nodes-rendobar/main/templates/quote-videos-from-google-sheets.json)
+
+## Run FFmpeg commands on n8n Cloud with Google Drive and Slack
+
+<Frame caption="The top branch submits the command, parks on the Wait node and delivers the output. The bottom branch starts on any failed job and posts the FFmpeg error. The warning marks on Drive and Slack clear once their credentials are connected.">
+  <img src="/images/templates/run-ffmpeg-canvas.png" alt="An n8n canvas with the setup steps sticky note above two rows of nodes. The top row runs FFmpeg form, Run FFmpeg on Rendobar, Wait for the callback, Fetch job and download file, Save the output to Drive and Post the link to Slack. The bottom row runs A job failed, Read the runner log and Post the error to Slack." />
+</Frame>
+
+An n8n Form takes a video URL and an FFmpeg command. Rendobar runs the command with the full FFmpeg build, a Wait node parks the execution until the job ends, and the output is saved to Google Drive with its link posted to Slack.
+
+A second branch starts whenever a job fails. It reads the runner's log and posts FFmpeg's error to Slack, which is usually the one line you need when a filter graph refuses to build.
+
+The command names its input `source` and its output `output.mp4`, the way you would type it on your own machine:
+
+```text
+-i source -vf scale=-2:720 -c:v libx264 -crf 28 output.mp4
+```
+
+The workflow uses an n8n Form, Google Drive and Slack, and the Rendobar operations Job Create (`ffmpeg`), Job Get, Job Get Logs and the `job.failed` trigger.
+
+[Workflow JSON](https://raw.githubusercontent.com/rendobar/n8n-nodes-rendobar/main/templates/run-ffmpeg-on-n8n-cloud.json)
+
+## See also
+
+- [n8n](/automation/n8n): install the node and add your API key
+- [FFmpeg job](/jobs/ffmpeg): how a command names its inputs and outputs
+- [Callbacks](/guides/callbacks): the callback the Wait node resumes on
+- [Rendobar on n8n.io](https://n8n.io/integrations/rendobar/): the verified listing

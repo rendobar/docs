@@ -1,0 +1,160 @@
+---
+title: "Run jobs from any automation tool over HTTP"
+sidebarTitle: "Any tool over HTTP"
+description: "Submit jobs from Make, Zapier or any tool with an HTTP step, receive the result on a webhook, and re-read the job before you use its file."
+icon: "globe"
+keywords: ["make video api", "zapier video processing", "make http module ffmpeg", "zapier ffmpeg", "webhooks by zapier video", "automation http request video", "callback url automation", "no-code ffmpeg api"]
+canonical: "https://rendobar.com/docs/automation/http"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/automation/http/#article",
+      "headline": "Run jobs from any automation tool over HTTP",
+      "description": "Submit jobs from Make, Zapier or any tool with an HTTP step, receive the result on a webhook, and re-read the job before you use its file.",
+      "datePublished": "2026-09-15",
+      "dateModified": "2026-09-15",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "isPartOf": { "@id": "https://rendobar.com/#website" }
+    })
+  }}
+/>
+
+Any automation tool that can send an HTTP request and receive a webhook can run Rendobar jobs. One workflow submits the job with a callback URL, and a second workflow starts when Rendobar calls that URL as the job ends.
+
+Use this for Make, Zapier, and self-hosted n8n with community nodes turned off. With the [n8n node](/automation/n8n) or the [Activepieces piece](/automation/activepieces), one workflow waits for the job itself, so use those guides instead.
+
+<Frame caption="A first workflow submits the job. Rendobar calls back when the job ends, which starts a second workflow that uses the result.">
+  <img src="/images/automation/hero-http.png" alt="The Rendobar mark joined by a submit arrow and a callback arrow to three tiles: the Make logo, the Zapier logo and a globe. The caption reads: Make, Zapier, and any tool with an HTTP step." />
+</Frame>
+
+## Submit a job
+
+Send `POST https://api.rendobar.com/jobs` with your API key and a JSON body:
+
+```bash
+curl -X POST https://api.rendobar.com/jobs \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ffmpeg",
+    "params": {
+      "command": "ffmpeg -i https://cdn.rendobar.com/assets/examples/sample.mp4 -vf scale=-2:720 -c:v libx264 -crf 28 output.mp4"
+    },
+    "callback": { "url": "https://hooks.example.com/rendobar-finished" },
+    "idempotencyKey": "row-42"
+  }'
+```
+
+The response names the job:
+
+```json
+{ "data": { "id": "job_a1b2c3d4", "status": "waiting" } }
+```
+
+- **`callback.url`** is the webhook URL of your second workflow. It must be public HTTPS.
+- **`idempotencyKey`** makes a repeated submission return the first job instead of billing a second one. Use a value unique to the record, such as a row id, so a retried step is safe.
+
+Store the job `id` with your record if the second workflow needs to find the record again.
+
+## Receive the result
+
+When the job completes, fails or is cancelled, Rendobar POSTs the job to `callback.url`. These terminal events always fire, so the second workflow always runs. A completed job, shortened to the fields most workflows map:
+
+```json
+{
+  "version": "1",
+  "event": "job.completed",
+  "deliveryId": "whd_x1y2z3",
+  "timestamp": 1707436815000,
+  "orgId": "org_abc123",
+  "data": {
+    "jobId": "job_a1b2c3d4",
+    "jobType": "ffmpeg",
+    "status": "complete",
+    "output": {
+      "data": null,
+      "file": { "url": "https://r2.rendobar.com/...", "path": "output.mp4", "type": "video", "size": 15234567 },
+      "expiresAt": 1707440415000
+    }
+  }
+}
+```
+
+Branch on `event`. A `job.failed` delivery carries `data.error.message` in place of `output`. A job with storage destinations also sends `job.deliveries_settled` once every bucket has resolved.
+
+## Re-read the job before you use it
+
+Anyone who learns the callback URL can post to it. Before the second workflow uses the file, fetch the job with your own key:
+
+```bash
+curl https://api.rendobar.com/jobs/job_a1b2c3d4 \
+  -H "Authorization: Bearer rb_YOUR_KEY"
+```
+
+Check that `data.status` is `complete`, then take `data.output.file.url` from this response. The URL expires, so copy the file to its destination in the same workflow.
+
+A tool with a code step can verify the signature instead. Set `callback.verify` to `true` and check `X-Rendobar-Signature` as the [callbacks guide](/guides/callbacks#secure-it) shows.
+
+## Set it up in your tool
+
+Build the receiving workflow first, so its webhook URL exists when you write the request body.
+
+<Tabs>
+  <Tab title="Make">
+    1. Create a scenario that starts with **Webhooks > Custom webhook**. Add a webhook and copy its URL.
+    2. In the scenario that submits jobs, add **HTTP > Make a request**. Set **URL** to `https://api.rendobar.com/jobs` and **Method** to `POST`.
+    3. Under **Headers**, add `Authorization` with the value `Bearer rb_YOUR_KEY`.
+    4. Set **Body content type** to `application/json`, choose **JSON string** as the body input method, and paste the request body with the webhook URL as `callback.url`. Turn on **Parse response** to map `data.id`.
+    5. Submit one job so the webhook learns the payload's fields.
+    6. In the receiving scenario, add another **Make a request** that sends `GET` to `https://api.rendobar.com/jobs/` followed by the mapped `data.jobId`, with the same header.
+  </Tab>
+  <Tab title="Zapier">
+    Webhooks by Zapier is available on the Professional, Team and Enterprise plans.
+
+    1. Create a Zap that starts with **Webhooks by Zapier** and the **Catch Hook** event. Copy the webhook URL it gives you.
+    2. In the Zap that submits jobs, add **Webhooks by Zapier** with the **Custom Request** event. Set **Method** to `POST` and **URL** to `https://api.rendobar.com/jobs`.
+    3. Paste the request body into **Data**, with the Catch Hook URL as `callback.url`.
+    4. Under **Headers**, add `Authorization` with `Bearer rb_YOUR_KEY`, and `Content-Type` with `application/json`.
+    5. Submit one job, then test the Catch Hook trigger so Zapier learns the payload's fields.
+    6. In the catching Zap, add another **Custom Request** that sends `GET` to `https://api.rendobar.com/jobs/` followed by the caught `data.jobId`, with the same `Authorization` header.
+  </Tab>
+  <Tab title="Other tools">
+    Any tool with an HTTP request step and a webhook trigger follows the same shape:
+
+    1. A second workflow that starts on a webhook trigger. Its URL goes in `callback.url`.
+    2. A `POST` to `https://api.rendobar.com/jobs` with the `Authorization` and `Content-Type` headers and the JSON body above.
+    3. In the second workflow, a `GET` to `https://api.rendobar.com/jobs/{jobId}` with the same `Authorization` header before the file is used.
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The request fails with 401 UNAUTHORIZED">
+    The `Authorization` header is missing or the key is wrong. The value is `Bearer`, a space, then the key, which starts with `rb_`.
+  </Accordion>
+  <Accordion title="The request fails with 402 INSUFFICIENT_CREDITS">
+    The account balance is below the job's estimated cost. Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing).
+  </Accordion>
+  <Accordion title="The second workflow never starts">
+    Rendobar could not deliver to `callback.url`. It must be a public HTTPS address, and the receiving workflow must be turned on. Fetch the job and read `data.callback.status`: `delivered` means your tool accepted the POST, and `failed` means every retry was refused.
+  </Accordion>
+  <Accordion title="The second workflow runs twice for one job">
+    Delivery is at least once, so a retried delivery can repeat an event. Skip any `deliveryId` you have already handled, and filter on `event` so `job.deliveries_settled` does not run the completed branch again.
+  </Accordion>
+</AccordionGroup>
+
+## See also
+
+- [Callbacks](/guides/callbacks): the payload, the headers and the signature
+- [Webhooks](/guides/webhooks): events for every job in the organization at one endpoint
+- [FFmpeg job](/jobs/ffmpeg): how a command names its inputs and outputs
+- [Errors](/support/errors): every error code the API returns
+
+Next step: build the receiving workflow, then submit one job with its webhook URL as `callback.url`.
