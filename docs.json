@@ -82,6 +82,7 @@
             "group": "Automation",
             "icon": "bolt",
             "root": "automation/index",
+            "expanded": true,
             "pages": [
               "automation/n8n",
               "automation/activepieces",
