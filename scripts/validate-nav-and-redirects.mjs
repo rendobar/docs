@@ -62,7 +62,10 @@ function collectNavSlugs(node, out = new Set()) {
   }
   if (node && typeof node === 'object') {
     for (const [key, value] of Object.entries(node)) {
-      if (key === 'pages' && Array.isArray(value)) {
+      if (key === 'root' && typeof value === 'string') {
+        // A group's root page opens from the group title, with no row of its own.
+        out.add(value);
+      } else if (key === 'pages' && Array.isArray(value)) {
         for (const page of value) {
           if (typeof page === 'string') out.add(page);
           else collectNavSlugs(page, out);
