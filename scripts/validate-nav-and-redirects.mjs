@@ -97,7 +97,8 @@ function main() {
     if (/^https?:\/\//.test(destination)) continue; // off-site, not ours to verify
     if (destination.includes(':')) continue; // dynamic (:slug*), not statically resolvable
     const slug = destination.replace(/^\//, '').replace(/#.*$/, '');
-    if (!pageSlugs.has(slug)) {
+    // A folder URL such as /automation is served by its index page.
+    if (!pageSlugs.has(slug) && !pageSlugs.has(`${slug}/index`)) {
       violations.push(
         `Redirect "${source}" points at "${destination}", which is not a page in this repo. ` +
           `Every URL matching that source is a dead end.`

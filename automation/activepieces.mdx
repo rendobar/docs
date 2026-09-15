@@ -2,7 +2,7 @@
 title: "Run media jobs from Activepieces"
 sidebarTitle: "Activepieces"
 description: "Install the Rendobar piece on Activepieces, add an API key, and run media jobs that pause the flow until they finish, with a trigger for finished jobs."
-icon: "puzzle-piece"
+icon: "/images/logos/activepieces.svg"
 keywords: ["activepieces", "activepieces piece", "rendobar activepieces", "@rendobar/piece-rendobar", "activepieces video processing", "activepieces ffmpeg", "activepieces waitpoint", "activepieces custom piece"]
 canonical: "https://rendobar.com/docs/automation/activepieces"
 ---
@@ -31,13 +31,13 @@ The Rendobar piece runs FFmpeg commands, compression, captions and image generat
 @rendobar/piece-rendobar
 ```
 
-<Frame caption="Run a Media Job submits the job, and the job's callback resumes the paused flow when it ends.">
-  <img src="/images/automation/hero-activepieces.png" alt="The Rendobar mark joined by a submit arrow and a callback arrow to the Activepieces logo. The caption reads: Flows pause on a waitpoint until the job finishes." />
+<Frame caption="The Rendobar piece runs video and image jobs inside Activepieces flows.">
+  <img src="/images/automation/hero-activepieces.png" alt="The Rendobar mark joined by a connector line to the Activepieces logo. The caption reads: Flows pause on a waitpoint until the job finishes." />
 </Frame>
 
 ## Before you start
 
-- A Rendobar API key. Create one in the [dashboard](https://app.rendobar.com) under **Settings > API keys**.
+- A Rendobar API key. Create one on the [API Keys](https://app.rendobar.com/api-keys) page of the dashboard.
 - Platform admin access to Activepieces 0.36.1 or later. The piece installs from npm rather than from the Activepieces catalog, and installing a custom piece is a paid feature on Activepieces Cloud.
 - An Activepieces that Rendobar can reach over HTTPS, for flows that pause and for the instant trigger. Without one, **Run a Media Job** polls instead and **Finished Job (Polling)** replaces the trigger.
 

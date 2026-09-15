@@ -2,7 +2,7 @@
 title: "Run media jobs from n8n"
 sidebarTitle: "n8n"
 description: "Install the verified Rendobar node on n8n Cloud or self-hosted n8n, add an API key, then run media jobs, wait without polling and hand the node to an AI Agent."
-icon: "circle-nodes"
+icon: "/images/logos/n8n.svg"
 keywords: ["n8n", "n8n node", "rendobar n8n", "n8n cloud ffmpeg", "n8n video processing", "n8n compress video", "n8n captions", "verified community node", "n8n ai agent video", "@rendobar/n8n-nodes-rendobar"]
 canonical: "https://rendobar.com/docs/automation/n8n"
 ---
@@ -31,13 +31,13 @@ The Rendobar node runs FFmpeg commands, compression, captions, composition and i
 @rendobar/n8n-nodes-rendobar
 ```
 
-<Frame caption="The Rendobar node submits a job from a workflow, and the job's callback resumes the workflow when it ends.">
-  <img src="/images/automation/hero-n8n.png" alt="The Rendobar mark joined by a submit arrow and a callback arrow to the n8n logo. The caption reads: A verified node for n8n Cloud and self-hosted n8n." />
+<Frame caption="The verified Rendobar node runs video and image jobs inside n8n workflows.">
+  <img src="/images/automation/hero-n8n.png" alt="The Rendobar mark joined by a connector line to the n8n logo. The caption reads: A verified node for n8n Cloud and self-hosted n8n." />
 </Frame>
 
 ## Before you start
 
-- A Rendobar API key. Create one in the [dashboard](https://app.rendobar.com) under **Settings > API keys**.
+- A Rendobar API key. Create one on the [API Keys](https://app.rendobar.com/api-keys) page of the dashboard.
 - n8n Cloud, or self-hosted n8n 1.94.0 or later.
 - On self-hosted n8n, a public HTTPS address, so the trigger node and the Wait node can receive Rendobar's calls. See [Start a workflow when a job ends](#start-a-workflow-when-a-job-ends).
 
@@ -55,8 +55,8 @@ The Rendobar node runs FFmpeg commands, compression, captions, composition and i
   </Step>
 </Steps>
 
-<Frame caption="The node details panel on a fresh instance. The verified badge means n8n reviewed the code and publishes the version itself. Install node makes the eight actions and the trigger available to everyone on the instance.">
-  <img src="/images/n8n/install-detail.png" alt="The n8n node details panel for Rendobar on an instance where it is not installed yet. A verified badge sits next to the name, an orange Install node button sits to the right, and below them the panel lists Verified, the download count, the author, and eight actions grouped under Account, File and Job." />
+<Frame caption="The node details panel before install. The verified badge means n8n reviewed the code and publishes the version itself, and Install node makes the node available to everyone on the instance.">
+  <img src="/images/n8n/install-detail.png" alt="The n8n node details panel for Rendobar before install. The Rendobar icon and a verified badge sit next to the name, an orange Install node button sits to the right, and below them is the description." />
 </Frame>
 
 If nothing appears under **More from the community**, an instance owner turns on **Verified Community Nodes** in the Cloud Admin Panel. A restart of the instance may be needed the first time.
@@ -74,7 +74,7 @@ The older route also works. Open **Settings > Community Nodes**, choose **Instal
 
 ## Add your API key
 
-The node authenticates with a Rendobar API key. Create one in the [dashboard](https://app.rendobar.com) under API keys, then add a **Rendobar API** credential in n8n and paste it in. The key starts with `rb_`. n8n checks it against your account when you save, so a wrong key fails at save time and not mid-workflow.
+The node authenticates with a Rendobar API key. Create one on the [API Keys](https://app.rendobar.com/api-keys) page of the dashboard, then add a **Rendobar API** credential in n8n and paste it in. The key starts with `rb_`. n8n checks it against your account when you save, so a wrong key fails at save time and not mid-workflow.
 
 Leave **Base URL** at `https://api.rendobar.com` unless you're pointing at another environment.
 
@@ -211,18 +211,13 @@ Give an agent **Callback URL** and a Wait node rather than **Wait for Completion
 
 Create Job's **Destinations** option writes the output to buckets connected on the [Storage page](https://app.rendobar.com/storage): one row per bucket, each with an optional folder or path. The job's `deliveries` reports every write. **Storage Connection** lists the connections, and **Storage File** lists the folders and files in one, each with a `storage://` URI that a job input accepts. See [Storage connections](/storage).
 
+<Note>
+  Destinations, the Storage resources and the three delivery events need version 0.6.0 or later. An install from the nodes panel gets the version n8n has verified, which can trail the latest npm release.
+</Note>
+
 ## Templates
 
-Two workflows import as they are and run on n8n Cloud, each with its setup steps in a sticky note. [Templates](/automation/templates) lists what each one needs.
-
-<CardGroup cols={2}>
-  <Card title="Create YouTube quote videos in any language from Google Sheets" img="/images/templates/quote-videos-languages.png" href="/automation/templates#create-youtube-quote-videos-in-any-language-from-google-sheets">
-    A new sheet row becomes a 9:16 quote video with music, set in a font made for its language.
-  </Card>
-  <Card title="Run FFmpeg commands on n8n Cloud with Google Drive and Slack" img="/images/templates/run-ffmpeg-canvas.png" href="/automation/templates#run-ffmpeg-commands-on-n8n-cloud-with-google-drive-and-slack">
-    A form takes a video URL and a command. Failed jobs post the FFmpeg error to Slack.
-  </Card>
-</CardGroup>
+Ready-made workflows that import and run on n8n Cloud are listed on the [Automation overview](/automation#templates).
 
 ## Troubleshooting
 
@@ -251,4 +246,4 @@ Two workflows import as they are and run on n8n Cloud, each with its setup steps
 - [Rendobar on n8n.io](https://n8n.io/integrations/rendobar/): the verified listing
 - [Source on GitHub](https://github.com/rendobar/n8n-nodes-rendobar): MIT licensed, published from CI with npm provenance
 
-Next step: import the [FFmpeg workflow](/automation/templates#run-ffmpeg-commands-on-n8n-cloud-with-google-drive-and-slack) and run a command from its form.
+Next step: import a [template](/automation#templates) and run it.
