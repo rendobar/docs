@@ -80,7 +80,7 @@
           },
           {
             "group": "Automation",
-            "icon": "diagram-project",
+            "icon": "bolt",
             "pages": [
               "automation/index",
               "automation/n8n",
