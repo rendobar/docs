@@ -51,26 +51,29 @@ const HEROES = [
   },
 ];
 
-const HUB = 300;
-const TILE = 210;
+// Tile and logo sizes. With several platforms Rendobar is the larger hub they
+// connect to. One to one, both sides are the same size.
+const TILE = { size: 210, radius: 48, logo: 104 };
+const HUB = { size: 300, radius: 68, logo: 162 };
 
-// Where the Rendobar hub and the platform tiles sit. One platform sits to the
-// right of the hub. Four split two on each side.
+// Where the Rendobar tile and the platform tiles sit. One platform sits to the
+// right of Rendobar. Four split two on each side.
 function layout(count) {
   const cy = 400;
   if (count === 1) {
-    return { hub: { x: 930, y: cy }, tiles: [{ x: 1470, y: cy, side: 1 }] };
+    return { hub: { x: 930, y: cy, ...TILE }, tiles: [{ x: 1470, y: cy, side: 1 }] };
   }
   const rows = [cy - 150, cy + 150];
   const left = rows.map((y) => ({ x: 540, y, side: -1 }));
   const right = rows.map((y) => ({ x: WIDTH - 540, y, side: 1 }));
-  return { hub: { x: WIDTH / 2, y: cy }, tiles: [...left, ...right].slice(0, count) };
+  return { hub: { x: WIDTH / 2, y: cy, ...HUB }, tiles: [...left, ...right].slice(0, count) };
 }
 
-// A horizontal S-curve from the hub's edge to the tile's edge, with a dot at its midpoint.
+// A horizontal S-curve from the Rendobar tile's edge to the platform tile's edge,
+// with a dot at its midpoint.
 function connector(hub, tile) {
-  const start = { x: hub.x + tile.side * (HUB / 2), y: hub.y };
-  const end = { x: tile.x - tile.side * (TILE / 2), y: tile.y };
+  const start = { x: hub.x + tile.side * (hub.size / 2), y: hub.y };
+  const end = { x: tile.x - tile.side * (TILE.size / 2), y: tile.y };
   const midX = (start.x + end.x) / 2;
   const c1 = { x: midX, y: start.y };
   const c2 = { x: midX, y: end.y };
@@ -103,7 +106,7 @@ function page({ tiles, caption }) {
         `<circle cx="${c.dot.x}" cy="${c.dot.y}" r="5" fill="#d1fae5"/>`,
     );
     tileHtml.push(
-      `<div class="tile" style="--glow:${t.glow};left:${spot.x - TILE / 2}px;top:${spot.y - TILE / 2}px">${t.svg}</div>`,
+      `<div class="tile" style="--glow:${t.glow};left:${spot.x - TILE.size / 2}px;top:${spot.y - TILE.size / 2}px">${t.svg}</div>`,
     );
   });
 
@@ -129,20 +132,20 @@ function page({ tiles, caption }) {
   svg.links { position: absolute; inset: 0; }
   .hub, .tile { position: absolute; display: grid; place-items: center; }
   .hub {
-    width: ${HUB}px; height: ${HUB}px; border-radius: 68px;
-    left: ${hub.x - HUB / 2}px; top: ${hub.y - HUB / 2}px;
+    width: ${hub.size}px; height: ${hub.size}px; border-radius: ${hub.radius}px;
+    left: ${hub.x - hub.size / 2}px; top: ${hub.y - hub.size / 2}px;
     background: linear-gradient(160deg, #191c1b, #0f1110);
     border: 1px solid rgba(52, 211, 153, 0.22);
     box-shadow: 0 0 110px rgba(16, 185, 129, 0.20), inset 0 1px 0 rgba(255,255,255,0.05);
   }
-  .hub img { width: 162px; height: 162px; }
+  .hub img { width: ${hub.logo}px; height: ${hub.logo}px; }
   .tile {
-    width: ${TILE}px; height: ${TILE}px; border-radius: 48px;
+    width: ${TILE.size}px; height: ${TILE.size}px; border-radius: ${TILE.radius}px;
     background: linear-gradient(160deg, #191c1b, #0f1110);
     border: 1px solid rgba(var(--glow), 0.30);
     box-shadow: 0 0 70px rgba(var(--glow), 0.20), inset 0 1px 0 rgba(255,255,255,0.04);
   }
-  .tile svg { width: 104px; height: 104px; }
+  .tile svg { width: ${TILE.logo}px; height: ${TILE.logo}px; }
   .caption {
     position: absolute; left: 0; right: 0; top: 740px; text-align: center;
     color: #b9c0bd; font-size: 46px; letter-spacing: -0.01em;
