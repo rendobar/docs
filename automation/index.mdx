@@ -1,9 +1,9 @@
 ---
 title: "Automate media jobs without code"
-description: "Run Rendobar video and image jobs from n8n or Activepieces, start from ready-made templates, and wait for long jobs without polling."
+description: "Run Rendobar video and image jobs from n8n or Activepieces, and start from ready-made workflows that import and run on n8n Cloud."
 sidebarTitle: "Overview"
 icon: "diagram-project"
-keywords: ["rendobar automation", "no-code video processing", "n8n video automation", "activepieces video processing", "make video api", "zapier video api", "workflow automation ffmpeg", "video automation templates"]
+keywords: ["rendobar automation", "no-code video processing", "n8n video automation", "activepieces video processing", "make video api", "zapier video api", "n8n templates", "video automation templates"]
 canonical: "https://rendobar.com/docs/automation"
 ---
 
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/automation"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/automation/#article",
       "headline": "Automate media jobs without code",
-      "description": "Run Rendobar video and image jobs from n8n or Activepieces, start from ready-made templates, and wait for long jobs without polling.",
+      "description": "Run Rendobar video and image jobs from n8n or Activepieces, and start from ready-made workflows that import and run on n8n Cloud.",
       "datePublished": "2026-09-15",
       "dateModified": "2026-09-15",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
@@ -25,60 +25,38 @@ canonical: "https://rendobar.com/docs/automation"
   }}
 />
 
-Run Rendobar jobs from an automation platform instead of code. A workflow submits the job, waits without holding a worker, and hands the finished file to the next step, such as Google Drive, Slack or YouTube.
+Run Rendobar jobs from an automation platform instead of code.
 
-<Frame caption="Each platform submits jobs to Rendobar. When a job ends, Rendobar calls back so the workflow continues.">
-  <img src="/images/automation/hero-overview.png" alt="The Rendobar mark on the left, joined by a submit arrow and a callback arrow to three tiles: the n8n logo, the Activepieces logo and a globe for any HTTP tool. The caption reads: n8n, Activepieces, and any tool that can send an HTTP request." />
+<Frame caption="Rendobar works with n8n and Activepieces today. Make and Zapier are coming.">
+  <img src="/images/automation/hero-overview.png" alt="The Rendobar mark joined by a submit arrow and a callback arrow to four tiles: the n8n, Activepieces, Make and Zapier logos. The caption reads: n8n and Activepieces today, Make and Zapier soon." />
 </Frame>
 
 ## Platforms
 
 <CardGroup cols={2}>
   <Card title="n8n" icon="/images/logos/n8n.svg" href="/automation/n8n">
-    A verified node for n8n Cloud and self-hosted n8n, with a trigger and AI Agent tool support.
+    Verified node for n8n Cloud and self-hosted n8n.
   </Card>
   <Card title="Activepieces" icon="/images/logos/activepieces.svg" href="/automation/activepieces">
-    A piece for self-hosted and paid Activepieces. Flows pause until the job finishes.
+    Piece for self-hosted and paid Activepieces.
   </Card>
-  <Card title="Any tool over HTTP" icon="globe" href="/automation/http">
-    Make, Zapier, or any tool that can send a request and receive a webhook.
+  <Card title="Make" icon="/images/logos/make.svg">
+    Coming soon.
   </Card>
-  <Card title="Templates" icon="layer-group" href="/automation/templates">
-    Import a finished n8n workflow, connect your accounts and run it.
+  <Card title="Zapier" icon="/images/logos/zapier.svg">
+    Coming soon.
   </Card>
 </CardGroup>
 
-## Start from a template
+## Templates
+
+Finished n8n workflows that run on n8n Cloud. Open a card, copy its address, and paste it into **Import from URL** in the n8n workflow menu. Each workflow lists its setup steps in a sticky note.
 
 <CardGroup cols={2}>
-  <Card title="Create YouTube quote videos in any language from Google Sheets" img="/images/templates/quote-videos-languages.png" href="/automation/templates#create-youtube-quote-videos-in-any-language-from-google-sheets">
-    A new sheet row becomes a 9:16 quote video with music, set in a font made for its language.
+  <Card title="Create YouTube quote videos in any language from Google Sheets" img="/images/templates/quote-videos-languages.png" href="https://raw.githubusercontent.com/rendobar/n8n-nodes-rendobar/main/templates/quote-videos-from-google-sheets.json" cta="Workflow JSON">
+    A new sheet row becomes a 9:16 quote video with music, in a font made for its language.
   </Card>
-  <Card title="Run FFmpeg commands on n8n Cloud with Google Drive and Slack" img="/images/templates/run-ffmpeg-canvas.png" href="/automation/templates#run-ffmpeg-commands-on-n8n-cloud-with-google-drive-and-slack">
+  <Card title="Run FFmpeg commands on n8n Cloud with Google Drive and Slack" img="/images/templates/run-ffmpeg-canvas.png" href="https://raw.githubusercontent.com/rendobar/n8n-nodes-rendobar/main/templates/run-ffmpeg-on-n8n-cloud.json" cta="Workflow JSON">
     A form takes a video URL and a command. Failed jobs post the FFmpeg error to Slack.
   </Card>
 </CardGroup>
-
-## How waiting works
-
-Media jobs run for seconds or for hours, which is longer than most platforms let one step run. Every integration here waits the same way. The job carries a callback URL, the workflow stops, and Rendobar calls that URL when the job ends. Nothing polls in between.
-
-| | n8n | Activepieces | Any tool over HTTP |
-|---|---|---|---|
-| Install | From the nodes panel | **Install Piece** in the platform admin | Nothing to install |
-| Runs on | n8n Cloud and self-hosted n8n | Self-hosted, or a paid Activepieces Cloud plan | Any tool with an HTTP step |
-| Waits with | A Wait node the callback resumes | A waitpoint the callback resumes | A second workflow the callback starts |
-| Starts a workflow when a job ends | Rendobar Trigger | Finished Job trigger | A webhook trigger |
-
-The callback tells the workflow a job ended. Each guide then re-reads the job with your own API key before using the file. [Callbacks](/guides/callbacks) covers the payload and its signature.
-
-## Before you start
-
-Every integration authenticates with a Rendobar API key. Create one in the [dashboard](https://app.rendobar.com) under **Settings > API keys**. A key created before September 13, 2026 cannot read [storage connections](/storage), so make a new one if a workflow reads from your bucket or delivers to it.
-
-## See also
-
-- [Callbacks](/guides/callbacks): the per-job URL every platform waits on
-- [Webhooks](/guides/webhooks): events for every job in the organization
-- [Jobs](/concepts/job): the statuses a job moves through and the output shape
-- [Storage connections](/storage): read inputs from your bucket and deliver outputs to it

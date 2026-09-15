@@ -24,12 +24,6 @@ const OUT = join(ROOT, 'images', 'automation');
 
 const logo = (name) => readFileSync(join(ROOT, 'images', 'logos', `${name}.svg`), 'utf8');
 
-// A globe for "any tool over HTTP". Not a brand, so it is drawn here.
-const HTTP_ICON =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="#C9D1CD" stroke-width="1.6" stroke-linecap="round">' +
-  '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/>' +
-  '<path d="M12 3c2.4 2.5 3.6 5.5 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.5-3.6-9S9.6 5.5 12 3z"/></svg>';
-
 // Make's purple sits too close to the dark tile to read, so its mark is drawn
 // in the tile's light ink and the brand colour carries the glow instead.
 const TILES = {
@@ -37,14 +31,13 @@ const TILES = {
   activepieces: { svg: logo('activepieces'), glow: '129, 66, 227' },
   make: { svg: logo('make').replace('fill="#6D00CC"', 'fill="#F2F5F3"'), glow: '109, 0, 204' },
   zapier: { svg: logo('zapier'), glow: '255, 79, 0' },
-  http: { svg: HTTP_ICON, glow: '52, 211, 153' },
 };
 
 const HEROES = [
   {
     file: 'hero-overview.png',
-    tiles: ['n8n', 'activepieces', 'http'],
-    caption: 'n8n, Activepieces, and any tool that can send an HTTP request',
+    tiles: ['n8n', 'activepieces', 'make', 'zapier'],
+    caption: 'n8n and Activepieces today, Make and Zapier soon',
   },
   { file: 'hero-n8n.png', tiles: ['n8n'], caption: 'A verified node for n8n Cloud and self-hosted n8n' },
   {
@@ -52,7 +45,6 @@ const HEROES = [
     tiles: ['activepieces'],
     caption: 'Flows pause on a waitpoint until the job finishes',
   },
-  { file: 'hero-http.png', tiles: ['make', 'zapier', 'http'], caption: 'Make, Zapier, and any tool with an HTTP step' },
 ];
 
 function page({ tiles, caption }) {

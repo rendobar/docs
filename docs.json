@@ -85,8 +85,8 @@
               "automation/index",
               "automation/n8n",
               "automation/activepieces",
-              "automation/templates",
-              "automation/http"
+              "automation/make",
+              "automation/zapier"
             ]
           },
           {
@@ -198,6 +198,14 @@
     {
       "source": "/n8n/:slug*",
       "destination": "/automation/n8n"
+    },
+    {
+      "source": "/automation/http",
+      "destination": "/automation"
+    },
+    {
+      "source": "/automation/templates",
+      "destination": "/automation#templates"
     },
     {
       "source": "/guides/ffmpeg",
