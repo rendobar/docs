@@ -27,6 +27,7 @@
           {
             "group": "Getting Started",
             "pages": [
+              "index",
               "quickstart",
               "build-with-ai"
             ]
