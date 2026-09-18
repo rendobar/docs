@@ -153,9 +153,10 @@ function validate(filePath, fm, violations) {
   }
 
   // --- Canonical checks ---
-  // A folder's index.mdx is served at the folder itself: storage/index.mdx is /docs/storage.
-  const expectedCanonical =
-    'https://rendobar.com/docs/' + rel.replace(/\\/g, '/').replace(/\.mdx$/, '').replace(/\/index$/, '');
+  // A folder's index.mdx is served at the folder itself: storage/index.mdx is /docs/storage,
+  // and the ROOT index.mdx is /docs with no trailing segment at all.
+  const slug = rel.replace(/\\/g, '/').replace(/\.mdx$/, '').replace(/(^|\/)index$/, '');
+  const expectedCanonical = 'https://rendobar.com/docs' + (slug ? '/' + slug : '');
   if (!fm.canonical) {
     violations.push({
       file: rel, field: 'canonical',

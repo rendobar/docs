@@ -1,0 +1,70 @@
+---
+title: "Docs for the media processing API"
+sidebarTitle: "Overview"
+description: "Start with the quickstart, then browse job types, storage connections, automation platforms, and the SDK, CLI and MCP server."
+icon: "book-open"
+keywords: ["rendobar docs", "rendobar documentation", "media processing api docs", "video api documentation", "ffmpeg api docs"]
+canonical: "https://rendobar.com/docs"
+---
+
+Rendobar runs media jobs on our infrastructure and hands back a finished file. You POST a job with your inputs, we execute it on isolated cloud workers, and you collect the output by webhook or by polling. One endpoint covers raw FFmpeg, media inspection, timeline composition, compression, captions, and image generation.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Submit your first job, poll it to completion, and download the result.
+  </Card>
+  <Card title="Build with AI" icon="sparkles" href="/build-with-ai">
+    Hand your coding agent one prompt and let it write the integration.
+  </Card>
+</CardGroup>
+
+## How a job works
+
+Every job shares the same shape, whatever its type. Read [how a job works](/concepts/job) for the lifecycle and the output contract, [scopes and access](/concepts/scopes) for what an API key is allowed to do, and [credits](/concepts/credits) for how work is billed.
+
+Results arrive two ways: [webhooks](/guides/webhooks) for signed delivery to your endpoint, or [callbacks](/guides/callbacks) when you want the job to call your own service.
+
+## Job types
+
+<CardGroup cols={2}>
+  <Card title="FFmpeg" icon="terminal" href="/jobs/ffmpeg">
+    Run any FFmpeg command in a sandbox, with guardrails.
+  </Card>
+  <Card title="ffprobe" icon="magnifying-glass" href="/jobs/ffprobe">
+    Probe media metadata from a URL, normalized plus raw.
+  </Card>
+  <Card title="Compose" icon="layer-group" href="/jobs/compose">
+    Render video from a declarative JSON timeline.
+  </Card>
+  <Card title="Compress" icon="compress" href="/jobs/compress">
+    Shrink a file to a target size or quality budget.
+  </Card>
+  <Card title="Captions" icon="closed-captioning" href="/jobs/captions/animate">
+    Burn static subtitles or animate word-level captions.
+  </Card>
+  <Card title="Generate images" icon="image" href="/jobs/image-generate">
+    Generate, edit and upscale images on hosted models.
+  </Card>
+</CardGroup>
+
+## Bring your own storage
+
+Connect a bucket you own and jobs read inputs from it and write outputs back, so your files never need to be public. Start at [storage connections](/storage), then pick your provider: [Cloudflare R2](/storage/cloudflare-r2), [Amazon S3](/storage/amazon-s3), [Supabase](/storage/supabase), or any [S3-compatible](/storage/s3-compatible) bucket.
+
+## Automation and tooling
+
+<CardGroup cols={3}>
+  <Card title="Automation" icon="bolt" href="/automation">
+    Run jobs from n8n or Activepieces, no code required.
+  </Card>
+  <Card title="SDK and CLI" icon="code" href="/sdk">
+    TypeScript SDK, plus the rb command line tool.
+  </Card>
+  <Card title="MCP server" icon="plug" href="/mcp-server">
+    Let Claude, Cursor and other agents run jobs directly.
+  </Card>
+</CardGroup>
+
+## When something goes wrong
+
+Check the [FAQ](/support/faq) first, then [error codes](/support/errors) to handle failures by machine code rather than message text. [Limits](/support/limits) covers plan caps, and [versioning](/support/versioning) covers how the API changes.

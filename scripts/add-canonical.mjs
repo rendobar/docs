@@ -31,8 +31,9 @@ for (const file of walkMdx(ROOT)) {
   if (lines[0] !== '---') { console.error(`SKIP no frontmatter: ${file}`); continue; }
   const close = lines.indexOf('---', 1);
   if (close === -1) { console.error(`SKIP unterminated frontmatter: ${file}`); continue; }
-  const slug = relative(ROOT, file).replace(/\\/g, '/').replace(/\.mdx$/, '');
-  const canonical = `canonical: "${BASE}${slug}"`;
+  // An index.mdx is served at its folder, and the root index.mdx at /docs itself.
+  const slug = relative(ROOT, file).replace(/\\/g, '/').replace(/\.mdx$/, '').replace(/(^|\/)index$/, '');
+  const canonical = `canonical: "${slug ? BASE + slug : BASE.replace(/\/$/, '')}"`;
   const existing = lines.findIndex((l, i) => i > 0 && i < close && l.startsWith('canonical:'));
   if (existing !== -1) {
     if (lines[existing] === canonical) continue;
