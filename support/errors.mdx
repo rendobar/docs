@@ -77,7 +77,7 @@ Creating, testing, or updating a [storage connection](/storage) returns these co
 
 A failed delivery does not return an error code. The job reports a `reason` for that destination instead. See [delivery errors](/storage#delivery-errors).
 
-## Handle the common ones
+## How do I handle the common errors?
 
 The three you'll hit most: `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `VALIDATION_ERROR`.
 
@@ -160,6 +160,9 @@ if not res.ok:
 </CodeGroup>
 
 ## See also
+- [FFmpeg](/jobs/ffmpeg): the flag and command errors this job returns
+- [Compress](/jobs/compress): why a target can be unreachable
+- [Plan limits](/support/limits): the caps that produce a limit error
 
 - [Limits](/support/limits)
 - [Job lifecycle](/concepts/job)

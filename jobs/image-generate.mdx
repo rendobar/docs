@@ -98,7 +98,7 @@ print(job["output"]["file"]["url"])  # the webp
 
 No `inputs` are needed. The prompt is the whole request. Every generation job is async, so you submit, then poll, [wait](/sdk#wait), or receive a [webhook](/guides/webhooks).
 
-## The output
+## What does an image job return?
 
 A completed job carries a single webp file in `output.file`. `output.data` is `null`, because generation writes a file rather than computing an answer.
 
@@ -121,7 +121,7 @@ A completed job carries a single webp file in `output.file`. `output.data` is `n
 
 The real dimensions are in `output.file.meta`. Each model snaps your requested `width` and `height` to a size it can render, so the returned image can differ from what you asked for. The full [output shape](/concepts/job#the-output) is the same for every job type.
 
-## Watch it render
+## Can I watch it render? {#watch-it-render}
 
 A generation job emits `job.preview` events while the model denoises, each carrying a small webp frame. Subscribe with the SDK to show the picture resolving instead of a spinner.
 
@@ -145,7 +145,7 @@ const sub = client.realtime.subscribeJob(created.id, {
 
 Previews are decoration and never hold up a job. They are ephemeral: nothing is replayed on reconnect, and a late subscriber sees only the newest frame. A model with no fast decoder emits none, and a four-step model resolves too late to be worth watching. Build for zero frames and treat anything you get as a bonus.
 
-## Tiers and models
+## Should I pick a tier or a model?
 
 Set `model` to a tier alias for a price and quality posture without naming a model, or pin an exact model id to reach that model's own controls. Omit `model` and you get the `economy` tier.
 
@@ -268,7 +268,7 @@ Tier aliases accept the base fields only. To use `steps`, `guidance`, or `negati
   What to keep out of the image. Up to 1000 characters. Requires `qwen-image-2512`.
 </ParamField>
 
-## Discover models
+## How do I discover models? {#discover-models}
 
 `GET /models` lists every generation model with its tier, relative price, capabilities, and step range, so a model picker never has to hardcode the catalog. Filter to one job type with `?job=`.
 
@@ -306,6 +306,7 @@ A bad request fails on `POST /jobs` before anything is billed. An unknown model 
 
 - [Generation API](/concepts/generation): the modalities and the shared model catalog
 - [Image edit](/jobs/image-edit): change an existing image from an instruction
+- [Image upscale](/jobs/image-upscale): enlarge what you generated
 - [Job output](/concepts/job#the-output): the output shape every job returns
 - [SDK](/sdk): `jobs.run`, `jobs.wait`, and reading the output
 - [Webhooks](/guides/webhooks): receive `job.completed` instead of polling

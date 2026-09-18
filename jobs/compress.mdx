@@ -92,7 +92,7 @@ curl -X POST "https://api.rendobar.com/jobs" \
 
 The compressed file lands in `output.file` and the report in `output.data`. Images finish in about 10 seconds, audio in about 1, video takes longer because every search probe is a real encode plus a VMAF pass.
 
-## The report
+## What does the report show?
 
 Every completed job carries the search's account of itself:
 
@@ -116,7 +116,7 @@ Every completed job carries the search's account of itself:
 
 `verdict` maps the score to a label. For images: 90+ is `visually_lossless`, 70+ is `high`, 50+ is `medium`, below that `low`. For video on VMAF: 95+, 90+, and 80+ (`acceptable`).
 
-## Targets
+## Should I target a size or a quality?
 
 `target` takes one of four shapes:
 
@@ -129,7 +129,7 @@ Every completed job carries the search's account of itself:
 
 The tier thresholds per medium: images clear SSIMULACRA2 90 / 85 / 78, video clears VMAF 96 / 93 / 88. Audio has no metric loop; tiers map to a channel-aware Opus bitrate ladder, so a mono voice track gets half the budget of stereo music.
 
-## Codecs
+## Which codecs does it use?
 
 With `codec: "auto"`, the pick follows `compatibility`:
 
@@ -143,7 +143,7 @@ Or pin one: `av1`, `hevc`, `h264`, `vp9`, `avif`, `jxl`, `jpegli`, `webp`, `png`
 
 `for: "archive"` skips the lossy ladder entirely and produces a lossless master: PNG for images, FFV1 in MKV for video, FLAC for audio.
 
-## Predict without encoding
+## Can I predict the result without encoding?
 
 `dryRun: true` runs the search and returns the report with a predicted `outputBytes`, but writes no file and uploads nothing. `output.file` is `null`, the same shape as a data job. Use it to quote a compression before committing to it.
 
@@ -205,7 +205,7 @@ Or pin one: `av1`, `hevc`, `h264`, `vp9`, `avif`, `jxl`, `jpegli`, `webp`, `png`
   Max execution time in seconds. Plan caps apply, same as [FFmpeg](/jobs/ffmpeg#parameters).
 </ParamField>
 
-## How the search behaves
+## How does the search pick an encode?
 
 The search is a binary search over the encoder's quality scale, so a job costs about 7 probe encodes at most, each scored against the source. Videos longer than 12 seconds probe on three 2-second samples instead of the full file, and only the final encode runs over everything. A byte-budget search always encodes the full file, because the budget is exact.
 
@@ -222,4 +222,7 @@ After the job starts, failures carry the standard `error` shape. `INPUT_FETCH_FA
 - [Job output](/concepts/job#the-output): the output shape every job returns
 - [ffprobe](/jobs/ffprobe): inspect a file before deciding how to compress it
 - [FFmpeg](/jobs/ffmpeg): full manual control when you want to write the command yourself
+- [Compose](/jobs/compose): render the video you are about to compress
+- [Upscale an image](/jobs/image-upscale): enlarge rather than shrink
+- [Plan limits](/support/limits): file-size caps and timeouts per plan
 - [Webhooks](/guides/webhooks): receive `job.completed` instead of polling

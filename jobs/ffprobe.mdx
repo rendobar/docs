@@ -92,7 +92,7 @@ curl -X POST "https://api.rendobar.com/jobs" \
 
 A probe is a data job. The answer lands in `output.data`, and `output.file` is `null` because nothing is written. Most probes finish in a few seconds. The SDK's `jobs.wait` polls for you; over raw HTTP, poll `GET /jobs/{id}` or subscribe with [webhooks](/guides/webhooks).
 
-## What comes back
+## What does ffprobe return?
 
 Your flags are honored. Rendobar fills in only what you left out:
 
@@ -108,7 +108,7 @@ Four things are rejected with `VALIDATION_ERROR` before the job is created: `-pr
 
 Rendobar reads the URL directly, so a faststart MP4 transfers only its header and a file over your plan's input limit still probes. When a server refuses range requests, the runner downloads the file first and the input limit applies.
 
-## The summary
+## What is in the summary?
 
 `summary` normalizes what's awkward to read raw: rotation buried in side data, fractional frame rates, HDR spread across three color fields, cover art masquerading as video. Here is the sample file above, probed:
 
@@ -177,7 +177,7 @@ Every `summary` field name is stable. Write your checks against `summary.kind` a
   Max execution time in seconds. Plan caps apply, same as [FFmpeg](/jobs/ffmpeg#parameters). A probe rarely approaches it.
 </ParamField>
 
-## Reading the result
+## How do I read the result?
 
 On a JSON run, `output.data` carries `summary` plus every section ffprobe emitted, under ffprobe's own field names:
 
@@ -239,5 +239,8 @@ Read `error.retryable` rather than mapping codes yourself. A file that probes bu
 
 - [Job output](/concepts/job#the-output): the output shape every job returns
 - [FFmpeg](/jobs/ffmpeg): run a command against the file you probed
+- [Compress](/jobs/compress): shrink the file you just inspected
+- [Compose](/jobs/compose): use the probed dimensions to lay out a timeline
+- [Burn captions](/jobs/captions/burn): read the subtitle streams a probe reports
 - [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
 - [Error codes](/support/errors): the full error catalogue

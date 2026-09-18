@@ -85,7 +85,7 @@ curl -X POST https://api.rendobar.com/jobs \
 
 </CodeGroup>
 
-## How it runs
+## How does an FFmpeg job run?
 
 1. **Validate**: command parsed against 8 security layers (flag whitelist, format/filter blocklists)
 2. **Download**: input URLs pulled to a sandboxed runner
@@ -94,7 +94,7 @@ curl -X POST https://api.rendobar.com/jobs \
 5. **Upload**: output goes to R2
 6. **Return**: signed `output.file.url` available via `GET /jobs/{id}`
 
-## Input sources
+## What can I use as an input?
 
 Most commands put the source URL straight in the command and skip `inputs` entirely. It is optional and defaults to an empty map:
 
@@ -200,7 +200,7 @@ This burns a subtitle track that lives only in the request, with no file to host
   GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require the Pro plan**. A GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan. See [GPU acceleration](#gpu-acceleration).
 </ParamField>
 
-## Validate without executing
+## Can I validate a command without running it?
 
 Free, no auth:
 
@@ -212,7 +212,7 @@ curl -X POST https://api.rendobar.com/ffmpeg/validate \
 
 Returns `{ data: { valid: true, args: [...], inferredOutputFormat: "mp4" } }` or `{ data: { valid: false, error: "..." } }`.
 
-## Allowed flags
+## Which flags are allowed?
 
 ~120 whitelisted flags. Common ones:
 
@@ -234,7 +234,7 @@ Returns `{ data: { valid: true, args: [...], inferredOutputFormat: "mp4" } }` or
 
 Unrecognised flags are rejected before dispatch with `VALIDATION_ERROR`.
 
-## GPU acceleration
+## Can I use GPU acceleration?
 
 Your jobs run on CPU-powered or GPU-powered machines. `compute` defaults to `auto`, so a command that uses an NVENC encoder routes to a GPU on its own. You do not send anything.
 
@@ -268,7 +268,7 @@ Set `compute` only to force a choice. `gpu` pins the job to a GPU. `cpu` pins it
 GPU jobs require the Pro plan and bill per second at GPU rates. A GPU job on the Free plan returns `403 PLAN_LIMIT`. CPU jobs run on every plan.
 </Info>
 
-## Security model
+## How is a command sandboxed?
 
 Every command is validated before it runs, then executed in an isolated, network-restricted sandbox.
 
@@ -329,7 +329,7 @@ Plan job budgets: 1 hour (Free), 9 hours (Pro). That is a bound on processing ti
 }
 ```
 
-## Output files
+## How do I return more than one file?
 
 The filenames your command writes define the output. You get back every file it produced.
 
@@ -434,7 +434,7 @@ Consuming the result is the same every time. The answer is `output.data`. The th
 
 URLs expire at `output.expiresAt`. Re-fetch the job with `GET /jobs/{id}` to mint fresh ones.
 
-## Error handling
+## How do I handle an error?
 
 A failed job carries an `error` object with `code`, `message`, `detail`, and `retryable`. When FFmpeg exits non-zero, `error.detail` holds the last ~2 KB of the real stderr. Fetch the job to see exactly why FFmpeg stopped.
 
@@ -465,6 +465,10 @@ Full error catalogue: [Error codes](/support/errors).
 
 - [Job output](/concepts/job#the-output): the output shape every job returns
 - [CLI](/cli): run the same job from your terminal with `rb ffmpeg`
+- [Compose](/jobs/compose): describe a render as a JSON timeline instead of a command
+- [Compress](/jobs/compress): hit a size or quality budget without tuning flags yourself
+- [ffprobe](/jobs/ffprobe): inspect a file before you write the command
+- [Burn captions](/jobs/captions/burn): subtitles without building the filter graph
 - [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
 - [Credits and billing](/concepts/credits): per-compute-second pricing detail
 - [Plan limits](/support/limits): file-size caps, timeouts, and concurrency per plan

@@ -45,7 +45,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 
 `ffmpeg`, MCP, and webhooks are on both plans.
 
-## Output URLs
+## How long do output URLs last?
 
 - **Signed download URL** (`output.file.url`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
 - **Output retention**: 7 days (Free) or 30 days (Pro). After that, the file is deleted; the job record stays but the file URLs return 404.
@@ -64,7 +64,7 @@ $10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds +20% to every purchase
 | Max page size | 100 |
 | Max request body | 100 MB |
 
-## File formats
+## Which file formats are supported?
 
 Rendobar accepts every FFmpeg-compatible input format. Default outputs by media type:
 

@@ -91,7 +91,7 @@ print(job["output"]["file"]["url"])  # the edited webp
 
 Each URL can be a public link or an [uploaded asset's](/sdk#uploads) content URL. The output size follows the first reference image unless you set `width` and `height`.
 
-## Reference images
+## How do reference images work?
 
 `inputs.images` accepts one to four URLs. The per-model cap is tighter than the schema ceiling, so a request that clears the schema can still be rejected against the resolved model.
 
@@ -103,7 +103,7 @@ Each URL can be a public link or an [uploaded asset's](/sdk#uploads) content URL
 
 Passing more images than the resolved model accepts returns `VALIDATION_ERROR` before anything is billed. Multiple references let you compose a scene, for example a product from one image on a background from another.
 
-## Tiers and models
+## Should I pick a tier or a model?
 
 Set `model` to a tier alias or pin an exact model id. Omit it and you get the `economy` tier. Aliases can be re-pointed as the catalog grows, so pin an exact id when you need a result to stay stable.
 
@@ -176,7 +176,7 @@ requests.post(
 
 </CodeGroup>
 
-## The output
+## What does an edit job return?
 
 A completed job carries a single webp file in `output.file`, typed `image`. `output.data` is `null`.
 
@@ -199,7 +199,7 @@ A completed job carries a single webp file in `output.file`, typed `image`. `out
 
 The full [output shape](/concepts/job#the-output) is the same for every job type.
 
-## Watch it render
+## Can I watch it render?
 
 An edit job emits `job.preview` events while the model denoises, each carrying a small webp frame. Subscribe with the SDK to show the edit resolving instead of a spinner.
 
@@ -254,7 +254,7 @@ Previews are decoration and never hold up a job. The `standard` tier finishes in
   What to keep out of the edited image. Up to 1000 characters. Requires `qwen-image-edit-2511`.
 </ParamField>
 
-## Discover models
+## How do I discover models?
 
 `GET /models?job=image.edit` lists the edit models with their reference-image caps, controls, and relative price. The [response shape](/jobs/image-generate#discover-models) is the same for both generation job types.
 
@@ -267,6 +267,7 @@ curl "https://api.rendobar.com/models?job=image.edit" \
 
 - [Generation API](/concepts/generation): the modalities and the shared model catalog
 - [Image generate](/jobs/image-generate): make an image from a text prompt
+- [Image upscale](/jobs/image-upscale): enlarge the edited result
 - [Job output](/concepts/job#the-output): the output shape every job returns
 - [SDK](/sdk): `jobs.run`, uploads, and reading the output
 - [Webhooks](/guides/webhooks): receive `job.completed` instead of polling

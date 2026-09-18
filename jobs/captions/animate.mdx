@@ -127,7 +127,7 @@ curl -X POST https://api.rendobar.com/jobs \
   Also return the word-level transcript plus SRT and VTT on `output.data`.
 </ParamField>
 
-## Inputs
+## What inputs does it take?
 
 <ParamField body="source" type="string" required>
   URL of the source video. An uploaded asset's content URL works too.
@@ -141,7 +141,7 @@ curl -X POST https://api.rendobar.com/jobs \
   URL of your own font file (TTF, OTF, TTC, WOFF, WOFF2). Captions render in it, and it takes priority over `style.font`, so you do not need to know the family name inside your own file. See [Fonts](#fonts).
 </ParamField>
 
-## Fonts
+## Which fonts can I use?
 
 Eleven presets ship with sensible default fonts. To pick a different one, set `style.font` to a bundled family. No upload needed.
 
@@ -179,3 +179,11 @@ existing integration that does both keeps rendering the same way.
 Like every job, this returns the standard response. See [Job output](/concepts/job#the-output) for the shape and how to read the result.
 
 To burn existing subtitles instead, see [caption.burn](/jobs/captions/burn).
+
+## See also
+
+- [Burn subtitles](/jobs/captions/burn): static SRT or VTT burned into the frame
+- [Compose](/jobs/compose): build the video these captions sit on
+- [Compress](/jobs/compress): shrink the captioned output before you deliver it
+- [ffprobe](/jobs/ffprobe): check the audio stream before transcribing it
+- [Plan limits](/support/limits): duration and file-size caps per plan

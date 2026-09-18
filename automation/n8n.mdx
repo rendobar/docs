@@ -128,7 +128,7 @@ Every job type returns the same shape on completion, lifted to the top of the it
 
 `file` is the headline result, or `null` for a job that computes data. `data` carries a probe report or a transcript, or `null` for a file-only job. `files` lists every output. **Raw** returns the full job and **Selected Fields** lets you pick.
 
-## Wait for a long job
+## How do I wait for a long job?
 
 A transcode can take minutes and an hour-long render can take an hour. The node offers three ways to get the result, and only one of them is right for a long job.
 
@@ -155,7 +155,7 @@ The execution parks with no worker held. When the job ends, Rendobar's callback 
   Leave **Wait for Completion** off when you set a Callback URL. The node refuses the combination rather than picking one, because a hidden field in n8n keeps its value.
 </Warning>
 
-## Start a workflow when a job ends
+## How do I start a workflow when a job ends?
 
 **Rendobar Trigger** registers a webhook with Rendobar when the workflow activates and removes it on deactivation. Pick the events:
 
@@ -176,7 +176,7 @@ Pair `job.failed` with **Job > Get Logs** and the item carries the runner's log,
 
 Rendobar must reach the webhook URL over HTTPS. That's true on n8n Cloud and on any publicly hosted instance. A `localhost` n8n is not reachable, so test locally through a tunnel such as `cloudflared tunnel --url http://localhost:5678` and set `WEBHOOK_URL` to its hostname.
 
-## Use it as an AI Agent tool
+## Can I use it as an AI Agent tool?
 
 The node is marked usable as a tool, so it attaches to the AI Agent node's tool port and n8n builds the tool schema from the node's own parameters. Nothing else to define.
 

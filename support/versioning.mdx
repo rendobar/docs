@@ -11,7 +11,7 @@ There is no version in the URL. No `/v1`, no `Api-Version` header, no date
 pinning. That is a commitment, not an omission: the API only changes in ways
 that existing callers survive, so there is nothing to pin to.
 
-## What we will change without warning
+## What changes without warning?
 
 These are safe because a tolerant client ignores what it does not recognise.
 
@@ -24,7 +24,7 @@ These are safe because a tolerant client ignores what it does not recognise.
 Write clients that ignore unknown response fields. Every SDK we publish already
 does.
 
-## What we treat as breaking
+## What counts as a breaking change?
 
 - Removing or renaming a field, parameter, endpoint or method
 - Making a response field nullable, or changing its type
@@ -35,7 +35,7 @@ When one of these looks necessary we look for the additive path first: a new
 sibling field, a default, a new endpoint alongside the old one. We break only
 when there is genuinely no additive option.
 
-## How something goes away
+## How is something removed?
 
 Three steps, in order, and the middle one lasts.
 
@@ -48,7 +48,7 @@ A deprecated surface is one you can keep using while you migrate, not one that
 is about to fail. `client.team.*` and the `/team/*` routes are deprecated today
 and call exactly the same code as their replacements.
 
-## How to tell what is deprecated
+## How do I tell what is deprecated?
 
 - **OpenAPI**: the operation carries `"deprecated": true` in
   [the spec](https://api.rendobar.com/openapi.json). Generators surface this.
@@ -57,7 +57,7 @@ and call exactly the same code as their replacements.
 - **Changelog**: every deprecation is announced at
   [rendobar.com/changelog](https://rendobar.com/changelog/).
 
-## SDK versions
+## How are SDK versions numbered?
 
 [`@rendobar/sdk`](/sdk) follows semantic versioning.
 

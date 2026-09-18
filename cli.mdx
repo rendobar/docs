@@ -127,7 +127,7 @@ A delivery starts after the job completes. rb waits up to five minutes for it an
 | `2` | Not authenticated, bad arguments, port in use, or insufficient credits |
 | `130` | Cancelled with `Ctrl+C`. The CLI tries to cancel the in-flight job first |
 
-## Run it in CI
+## How do I run it in CI?
 
 `RENDOBAR_API_KEY` is the only auth path for CI. It beats any saved credential and writes nothing to disk. Don't run `rb login` in a pipeline, the browser flow will hang.
 
@@ -162,7 +162,7 @@ rb ffmpeg --json -i in.mp4 -c:v libx264 out.mp4 | jq -r '.id'
 
 The CLI has no `--idempotency-key`. If a retried step must not double-charge, submit via the [SDK](https://www.npmjs.com/package/@rendobar/sdk) or [`POST /jobs`](/jobs/ffmpeg) with an `idempotencyKey` field.
 
-## Common fixes
+## What do I do when a command fails?
 
 `rb doctor` runs the install and connectivity checks and prints a `fix:` line under any failure. Run it first. The three you'll actually hit:
 
