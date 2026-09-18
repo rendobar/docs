@@ -95,7 +95,7 @@ Every job-shaped action and trigger returns the same flat row, so a table built 
 
 `cost_formatted` can be `null` on a row read the moment a job completes, because billing settles a moment later. A later read carries it.
 
-## Wait for a long job
+## How do I wait for a long job?
 
 <Frame caption="Polling holds a worker and repeats status calls for the whole job. A waitpoint submits once, parks the flow, and resumes it when Rendobar calls back.">
   <img src="/images/activepieces/waitpoint.svg" alt="Two timelines compared. Polling holds a worker open and repeats status calls from submit to done. A waitpoint submits once, shows a paused span with no execution time, and resumes on Rendobar's callback." />
@@ -112,7 +112,7 @@ Turn **Wait for the Result** off to submit and move on, then pick up the result 
 - **Fail This Step if the Job Fails** is on by default, so a failed job runs the flow's error path. Turn it off to branch on `succeeded` instead.
 - **Idempotency Key** is derived from the run, the step and the submission when left empty. An automatic retry then settles on the job it already created instead of billing a second one.
 
-## Start a flow when a job finishes
+## How do I start a flow when a job finishes?
 
 **Finished Job** registers a webhook on your Rendobar account when the flow is turned on, and deletes it when the flow is turned off. **Outcome** picks which jobs start the flow:
 

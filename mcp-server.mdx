@@ -61,7 +61,7 @@ Clients without OAuth support can authenticate with an API key instead: header `
 </Tab>
 </Tabs>
 
-## What you can do
+## What can I do with it?
 
 Call `list_job_types` first. It returns every active job type fresh, so it never goes stale like a hardcoded list would. Pass `type` (for example `"compose"`) to get that one job type's complete parameter schema instead, with per-field documentation: ranges, defaults, units, and usage notes. Agents should do this before authoring a complex payload like a compose timeline.
 
@@ -83,7 +83,7 @@ Call `list_job_types` first. It returns every active job type fresh, so it never
 
 A failed call returns `isError: true` with `{ error: { code, message, retryable } }` instead of throwing, so the agent can react to it. See the [error catalogue](/support/errors) for codes.
 
-## From your phone
+## Can I use it from my phone?
 
 A phone has no filesystem the agent can reach, so a media file routes through a page you open yourself.
 
@@ -199,7 +199,7 @@ Cursor, Cline, Windsurf, Zed, and Continue all run the same `npx -y @rendobar/mc
 
 <Info>Needs Node 20.10 or later. The server checks at startup and exits with a clear message if it's older.</Info>
 
-## Manage what it can reach
+## How do I limit what it can reach?
 
 Approving a connection grants access to one workspace, and you can take it back.
 

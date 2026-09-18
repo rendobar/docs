@@ -92,7 +92,7 @@ print(job["output"]["file"]["url"])  # the png
 
 </CodeGroup>
 
-## Sizing
+## How do I control the output size?
 
 `sizing` is a union, because "twice as big" and "2160 pixels tall" are different questions and only one can be answered per request.
 
@@ -137,11 +137,11 @@ two renders. A single large step is available with `passes: 1`, and looks worse.
 
 Leave it at `1` for photographs. Lowering it hands the model less to work from and more to invent, which suits a clean uncompressed source and hurts a compressed one, where the reconstruction follows the compression artifacts instead of the subject.
 
-## Transparency
+## Is transparency preserved?
 
 A transparent png stays transparent. Alpha is upscaled alongside the colour channels rather than flattened, so a logo keeps its edge.
 
-## The output
+## What does an upscale job return?
 
 A completed job carries a single png file in `output.file`. `output.data` is `null`, because upscaling writes a file rather than computing an answer.
 
@@ -161,7 +161,7 @@ png rather than webp on purpose. Re-compressing lossily is the one thing that wo
 }
 ```
 
-## Size limits
+## What are the size limits?
 
 There is no product cap on how large an output you can ask for. The bound is what the GPU can physically hold.
 
@@ -183,3 +183,5 @@ The ceiling also depends on the model. `seedvr2-7b` holds about twice the weight
 - [Generate an image from a prompt](/jobs/image-generate)
 - [Edit an image from an instruction](/jobs/image-edit)
 - [How the Generation API works](/concepts/generation)
+- [Compress the result](/jobs/compress): shrink the enlarged file before delivery
+- [Plan limits](/support/limits): resolution and file-size caps per plan

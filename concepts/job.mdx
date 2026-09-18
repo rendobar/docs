@@ -44,7 +44,7 @@ sequenceDiagram
     API-->>You: status complete, output
 ```
 
-## The shape of a job
+## What does a job look like?
 
 Every job is a `type` plus the `inputs` and `params` that type expects:
 
@@ -62,7 +62,7 @@ To also write the output to a bucket you own, add `destinations`. An input can c
 
 See [storage connections](/storage) for connecting a bucket and how outputs are named.
 
-## The lifecycle
+## What are the job statuses?
 
 A job moves through six statuses. Three are terminal.
 
@@ -86,7 +86,7 @@ flowchart LR
 
 On any terminal status the job is billed for the compute it used, and a [webhook](/guides/webhooks) fires if you configured one. A job that never started settles free. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its plan's time limit fails with `JOB_TIMEOUT` and is billed for the compute it consumed. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged. Cancelling a `running` job stops the upstream execution too.
 
-## The output
+## What does a job return? {#the-output}
 
 A `complete` job carries one `output`. The shape is the same for every type, so you never branch on the job type to find the result.
 
@@ -220,7 +220,7 @@ for (const f of job.output.files) console.log(f.path, f.type, f.size); // the fu
 
 Three invariants hold for every type, so you can code against them: `output.file` is always one of `output.files` (or `null`), `expiresAt` is set whenever `files` is non-empty, and a `complete` job always has `output.data` or `output.files`. It never returns nothing.
 
-## Polling or webhooks
+## Should I poll or use webhooks?
 
 Poll `GET /jobs/{id}` every second or two until the status is terminal, or skip polling entirely: register a [webhook](/guides/webhooks) and Rendobar pushes `job.completed` to your server the moment the job lands.
 
@@ -230,3 +230,7 @@ Poll `GET /jobs/{id}` every second or two until the status is terminal, or skip 
 - [Credits and billing](/concepts/credits): how the terminal debit works
 - [Error codes](/support/errors): every `error.code` a failed job returns
 - [FFmpeg](/jobs/ffmpeg): a job type end to end
+- [Compose](/jobs/compose): a render described as a JSON timeline
+- [Compress](/jobs/compress): a job that searches encodes to hit a budget
+- [Animated captions](/jobs/captions/animate): a job that transcribes and renders
+- [Generate an image](/jobs/image-generate): the same job shape on a diffusion model

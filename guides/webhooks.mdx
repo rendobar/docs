@@ -31,7 +31,7 @@ Webhooks push events to your server the moment a [job](/concepts/job) changes st
 Want a hook scoped to a single job instead of every job in the organization? See [per-job callbacks](/guides/callbacks).
 </Note>
 
-## Create an endpoint
+## How do I create an endpoint?
 
 Create and manage endpoints on the [**Webhooks page**](https://app.rendobar.com/webhooks) in the dashboard.
 
@@ -60,7 +60,7 @@ Hit **Send Test** on the card to fire a sample event and confirm your receiver r
 | `balance.low` | Credit balance crossed the low threshold |
 | `balance.depleted` | Credit balance reached zero |
 
-## Verify every delivery
+## How do I verify a delivery?
 
 Rendobar signs each payload. Check the signature before you trust the body. The SDK does it in one call.
 
@@ -132,7 +132,7 @@ def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> 
 Compare with a timing-safe function (`timingSafeEqual`, `hmac.compare_digest`). Plain string equality leaks the signature one byte at a time.
 </Warning>
 
-## Payload
+## What is in the payload?
 
 Every delivery carries these headers.
 
@@ -204,7 +204,7 @@ For `job.failed`, `data` carries `error` instead of `output`.
 }
 ```
 
-## Delivery and retries
+## What happens when a delivery fails?
 
 If your endpoint does not return `2xx` within 10 seconds, Rendobar retries up to 5 times, doubling the wait each attempt.
 
@@ -224,7 +224,7 @@ await client.webhooks.retryDelivery(deliveryId);
 
 An endpoint that fails 10 deliveries in a row is disabled automatically and flagged in the dashboard. Update or re-enable it to reset the counter.
 
-## Secret rotation
+## How do I rotate the signing secret?
 
 Rotate from the card, or with `client.webhooks.rotateSecret(endpointId)`. For 24 hours Rendobar signs with both secrets, sending `X-Rendobar-Signature` (new) and `X-Rendobar-Signature-Previous` (old), so `verifyWebhook` keeps passing while you roll the new one out. After the window the old secret stops signing. An endpoint can rotate once per 24 hours.
 

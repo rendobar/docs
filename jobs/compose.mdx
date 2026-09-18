@@ -616,7 +616,7 @@ choose, then reference that name in `style.font`.
 ```
 
 There is no limit on how many you declare. TTF, OTF, TTC, WOFF and WOFF2 all
-work, and an [uploaded asset's](/api-reference/assets) content URL works in
+work, and an [uploaded asset's](/sdk#uploads) content URL works in
 `src` like any other input URL.
 
 Naming your own font is the point. The alternative is to reference the family
@@ -846,3 +846,12 @@ Fields on a text asset's `style`:
 | `background` | Hex fill behind the text |
 | `shadow` | `{ color, opacity, offsetX, offsetY }` |
 | `animate` | `{ type, duration }` (type: fade, slideUp, slideDown, slideLeft, slideRight) |
+
+## See also
+
+- [Job output](/concepts/job#the-output): the output shape every job returns
+- [Animated captions](/jobs/captions/animate): word-level captions over a rendered video
+- [Compress](/jobs/compress): shrink the render to a size or quality budget
+- [FFmpeg](/jobs/ffmpeg): drop to a raw command when the timeline cannot express it
+- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
+- [Plan limits](/support/limits): render duration and file-size caps per plan

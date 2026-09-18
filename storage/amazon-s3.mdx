@@ -171,7 +171,7 @@ To change how outputs are named, see [delivery settings](/storage#delivery-setti
 
 To create the role with Terraform or by hand, open **Trust policy and Terraform** in the waiting dialog and copy either one. Create the role with a maximum session duration of 12 hours, which the Terraform already sets. Then select **I created the role another way**, and paste the role's ARN. Rendobar runs the access checks as soon as you finish.
 
-## Revoke access
+## How do I revoke access?
 
 Delete the stack in CloudFormation. This deletes the role, and Rendobar removes the connection. The OpenID Connect provider, and any bucket the stack created, stay in the account.
 

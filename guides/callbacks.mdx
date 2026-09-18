@@ -27,7 +27,7 @@ canonical: "https://rendobar.com/docs/guides/callbacks"
 
 A callback attaches a completion hook to one [job](/concepts/job). You pass `callback.url` when you create the job, and the moment that job reaches a terminal state Rendobar POSTs the result there. The body is byte-identical to the [webhook](/guides/webhooks) envelope, so the same receiver code handles both. The correlation lives in the URL you chose, so the receiver stays stateless and never polls `GET /jobs/{id}`.
 
-## Attach a callback
+## How do I attach a callback?
 
 Add a `callback` object to `client.jobs.create(...)`. The only required field is `url`.
 
@@ -127,7 +127,7 @@ await client.jobs.create({
 
 The waiting Workflow is the same as Shape A. It calls `waitForEvent({ type: "rb-job" })` and resumes when Cloudflare delivers the event.
 
-## Secure it
+## How do I secure a callback?
 
 Callbacks are unsigned by default because the URL itself is the capability. Set `callback.verify: true` to sign the POST, then check it on your receiver. The signature is the same HMAC-SHA256 scheme as webhooks, over `${timestamp}.${body}`, and the SDK ships the same verifier.
 
@@ -148,7 +148,7 @@ const { data } = await client.orgs.getCallbackSecret();
 
 Rotate the secret with `POST /orgs/current/callback-secret/rotate`. Reach for signing when the callback lands on an endpoint you own and you want to prove the POST came from Rendobar. For Shape B, where you already authenticate to Cloudflare through `callback.headers`, signing usually adds nothing.
 
-## Watch delivery
+## How do I watch delivery?
 
 Once a job carries a callback, `GET /jobs/{id}` reports its delivery state under `callback.status`.
 
@@ -167,7 +167,7 @@ X-Rendobar-Timestamp: 1707436815
 X-Rendobar-Attempt: 1
 ```
 
-## How it compares to org webhooks
+## How do callbacks compare to org webhooks?
 
 [Webhooks](/guides/webhooks) and callbacks carry the identical envelope and verify with the same code. The difference is scope. A webhook is one static URL registered in the dashboard that receives events for every job in the organization. A callback is a per-job URL, set at create time, that receives events for exactly one job. Webhooks fit a central event pipeline. Callbacks fit an orchestrator that dispatches a job and waits on that one job, such as the Cloudflare Workflow above.
 

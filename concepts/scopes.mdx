@@ -29,7 +29,7 @@ Every credential carries scopes, and every endpoint states the one it needs. Wha
 comes from what it was granted, not from whether it authenticated with an API key, an OAuth token
 or a dashboard session.
 
-## The scopes
+## Which scopes exist?
 
 Seven resources, each with a read and a write scope.
 
@@ -49,7 +49,7 @@ Two rules cover the rest:
 - **Self-description is never scoped.** Any credential can ask which workspace it acts for and what
   limits apply, whatever else it holds.
 
-## Narrowing an API key
+## How do I narrow an API key?
 
 Pass `scopes` when you create a key and it can do only that.
 
@@ -85,7 +85,7 @@ Two limits apply to every key, however it was made:
 - **A key is never broader than what created it.** Asking for more than the creating credential
   holds is refused rather than quietly narrowed.
 
-## What an app is asking for
+## What is an app asking for?
 
 When you connect an app over OAuth, the consent screen lists what it requested, area by area, with
 what each one lets it do. You can grant less than it asked for, and the app receives exactly what
@@ -99,7 +99,7 @@ it can reach and where. Revoking deletes the grant and every stored token, so th
 access or renew what it has. An access token it already holds stays valid until it expires, which is
 under an hour.
 
-## When a scope is missing
+## What happens when a scope is missing?
 
 A request outside a credential's scopes is refused with `403` and a header naming what was missing,
 per [RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750#section-3.1).

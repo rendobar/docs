@@ -87,7 +87,7 @@ curl -X POST https://api.rendobar.com/jobs \
 
 Omit `subtitles` to auto-transcribe. The spoken language is detected by default (`language: "auto"`). Pass an ISO-639-1 code to skip detection.
 
-## Inputs
+## What inputs does it take?
 
 <ParamField body="source" type="string" required>
   URL of the source video to caption.
@@ -178,3 +178,11 @@ Omit `subtitles` to auto-transcribe. The spoken language is detected by default 
 Like every job, this returns the standard response. See [Job output](/concepts/job#the-output) for the shape and how to read the result.
 
 For animated word-level captions instead, see [captions.animate](/jobs/captions/animate).
+
+## See also
+
+- [Animated captions](/jobs/captions/animate): word-level captions generated from the audio
+- [ffprobe](/jobs/ffprobe): check the subtitle streams already in a file
+- [Compose](/jobs/compose): assemble the video before you burn subtitles onto it
+- [Error codes](/support/errors): the full error catalogue
+- [Plan limits](/support/limits): duration and file-size caps per plan

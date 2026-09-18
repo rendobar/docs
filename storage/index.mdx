@@ -37,7 +37,7 @@ storage://<connection-id>/<path>
   <img src="/images/storage/hero-all.png" alt="Rendobar connected to Cloudflare R2, Amazon S3, Supabase Storage and any S3-compatible bucket, reading inputs from them and delivering outputs back" />
 </Frame>
 
-## Supported providers
+## Which providers are supported?
 
 | Provider | Credentials |
 |---|---|
@@ -48,7 +48,7 @@ storage://<connection-id>/<path>
 
 Use **S3-compatible** for any service that implements the S3 API, such as MinIO, Backblaze B2, or Wasabi.
 
-## How connections work
+## How does a storage connection work?
 
 A connection has three parts:
 
@@ -275,7 +275,7 @@ A failed delivery includes one of these `reason` codes. Rendobar never forwards 
 
 Errors returned when you create a connection are listed in [error codes](/support/errors).
 
-## Credentials
+## How are credentials stored?
 
 For connections that use keys, Rendobar stores the access key and secret, encrypted with AES-256-GCM. No API endpoint returns them. A one-click AWS role stores no keys, because Rendobar assumes the role when it needs access.
 

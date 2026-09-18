@@ -42,7 +42,7 @@ Images are the first modality. You can generate an image from a text prompt, or 
 
 More modalities will join the same surface over time. Only image generation and editing are available today.
 
-## Tiers or exact models
+## Should I pick a tier or an exact model?
 
 Every generation job takes a `model`. You can name a tier and let the platform choose, or pin an exact model id.
 
@@ -51,7 +51,7 @@ Every generation job takes a `model`. You can name a tier and let the platform c
 
 Tier aliases can be re-pointed to newer models as the catalog grows. Pin an exact id when you need a result to stay stable across that change.
 
-## Discover models
+## How do I discover models?
 
 `GET /models` returns the live catalog: every model with its supported jobs, tier, relative price, capabilities, and step range. Filter to one job type with `?job=`. Build a model picker against this endpoint instead of hardcoding the list.
 
@@ -83,7 +83,7 @@ curl "https://api.rendobar.com/models" \
 
 A model with `underReview: true` is pulled from tier resolution while we re-evaluate its cost and quality. It stays listed so a caller pinning it can see why the submit was rejected, but no tier resolves to it and pinning it returns `VALIDATION_ERROR`.
 
-## Same job, same shape
+## Does every model use the same job shape?
 
 A generation job is a [job](/concepts/job) like any other. You submit it to `POST /jobs`, it runs async, and you poll, [wait](/sdk#wait), or receive a [webhook](/guides/webhooks). The image jobs return a single webp file in `output.file`, with `output.data` set to `null`.
 
@@ -106,6 +106,7 @@ console.log(outputUrl(job)); // signed URL to the webp
 
 - [Image generate](/jobs/image-generate): text to image, with the full model catalog
 - [Image edit](/jobs/image-edit): instruction editing with one to four reference images
+- [Image upscale](/jobs/image-upscale): enlarge an image without a prompt
 - [How a job works](/concepts/job): statuses and the output shape
 - [SDK](/sdk): `jobs.run`, `jobs.wait`, and reading the output
 - [Credits and billing](/concepts/credits): how compute-based billing works

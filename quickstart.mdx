@@ -4,6 +4,7 @@ sidebarTitle: "Quickstart"
 description: "Submit your first ffmpeg job, poll to completion, and download the result. Under 5 minutes from API key to finished MP4."
 icon: "rocket"
 keywords: ["rendobar quickstart", "ffmpeg api tutorial", "first api call", "video processing quickstart", "ffmpeg job"]
+boost: 2
 canonical: "https://rendobar.com/docs/quickstart"
 ---
 
@@ -35,7 +36,7 @@ Add Rendobar to my app: read and follow https://rendobar.com/prompts/integrate.m
 ```
 </Tip>
 
-## 1. Get an API key
+## 1. Get an API key {#authentication}
 
 Sign up at [app.rendobar.com](https://app.rendobar.com) and create a key from **Settings → API keys**. Keys start with `rb_`. New accounts get $5 in free [credits](/concepts/credits).
 
@@ -150,6 +151,10 @@ Every job type returns this same `output` shape: `data` for a computed answer, `
 
 - [Rendobar CLI](/cli): skip the curl, run `rb ffmpeg` from your terminal
 - [FFmpeg](/jobs/ffmpeg): full guide with the security model and examples
+- [Compose](/jobs/compose): render video from a JSON timeline
+- [Compress](/jobs/compress): hit a size or quality target
+- [Animated captions](/jobs/captions/animate): transcribe and burn word-level captions
+- [Generate an image](/jobs/image-generate): text to image on hosted models
 - [Webhooks](/guides/webhooks): push events instead of polling
 - [Credits and billing](/concepts/credits): plans, balance, billing
 - [MCP](/mcp-server): drive Rendobar from an AI agent
