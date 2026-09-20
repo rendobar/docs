@@ -106,13 +106,16 @@ Every completed job carries the search's account of itself:
   "originalBytes": 179208,
   "outputBytes": 64031,
   "qualityLevel": 82,
-  "probes": 7
+  "probes": 7,
+  "scoredOn": "full"
 }
 ```
 
-`status` is the honest part. `ok` means the target was met. `infeasible_quality` means even the best encode could not reach the score you asked for, and you got the best effort. `infeasible_size` means the byte cap and the quality floor could not both hold. `skipped_no_improvement` means no encode beat your original, so the original came back untouched with `compressionRatio: 1` and `verdict: "passthrough"`. Set `forceReencode: true` to get the re-encode anyway.
+`status` is the honest part. `ok` means the target was met. `infeasible_quality` means even the best encode could not reach the score you asked for, and you got the best effort. `infeasible_size` means the byte cap and the quality floor could not both hold. `skipped_no_improvement` means no encode beat your original, so the original came back untouched with `compressionRatio: 1` and `verdict: "passthrough"`. Set `forceReencode: true` to get the re-encode anyway. A passthrough result reports `achievedScore: null` and `qualityLevel: null`, because the file you got back was never encoded. A `dryRun` predicts passthrough the same way.
 
-`verdict` maps the score to a label. For images: 90+ is `visually_lossless`, 70+ is `high`, 50+ is `medium`, below that `low`. For video on VMAF: 95+, 90+, and 80+ (`acceptable`).
+`scoredOn` says where the score was measured. `full` means the delivered file. `sample` means a long video was searched on samples taken across its length, and the score is the samples' score.
+
+`verdict` maps the score to a label. For images: 90+ is `visually_lossless`, 70+ is `high`, 50+ is `medium`, below that `low`. For video on VMAF: 94+, 90+, and 80+ (`acceptable`).
 
 ## Should I target a size or a quality?
 
@@ -122,10 +125,14 @@ Every completed job carries the search's account of itself:
 |---|---|---|
 | Named tier | `"visually-lossless"`, `"balanced"`, `"efficient"` | Finds the smallest file clearing that tier's score |
 | Quality number | `85` | Same, with your own 1-100 score as the bar |
-| Byte budget | `{ "maxSize": "500kb" }` or `{ "maxBytes": 512000 }` | Finds the best-looking file under the cap and reports the score it got |
+| Byte budget | `{ "maxSize": "500kb" }` or `{ "maxBytes": 512000 }` | Fits the file under the cap and reports the score it got |
 | Bitrate | `{ "bitrate": 128 }` | One encode at that bitrate in kbps, no search |
 
-The tier thresholds per medium: images clear SSIMULACRA2 90 / 85 / 78, video clears VMAF 96 / 93 / 88. Audio has no metric loop; tiers map to a channel-aware Opus bitrate ladder, so a mono voice track gets half the budget of stereo music.
+The tier thresholds per medium: images clear SSIMULACRA2 90 / 85 / 78, video clears VMAF 94 / 91 / 86. Video is scored with the VMAF NEG model, which reads one to two points under the standard VMAF scale, so 94 here sits near 96 on the numbers you may know. Audio has no metric loop. Tiers map to a channel-aware Opus bitrate ladder, so a mono voice track gets half the budget of stereo music.
+
+A byte budget on H.264 video runs one two-pass encode at a planned bitrate, with no search. When the budget is too small for the source resolution, the video steps down to a smaller frame, because a sharp small picture beats a blocky large one. The result reports `probes: 1` and `qualityLevel: null`, and the audio is re-encoded to AAC to fit. A video that already fits the budget comes back untouched. Other codecs and images still search for the best level under the cap.
+
+A JPEG headed for JPEG XL is also repacked with its pixels untouched, and the smaller of that and the lossy search ships. A repacked result reports `mode: "lossless"` with no score.
 
 ## Which codecs does it use?
 
