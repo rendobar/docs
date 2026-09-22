@@ -1,0 +1,45 @@
+---
+title: "Audio levels and effects"
+sidebarTitle: "Audio"
+description: "Set levels and fades, clean up a voice recording, and draw sound onto the picture as a waveform or bars."
+icon: "waveform-lines"
+keywords: ["video audio api", "audio normalize api", "audiogram api"]
+canonical: "https://rendobar.com/docs/jobs/compose/audio"
+---
+
+Sound is a clip like any other, and a `volume` on any clip that has audio sets its level. Fades sit next to it. Everything past that is an effect on the `sound` medium, and the same effect list works on a clip or on a whole track.
+
+```json
+{
+  "asset": { "type": "audio", "src": "https://example.com/music.mp3", "volume": 0.35, "fadeIn": 1.5, "fadeOut": 2 },
+  "length": "end"
+}
+```
+
+## Levels that work
+
+
+`volume` is linear gain. With speech at 1.0: music under speech 0.10 to 0.12, music alone 0.35 to 0.5, sound effects 0.25 to 0.32. Fade music in over 1 to 2 seconds and out over 3 to 5, ending on the last frame. To duck music under speech, keep one music clip and put keyframes on its `volume`: 0.4 before the first word, 0.11 under the speech, back to 0.4 after it. `fadeIn` and `fadeOut` work alongside those keyframes.
+
+## Cleaning up a recording
+
+`loudness` brings a quiet recording to a streaming target. `voiceDenoise` removes steady background noise from under speech. `gate` closes the microphone between phrases, `highPass` cuts rumble below the voice, `eq` shapes it, and `compressor` evens out loud and quiet words.
+
+## Shaping and colour
+
+`reverb`, `echo`, `pitch`, `lowPass` and `limiter`. A limiter makes music louder without letting peaks clip.
+
+## Sound drawn on the picture
+
+`visualizer` draws the sound onto the frame for an audiogram or a podcast clip, as a waveform, bars or a level meter.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/visualizer/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/visualizer/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="visualizer">
+    <video src="https://cdn.rendobar.com/compose/showcase/visualizer/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/visualizer/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+Every sound effect and its parameters are in the [effect reference](/docs/jobs/compose/reference/effects).

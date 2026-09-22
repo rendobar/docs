@@ -1,0 +1,76 @@
+---
+title: "Transitions between clips"
+sidebarTitle: "Transitions"
+description: "Add a crossfade, fade, slide, push, wipe or zoom between two clips, and see why a hard cut is the right default."
+icon: "shuffle"
+keywords: ["video transitions api", "crossfade video api", "wipe transition json"]
+canonical: "https://rendobar.com/docs/jobs/compose/transitions"
+---
+
+Two clips next to each other on a track cut straight from one to the other. A `transition` on the second clip blends them instead. It always describes how this clip arrives, so it goes on the second of the pair.
+
+```json
+{
+  "asset": { "type": "video", "src": "https://example.com/b.mp4" },
+  "transition": { "kind": "crossfade", "duration": 0.8 }
+}
+```
+
+The blend is taken out of the two clips, not added to the timeline, so a transition never makes the render longer.
+
+## The seven kinds
+
+`crossfade` dissolves one picture into the other. `fade` goes through the background colour between them, which reads as a chapter break. `slide` moves the new clip in over the old one, `push` shoves the old one out of frame, and both take a `direction`. `wipe` reveals the new clip along a moving edge whose `shape` you choose. `zoom` scales into the new clip. `none` is the hard cut, and it is the default because it is what professional editors use for almost every join.
+
+<Columns cols={2}>
+  <Frame caption="crossfade">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/crossfade.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="fade, through the background">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/fade.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="slide, direction left">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-left.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="slide, direction up">
+    <video src="https://cdn.rendobar.com/assets/showcase/transitions/slide-up.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="push, direction left">
+    <video src="https://cdn.rendobar.com/compose/showcase/push/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/push/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="wipe, shape circle">
+    <video src="https://cdn.rendobar.com/compose/showcase/wipe/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/wipe/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Frame caption="zoom">
+  <video src="https://cdn.rendobar.com/assets/showcase/transitions/zoom.mp4" autoPlay loop muted playsInline controls />
+</Frame>
+
+## Wipe shapes
+
+`edge` is a straight line travelling in `direction`. `circle` opens from the centre, `box` opens as a rectangle, and `barnDoorHorizontal` and `barnDoorVertical` split from the middle outwards.
+
+## How long it can be
+
+A transition cannot be longer than either clip it joins. Ask for more and the render clamps it to what fits and the job carries a warning, so a template built for long clips still works when a short one arrives. [Validate](/docs/jobs/compose/output#check-it-before-you-render) reports the same warning before you spend anything.
+
+
+## How to use them
+
+Professionals cut. Keep crossfades under 10% of your joins and pick ONE decorative style (slide or zoom) per video, at section boundaries only.
+
+| Use | Transition | Duration |
+| --- | --- | --- |
+| Almost every join | none (hard cut) | 0 |
+| Time passes, mood softens | `crossfade` | 0.6 to 1.0s |
+| Chapter break | `fade` | 1 to 2s |
+| Energy, social | `slide`, `push` or `zoom` | 0.3 to 0.7s |
+
+Every field is in the [transition reference](/docs/jobs/compose/reference/transition).

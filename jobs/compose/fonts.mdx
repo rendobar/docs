@@ -1,0 +1,110 @@
+---
+title: "Fonts and languages"
+sidebarTitle: "Fonts"
+description: "Use your own font files, set fallback stacks, and render scripts that need shaping such as Arabic and Devanagari."
+icon: "language"
+keywords: ["custom fonts video api", "arabic text video api", "video font fallback"]
+canonical: "https://rendobar.com/docs/jobs/compose/fonts"
+---
+
+
+
+Name any [Google Fonts](https://fonts.google.com) family in `style.font` and it
+is fetched at render time. Nothing to upload, no configuration.
+
+```json
+"style": { "font": "Bebas Neue", "size": 96, "weight": 700 }
+```
+
+Seven families are bundled into the render image and resolve instantly, with no
+fetch: `Inter`, `Roboto`, `Montserrat`, `Poppins`, `Oswald`, `Anton`,
+`Bebas Neue`.
+
+## Your own font files
+
+
+Put the file URLs in the job's `fonts` input, each under a family name **you**
+choose, then reference that name in `style.font`.
+
+```json
+{
+  "type": "compose",
+  "inputs": {
+    "fonts": [
+      { "family": "Display", "src": "https://cdn.example.com/BrandDisplay.woff2" },
+      { "family": "Body", "src": "https://cdn.example.com/BrandText.otf" }
+    ]
+  },
+  "params": {
+    "schemaVersion": 1,
+    "timeline": {
+      "tracks": [
+        { "clips": [{ "asset": { "type": "text", "text": "LAUNCH", "style": { "font": "Display", "size": 140 } }, "start": 0, "length": 3 }] },
+        { "clips": [{ "asset": { "type": "text", "text": "in stores now", "style": { "font": "Body", "size": 54 } }, "start": 0, "length": 3 }] }
+      ]
+    },
+    "output": { "format": "mp4", "size": "1080p" }
+  }
+}
+```
+
+There is no limit on how many you declare. TTF, OTF, TTC, WOFF and WOFF2 all
+work, and an [uploaded asset's](/sdk#uploads) content URL works in
+`src` like any other input URL.
+
+Naming your own font is the point. The alternative is to reference the family
+name buried inside the file, which you have to discover with a font inspector
+and which is frequently not what the file is called. Omit `family` and that
+embedded name is read for you, so `{ "src": "..." }` on its own is also valid.
+
+A family you declare shadows a bundled one of the same name, exactly the way an
+`@font-face` rule beats a system font in CSS. Declare a font called `Inter` and
+yours is the one that renders.
+
+For a single file, `inputs.font` is the shorthand. It is addressed as `custom`:
+
+```json
+"inputs": { "font": "https://cdn.example.com/BrandDisplay.ttf" },
+"style": { "font": "custom", "size": 96 }
+```
+
+## Fallback stacks
+
+
+`style.font` takes a CSS-style list, and it falls through in order:
+
+```json
+"style": { "font": "Display, Bebas Neue, sans-serif" }
+```
+
+This is a failure policy, not just a preference. If your CDN is unreachable or
+a Google family cannot be fetched, the render continues with the next entry
+instead of failing the job or silently substituting whatever the system happens
+to have. Every substitution is reported on the job:
+
+```json
+"steps": [
+  {
+    "id": "execute-engine",
+    "meta": {
+      "fontFallbacks": [
+        "font \"Display\" is not available; trying the next entry in \"Display, Bebas Neue\""
+      ]
+    }
+  }
+]
+```
+
+A value naming nothing resolvable is rejected at submit, which catches the
+common mistake of pasting a font URL into `style.font` instead of into `fonts`.
+
+## Weights and languages
+
+
+`weight` runs 100 to 1000. Variable fonts honour it exactly; a static family
+snaps to its nearest available cut, rounding up on a tie.
+
+Latin, Cyrillic, Greek, Vietnamese, Turkish, Arabic, Hebrew, Thai, Devanagari,
+Bengali, Tamil, Amharic, Khmer, Chinese, Japanese and Korean all render, with
+right-to-left joining and conjunct shaping handled by the engine. Colour emoji
+does not render in text assets.

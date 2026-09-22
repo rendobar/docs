@@ -1,0 +1,189 @@
+---
+title: "Picture effects"
+sidebarTitle: "Effects"
+description: "Add colour grades, looks, stylised filters and layer effects to a clip or a whole track, with keyframes on any number."
+icon: "wand-magic-sparkles"
+keywords: ["video effects api", "video color grading api", "chroma key api"]
+canonical: "https://rendobar.com/docs/jobs/compose/effects"
+---
+
+
+
+Effects are one ordered list. The same list sits on a clip, on a track, or on the whole timeline, and it runs in the order you write it.
+
+```json
+{
+  "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" },
+  "start": 0,
+  "length": 3,
+  "effects": [
+    { "type": "color", "saturation": 1.2, "temperature": 6800 },
+    { "type": "vignette" }
+  ]
+}
+```
+
+On a **track**, the list covers every clip on it. On the **timeline**, it covers the finished video, which is where one grade for the whole edit belongs.
+
+```json
+"timeline": {
+  "effects": [{ "type": "look", "name": "muted" }],
+  "tracks": [
+    { "effects": [{ "type": "grain" }], "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" } }] }
+  ]
+}
+```
+
+Every entry takes an optional `start` and `length`, in seconds or as a percent of what it sits on, so an effect can run for part of a clip. Numeric parameters take keyframes, so they can move while it runs.
+
+```json
+{ "type": "blur", "radius": [{ "time": "0%", "value": 14, "easing": "easeOutCubic" }, { "time": 1, "value": 0 }] }
+```
+
+There are 34 effects, for picture and for sound, each with its own parameters in real units. The full list, with a rendered before and after for each one, is the [effects reference](https://rendobar.com/compose/effects/). The groups:
+
+| Group | Examples |
+| --- | --- |
+| Colour and looks | `color`, `look`, `lut`, `denoise`, `glow`, `grain`, `vignette`, `sharpen`, `blur` |
+| Stylise | `shake`, `glitch`, `mosaic`, `posterize`, `rgbShift`, `scanLines`, `sketch`, `trails` |
+| Layers and masking | `chromaKey`, `mask`, `blurRegion`, `outline`, `dropShadow` |
+| Sound | `eq`, `compressor`, `limiter`, `gate`, `highPass`, `lowPass`, `loudness`, `pitch`, `echo`, `reverb`, `voiceDenoise` |
+| Sound made visible | `visualizer` |
+
+Two of them read a file, which is fetched and checked like any clip source: `lut` takes a `.cube` grade, and `mask` takes a picture that decides what of the clip shows.
+
+```json
+{ "type": "mask", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png", "channel": "alpha" }
+```
+
+An effect that changes the picture is refused on a clip that has none, and one that changes the sound is refused on a silent clip, so a mistake is a 400 rather than a render that ignores it. Text and shapes draw their own outline and shadow, so `outline` and `dropShadow` are refused on them.
+
+<Columns cols={2}>
+  <Frame caption="Cinematic colour grade for mood (color)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/color-grade.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Lift flat, hazy footage (color)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/social-pop.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Dramatic black and white (look: greyscale)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/black-white.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="Chroma key onto any background (chromaKey)">
+    <video src="https://cdn.rendobar.com/assets/showcase/fx/chroma.mp4" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Colour
+
+One `color` effect carries brightness, contrast, saturation, temperature and the rest, so there is one place to correct a picture rather than nine overlapping filters. `look` applies a promoted recipe in one word, and `lut` takes a `.cube` file you supply.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/color/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/color/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="color">
+    <video src="https://cdn.rendobar.com/compose/showcase/color/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/color/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/look/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/look/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="look">
+    <video src="https://cdn.rendobar.com/compose/showcase/look/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/look/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/lut/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/lut/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="lut">
+    <video src="https://cdn.rendobar.com/compose/showcase/lut/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/lut/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Stylise
+
+`glitch`, `pixelate`, `posterize`, `rgbShift`, `scanLines`, `sketch`, `trails` and `shake`. Used for a beat or a scene change rather than a whole video.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/pixelate/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/pixelate/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="pixelate, size 24">
+    <video src="https://cdn.rendobar.com/compose/showcase/pixelate/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/pixelate/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/glitch/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/glitch/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="glitch">
+    <video src="https://cdn.rendobar.com/compose/showcase/glitch/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/glitch/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/trails/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/trails/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="trails">
+    <video src="https://cdn.rendobar.com/compose/showcase/trails/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/trails/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Layers
+
+`chromaKey` removes a solid background, `mask` cuts a clip to a shape, `blurRegion` hides a face or a plate, and `outline` and `dropShadow` edge a layer that has transparency.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/chroma-key/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/chroma-key/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="chromaKey">
+    <video src="https://cdn.rendobar.com/compose/showcase/chroma-key/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/chroma-key/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/mask/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/mask/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="mask">
+    <video src="https://cdn.rendobar.com/compose/showcase/mask/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/mask/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/blur-region/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/blur-region/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="blurRegion">
+    <video src="https://cdn.rendobar.com/compose/showcase/blur-region/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/blur-region/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/drop-shadow/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/drop-shadow/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="dropShadow">
+    <video src="https://cdn.rendobar.com/compose/showcase/drop-shadow/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/drop-shadow/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Anything the engine can do
+
+
+`{ "type": "engine" }` reaches the rest of the render engine by its own names, for the case a promoted effect does not cover. Every service and property is checked before the job starts, so a typo is a 400 and not a failed render.
+
+```json
+{ "type": "engine", "service": "avfilter.colorize", "params": { "av.hue": 200, "av.saturation": 0.6 } }
+```
+
+An engine entry that duplicates a promoted effect is refused, so there is one way to ask for each thing. The names come from the engine and can change when it is upgraded, which the promoted names never do.
+
+Every effect and every parameter is in the [effect reference](/docs/jobs/compose/reference/effects). Sound effects are on [Audio levels and effects](/docs/jobs/compose/audio).

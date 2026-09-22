@@ -1,0 +1,117 @@
+---
+title: "How the timeline works"
+sidebarTitle: "Timeline"
+description: "Build a compose timeline from tracks and clips, and learn when to leave start and length out of it entirely."
+icon: "layer-group"
+keywords: ["video timeline api", "json video tracks", "video clip timing"]
+canonical: "https://rendobar.com/docs/jobs/compose/timeline"
+---
+
+A timeline is tracks, and a track is clips. The first track is the background and every track after it draws over the one before. That is the whole model, and the rest of this page is what falls out of it.
+
+
+The model is two ideas:
+
+- **Tracks stack.** The first track is the background. Each later track composites on top of the ones below it: overlays, titles, picture-in-picture.
+- **Clips sit in time.** A clip can carry a `start` and a `length` in seconds, and it can leave both out. Two clips on the same track are joined by a transition. A gap between them plays nothing.
+
+So a multi-track timeline is layers (tracks) of sequences (clips). That is the whole structure.
+
+## Timing is optional
+
+
+Every clip sits in a **container**: the scene it belongs to, or the whole video. Two sentences cover every case.
+
+- **Omit `length`** and the clip runs as long as its **content** does, never past its container.
+- **Write `length: "end"`** and it runs to the end of its **container**, whatever its content says.
+
+Content means the source's duration, or the trim span, or the source duration divided by `speed` (so `speed: 0.5` on a 4 second clip occupies 8 seconds), or a composition's own end.
+
+Text and images have no duration of their own, so for them the two sentences say the same thing. A title with no `length` stays up for the whole video, which is what a watermark wants.
+
+`start` follows the same shape: omit it and the clip begins after everything already placed on its track, pulled back by any transition immediately before it. Give it a number and that is seconds from the start of its container.
+
+Set either field wherever you want something else. Every timeline written with full timing keeps rendering exactly as it did.
+
+## Worked examples
+
+
+A music bed. The source is three minutes long, the video is not, and `"end"` is how you say so without totalling the clips above it.
+
+```json
+"tracks": [
+  { "clips": [
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/river.mp4" } },
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/forest.mp4" } }
+  ] },
+  { "clips": [
+    { "asset": { "type": "audio", "src": "https://cdn.rendobar.com/assets/showcase/music.mp3", "volume": 0.35, "fadeOut": 2 },
+      "length": "end" }
+  ] }
+]
+```
+
+A watermark. It has no duration of its own, so it needs nothing at all.
+
+```json
+{ "clips": [
+  { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" },
+    "transform": { "scale": 0.15, "position": { "x": "88%", "y": "12%" } }, "opacity": 0.8 }
+] }
+```
+
+Both stop on the last frame, whatever the clips elsewhere add up to. Add another clip later and they still do.
+
+## The rules that fall out of it
+
+
+A clip running to the end of the **video** is measured against every clip that is not, so two of them on different tracks both land on the real end rather than chasing each other. It runs to the last frame, so nothing may follow it on the same track, and a timeline where nothing has a length of its own has no end to measure and is rejected.
+
+A clip never runs past its container, so a 6 second video in a 3 second scene plays 3 seconds, and a 2 second video in a 5 second scene plays 2. That applies to a length you wrote as well as one the engine worked out.
+
+`"end"` is the opposite request and does not cap: it asks for the container's full extent whatever the source holds. On a source shorter than the container that is impossible, and the job is rejected for outrunning its source. Leave the length off instead, or trim less.
+
+Inside a `composition`, `start` and `length` both stay required. A nested timeline's length is set by the clip hosting it, so there is nothing to append to and no container to measure against.
+
+## Add a layer
+
+
+A second track renders over the first. This lays an animated title over the video.
+
+```json
+"tracks": [
+  { "clips": [
+    { "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" }, "start": 0, "length": 3 }
+  ] },
+  { "clips": [
+    { "asset": { "type": "text", "text": "Coastal Escape", "style": { "font": "Inter", "size": 84, "color": "#FFFFFF" } },
+      "start": 0, "length": 3 }
+  ] }
+]
+```
+
+## Scene-first authoring
+
+
+Tracks give you precise multi-track control. For a sequential edit, you can instead describe a list of scenes. Each scene is a self-contained segment with its own clips. A scene's `transition` blends INTO it from the previous scene, so put it on the second of two scenes. `overlays` is a flat list of clips that sit over the whole composition, like a persistent logo or watermark.
+
+```json
+{
+  "scenes": [
+    { "duration": 4,
+      "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/river.mp4" } }] },
+    { "duration": 4, "transition": { "transition": "crossfade", "duration": 0.6 },
+      "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/forest.mp4" } }] }
+  ],
+  "overlays": [
+    { "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" },
+      "transform": { "scale": 0.2, "position": { "x": "88%", "y": "12%" } } }
+  ]
+}
+```
+
+A scene's clips can omit `start` and `length` to span the whole scene, and a scene can omit its own `duration` to take the length of the video inside it. Every clip field works the same as in tracks mode. `scenes` and `tracks` are mutually exclusive: a timeline uses one or the other.
+
+## Where to go next
+
+Clips blend into each other on [Transitions](/docs/jobs/compose/transitions). Anything that moves is on [Keyframes and easing](/docs/jobs/compose/motion). Every field a clip takes is listed in the [clip reference](/docs/jobs/compose/reference/timeline).
