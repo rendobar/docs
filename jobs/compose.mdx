@@ -1,7 +1,7 @@
 ---
 title: "Compose: render from a timeline"
 sidebarTitle: "Compose"
-description: "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects."
+description: "Render a video from a declarative JSON timeline: tracks, clips, transitions, text, shapes, keyframes and effects."
 icon: "film"
 keywords: ["video compose api", "json timeline to video", "video transitions api", "video editing api", "compose"]
 canonical: "https://rendobar.com/docs/jobs/compose"
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/jobs/compose"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/jobs/compose#article",
       "headline": "Compose: render from a timeline",
-      "description": "Render a video from a declarative JSON timeline. Tracks, clips, transitions, text, and per-clip effects.",
+      "description": "Render a video from a declarative JSON timeline: tracks, clips, transitions, text, shapes, keyframes and effects.",
       "datePublished": "2026-06-21",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
@@ -140,7 +140,7 @@ curl -X POST https://api.rendobar.com/jobs \
 </CodeGroup>
 
 <Info>
-**Assets:** video, image, text, audio, composition · **Output:** mp4 / webm / gif / mp3 (audio only) / jpg / png (still frame)
+**Assets:** video, image, audio, text, timer, subtitles, shape, animation (Lottie), composition · **Output:** mp4 / webm / gif / mp3 (audio only) / jpg / png (still frame)
 </Info>
 
 Without `trim`, a clip plays its source from the start for `length` seconds, or for the whole source when `length` is left off. To use a specific segment instead, add `trim: { from, to }` (in source seconds) to the asset. `length` is always the timeline duration. `trim` only chooses which part of the source fills it.
@@ -171,14 +171,21 @@ Writing the timing out by hand gives the same render. The second clip starts `du
 ]
 ```
 
-`slide` also accepts `direction: "left" | "right" | "up" | "down"`.
-
 | Transition | Effect |
 | --- | --- |
 | `crossfade` | A dissolves directly into B |
 | `fade` | A dips through black, then B fades up |
-| `slide` | B slides in over A from an edge (directional) |
-| `zoom` | B grows in from the center |
+| `slide` | B slides in over A from an edge |
+| `push` | B pushes A off the frame |
+| `wipe` | An edge travels across, in a shape or along your own greyscale map |
+| `zoom` | B grows in from the centre |
+| `none` | A hard cut, no blend |
+
+`slide`, `push` and `wipe` take a `direction`: `left`, `right`, `up` or `down`. A wipe takes a `shape` instead (`circle`, `box`, `barnDoorHorizontal`, `barnDoorVertical`), or a `map`: a greyscale image of your own, where black turns over first and white last.
+
+```json
+{ "type": "transition", "transition": "wipe", "shape": "circle", "duration": 0.8 }
+```
 
 <Columns cols={2}>
   <Frame caption="crossfade">
@@ -273,110 +280,185 @@ A second track renders over the first. This lays an animated title over the vide
 ]
 ```
 
-## Effects on a clip
+## Effects
 
-Effects are fields on a clip. Stack as many as you like on one clip. Each example below shows the source on the left and the rendered result on the right. Exact fields and ranges are in the [Reference](#clip-fields).
+Effects are one ordered list. The same list sits on a clip, on a track, or on the whole timeline, and it runs in the order you write it.
 
 ```json
 {
   "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" },
   "start": 0,
   "length": 3,
-  "color": { "saturation": 1.2, "temperature": 6800 },
-  "speed": 0.8,
-  "transform": { "scale": 1.1, "animateTo": { "scale": 1.3 } }
+  "effects": [
+    { "type": "color", "saturation": 1.2, "temperature": 6800 },
+    { "type": "vignette" }
+  ]
 }
 ```
 
-### Color and filters
+On a **track**, the list covers every clip on it. On the **timeline**, it covers the finished video, which is where one grade for the whole edit belongs.
 
-`color` grades a clip with `contrast`, `saturation`, `temperature`, `brightness`, `gamma`, and `hue`. `filter` applies a one-shot look like `greyscale` or `boost`.
+```json
+"timeline": {
+  "effects": [{ "type": "look", "name": "muted" }],
+  "tracks": [
+    { "effects": [{ "type": "grain" }], "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" } }] }
+  ]
+}
+```
+
+Every entry takes an optional `start` and `length`, in seconds or as a percent of what it sits on, so an effect can run for part of a clip. Numeric parameters take keyframes, so they can move while it runs.
+
+```json
+{ "type": "blur", "radius": [{ "time": "0%", "value": 14, "easing": "easeOutCubic" }, { "time": 1, "value": 0 }] }
+```
+
+There are 34 effects, for picture and for sound, each with its own parameters in real units. The full list, with a rendered before and after for each one, is the [effects reference](https://rendobar.com/compose/effects/). The groups:
+
+| Group | Examples |
+| --- | --- |
+| Colour and looks | `color`, `look`, `lut`, `denoise`, `glow`, `grain`, `vignette`, `sharpen`, `blur` |
+| Stylise | `shake`, `glitch`, `mosaic`, `posterize`, `rgbShift`, `scanLines`, `sketch`, `trails` |
+| Layers and masking | `chromaKey`, `mask`, `blurRegion`, `outline`, `dropShadow` |
+| Sound | `eq`, `compressor`, `limiter`, `gate`, `highPass`, `lowPass`, `loudness`, `pitch`, `echo`, `reverb`, `voiceDenoise` |
+| Sound made visible | `visualizer` |
+
+Two of them read a file, which is fetched and checked like any clip source: `lut` takes a `.cube` grade, and `mask` takes a picture that decides what of the clip shows.
+
+```json
+{ "type": "mask", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png", "channel": "alpha" }
+```
+
+An effect that changes the picture is refused on a clip that has none, and one that changes the sound is refused on a silent clip, so a mistake is a 400 rather than a render that ignores it. Text and shapes draw their own outline and shadow, so `outline` and `dropShadow` are refused on them.
 
 <Columns cols={2}>
-  <Frame caption="Cinematic color grade for mood (color)">
+  <Frame caption="Cinematic colour grade for mood (color)">
     <video src="https://cdn.rendobar.com/assets/showcase/fx/color-grade.mp4" autoPlay loop muted playsInline controls />
   </Frame>
   <Frame caption="Lift flat, hazy footage (color)">
     <video src="https://cdn.rendobar.com/assets/showcase/fx/social-pop.mp4" autoPlay loop muted playsInline controls />
   </Frame>
-  <Frame caption="Dramatic black and white (filter: greyscale)">
+  <Frame caption="Dramatic black and white (look: greyscale)">
     <video src="https://cdn.rendobar.com/assets/showcase/fx/black-white.mp4" autoPlay loop muted playsInline controls />
   </Frame>
-</Columns>
-
-### Motion and speed
-
-`transform` positions, scales, and rotates a clip. Add `animateTo` for a Ken Burns move, or scale a clip down and place it on an overlay track for picture-in-picture. `speed` is a playback multiplier: below `1` for slow motion, above `1` for a timelapse.
-
-<Frame caption="Picture-in-picture webcam (transform.scale)">
-  <video src="https://cdn.rendobar.com/assets/showcase/fx/pip-webcam.mp4" autoPlay loop muted playsInline controls />
-</Frame>
-
-### Compositing
-
-`chromaKey` keys out a solid background color so you can drop a presenter onto any scene. `blendMode` controls how an overlay blends with the track below. `opacity` (a number or keyframes) and `blur` handle fades and soft backdrops.
-
-<Columns cols={2}>
   <Frame caption="Chroma key onto any background (chromaKey)">
     <video src="https://cdn.rendobar.com/assets/showcase/fx/chroma.mp4" autoPlay loop muted playsInline controls />
   </Frame>
-  <Frame caption="Cinematic light-leak glow (blendMode: screen)">
-    <video src="https://cdn.rendobar.com/assets/showcase/fx/light-leak.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="Clean fade in and out (opacity keyframes)">
-    <video src="https://cdn.rendobar.com/assets/showcase/fx/fade-in-out.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="Blurred backdrop keeps text readable (blur)">
-    <video src="https://cdn.rendobar.com/assets/showcase/fx/blur-text.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
 </Columns>
+
+### Anything the engine can do
+
+`{ "type": "engine" }` reaches the rest of the render engine by its own names, for the case a promoted effect does not cover. Every service and property is checked before the job starts, so a typo is a 400 and not a failed render.
+
+```json
+{ "type": "engine", "service": "avfilter.colorize", "params": { "av.hue": 200, "av.saturation": 0.6 } }
+```
+
+An engine entry that duplicates a promoted effect is refused, so there is one way to ask for each thing. The names come from the engine and can change when it is upgraded, which the promoted names never do.
+
+## Keyframes
+
+Any numeric field that moves takes a list instead of a value: `position`, `scale`, `rotate`, `opacity`, `volume`, a shape's `color` and `radius`, a box's `size`, and any numeric effect parameter.
+
+```json
+"transform": {
+  "scale": [
+    { "time": "0%", "value": 1, "easing": "easeInOutSine" },
+    { "time": "100%", "value": 1.12 }
+  ]
+}
+```
+
+- `time` is seconds from the clip's start, or a percent of its length, so `"100%"` means the last frame without knowing how long the clip is.
+- `easing` shapes the move **from that keyframe to the next one**, so it goes on the first of a pair. The last keyframe's easing is never used.
+- 33 easings: `step`, `linear`, `smooth`, and the `easeIn`, `easeOut` and `easeInOut` families over Sine, Quad, Cubic, Quart, Quint, Expo, Circ, Back, Elastic and Bounce.
+
+A Ken Burns push-in is the example above. A fade is the same shape on `opacity`, and ducking music under a voice is the same shape on `volume`.
 
 ## Text and titles
 
-A `text` asset renders a styled title. Set the `font`, `size`, `weight`, `color`, `position`, and an `animate` entrance (`fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`). Put one text clip on its own track for a title card, another low and left for a lower-third name tag. `font` takes any Google Fonts family by name, or a family from your own file. See [Fonts](#fonts).
+A `text` asset renders a styled title. `style` holds the type: `font`, `size`, `weight`, `color`, `align`, a `stroke`, a `background` box, a `shadow`, and an `animate` entrance (`fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`). `font` takes any Google Fonts family by name, or a family from your own file. See [Fonts](#fonts).
+
+Where it sits is the clip's `transform`, the same field that places every other clip.
 
 ```json
-"asset": {
-  "type": "text",
-  "text": "Coastal Escape",
-  "style": {
-    "font": "Inter",
-    "size": 84,
-    "weight": 800,
-    "color": "#FFFFFF",
-    "position": { "x": "50%", "y": "38%" },
-    "animate": { "type": "slideUp", "duration": 0.7 }
-  }
+{
+  "asset": {
+    "type": "text",
+    "text": "Coastal Escape",
+    "style": {
+      "font": "Inter",
+      "size": 84,
+      "weight": 800,
+      "color": "#FFFFFF",
+      "stroke": { "color": "#000000", "width": 6 },
+      "animate": { "type": "slideUp", "duration": 0.7 }
+    }
+  },
+  "transform": { "position": { "x": "50%", "y": "38%" } },
+  "start": 0,
+  "length": 3
 }
 ```
+
+Colours are hex: `#RGB`, `#RRGGBB`, or `#RRGGBBAA` with alpha.
 
 <Frame caption="Add a title card and a lower-third name tag (text)">
   <video src="https://cdn.rendobar.com/assets/showcase/fx/title-lowerthird.mp4" autoPlay loop muted playsInline />
 </Frame>
 
-## Shapes
+### A clock
 
-A `shape` asset draws a rect, ellipse, circle, triangle, diamond, or any SVG
-path you paste in. No image to make, no file to host, and it stays sharp at any
-output resolution.
+A `timer` counts over the clip's own length, up or down, in the format you name.
 
 ```json
-"asset": {
-  "type": "shape",
-  "color": "#0A0A0ACC",
-  "position": { "x": "50%", "y": "86%" },
-  "size": { "width": "100%", "height": "22%" }
+{ "asset": { "type": "timer", "direction": "down", "format": "MM:SS", "style": { "font": "JetBrains Mono", "size": 96, "color": "#FFFFFF" } }, "start": 0, "length": 10 }
+```
+
+`format` is `SS`, `SS.S`, `SS.SS`, `MM:SS`, `MM:SS.SS` or `HH:MM:SS`. It takes the same `style` as text.
+
+### Subtitles
+
+One `subtitles` clip holds every line, either written in the timeline or read from an `.srt` or `.vtt` file. Times are seconds from the clip's start.
+
+```json
+{ "asset": { "type": "subtitles", "cues": [
+    { "start": 0, "end": 1.8, "text": "Subtitles live in the timeline." },
+    { "start": 2, "end": 4, "text": "One clip, every line." }
+  ], "reveal": "typewriter", "style": { "font": "Inter", "size": 44, "color": "#FFFFFF", "background": "#000000B0" } },
+  "transform": { "position": { "x": "50%", "y": "88%" }, "anchor": "topLeft" } }
+```
+
+Or point it at a file: `{ "type": "subtitles", "src": "https://example.com/captions.srt" }`. For word-level captions burned from speech instead, see [animated captions](/jobs/captions/animate).
+
+### Lottie animations
+
+An `animation` asset plays a Lottie `.json` file, the kind After Effects, Figma and LottieFiles export, with a transparent background. It plays once, for its own length, and fits the frame like an image.
+
+```json
+{ "asset": { "type": "animation", "src": "https://example.com/logo-reveal.json" }, "transform": { "scale": 0.4, "position": { "x": "50%", "y": "50%" } } }
+```
+
+Export it self-contained: a file that pulls images or fonts from elsewhere is refused, because nothing reaches the renderer except through the checked download.
+
+## Shapes
+
+A `shape` asset draws a rect, ellipse, circle, triangle, diamond, or any SVG path you paste in. No image to make, no file to host, and it stays sharp at any output resolution.
+
+```json
+{
+  "asset": { "type": "shape", "color": "#0A0A0ACC" },
+  "transform": { "size": { "width": "100%", "height": "22%" }, "position": { "x": "50%", "y": "86%" } }
 }
 ```
 
-That is a bar across the lower third, dark enough to read a title on and thin
-enough to see the footage through. Put it on a track below the text.
+That is a bar across the lower third, dark enough to read a title on and thin enough to see the footage through. Put it on a track below the text.
 
 <Columns cols={3}>
   <Frame caption="a bar, plus a text track">
     <video src="https://cdn.rendobar.com/assets/showcase/shapes/lower-third.mp4" autoPlay loop muted playsInline controls />
   </Frame>
-  <Frame caption="animateTo on the width">
+  <Frame caption="a width that grows">
     <video src="https://cdn.rendobar.com/assets/showcase/shapes/progress-bar.mp4" autoPlay loop muted playsInline controls />
   </Frame>
   <Frame caption="radius with a shadow">
@@ -393,166 +475,148 @@ enough to see the footage through. Put it on a track below the text.
   </Frame>
 </Columns>
 
-Only `type` and `size` are required. Everything else on this page is optional,
-and the defaults are chosen so the common cases need almost none of it.
+A shape is placed the way every clip is placed: by the clip's `transform`. `size` is its box, `position` its centre unless `anchor` says otherwise, and `rotate` turns it about that anchor. The asset itself only says what to draw.
 
-Two things to know up front. `position` is the **centre** of the shape unless
-you set `anchor`, so a full-width bar sits at `x: "50%"` whatever its height.
-And there is no `length`, because a shape has no duration of its own: like text
-and images it runs to the end of its container unless you give it one.
+With no `size` a shape fills the frame, which is a scrim or a background in one line. Like text it has no duration of its own, so leaving `length` off runs it to the end of its container.
 
-`width` is a percent of the frame's width, `height` a percent of its height.
+`width` is a percent of the frame's width and `height` a percent of its height. Both also take pixels as plain numbers.
 
 ### Leave the height out to get a circle
 
-Omit `size.height` and the shape is made **square in pixels**. That is the only
-way to get a true circle or square on a frame that is not square, and it is the
-one thing about shapes worth memorising.
+Omit `size.height` and the box is made **square in pixels**. That is the only way to get a true circle or square on a frame that is not square, and it is the one thing about shapes worth memorising.
 
-A `10%` by `10%` box on a 16:9 frame is 192 by 108 pixels. Rounding it fully
-gives a pill, not a circle. Omit the height and the engine derives 17.8% for
-you.
+A `10%` by `10%` box on a 16:9 frame is 192 by 108 pixels. Rounding it fully gives a pill, not a circle. Omit the height and the engine derives 17.8% for you.
 
 ```json
-{ "type": "shape", "shape": "circle", "color": "#059669",
-  "position": { "x": "88%", "y": "18%" }, "size": { "width": "12%" } }
+{
+  "asset": { "type": "shape", "shape": "circle", "color": "#059669" },
+  "transform": { "size": { "width": "12%" }, "position": { "x": "88%", "y": "18%" } }
+}
 ```
 
-`shape: "circle"` is `ellipse` with that rule applied, so it rejects an explicit
-height rather than quietly ignoring one. The same omission works on every kind:
-a `rect` with no height is a square, a `diamond` with no height is a regular one.
+`shape: "circle"` is `ellipse` with that rule applied, so it rejects an explicit height rather than quietly ignoring one. The same omission works on every kind: a `rect` with no height is a square, a `diamond` with no height is a regular one.
 
 ### Anchor
 
-`anchor: "topLeft"` points `position` at the corner instead of the centre. It is
-what makes letterbox bars arithmetic-free.
+`anchor: "topLeft"` points `position` at the box's corner instead of its centre. It is what makes letterbox bars arithmetic-free.
 
 ```json
-{ "type": "shape", "color": "#000000", "anchor": "topLeft",
-  "position": { "x": "0%", "y": "90%" }, "size": { "width": "100%", "height": "10%" } }
+{
+  "asset": { "type": "shape", "color": "#000000" },
+  "transform": { "anchor": "topLeft", "position": { "x": "0%", "y": "90%" }, "size": { "width": "100%", "height": "10%" } }
+}
 ```
 
 ### Fills, flat and gradient
 
-`color` takes `#RRGGBB`, or the 8-digit `#RRGGBBAA` for a constant translucency
-the way `#0A0A0ACC` does above.
+`color` takes `#RRGGBB`, or the 8-digit `#RRGGBBAA` for a constant translucency the way `#0A0A0ACC` does above.
 
-Do not reach for the clip's `opacity` instead. `opacity` dims the fill as well
-as fading it, so a half-opacity white box renders grey rather than white you can
-see through. Keep `opacity` for animated fades.
+Do not reach for the clip's `opacity` instead. `opacity` fades the whole clip, so keep it for fades and put a constant translucency in the colour.
 
-Give `color` **two** colours and it is a gradient. `gradient` names the
-direction: `vertical` (the default), `horizontal`, `diagonal` or `radial`.
+Give `color` **two** colours and it is a gradient. `gradient` names the direction: `vertical` (the default), `horizontal`, `diagonal` or `radial`.
 
 ```json
-{ "type": "shape", "color": ["#E11D48", "#3B82F6"], "gradient": "diagonal",
-  "position": { "x": "50%", "y": "50%" }, "size": { "width": "40%", "height": "30%" } }
+{
+  "asset": { "type": "shape", "color": ["#E11D48", "#3B82F6"], "gradient": "diagonal" },
+  "transform": { "size": { "width": "40%", "height": "30%" }, "position": { "x": "50%", "y": "50%" } }
+}
 ```
 
-The gradient maps to the **shape**, not the frame, so a small badge shows the
-whole ramp instead of a sliver of one. Stops take the 8-digit form too, which is
-how you get a scrim that fades to nothing: `["#0A0A0A00", "#0A0A0AFF"]`.
+The gradient maps to the **shape**, not the frame, so a small badge shows the whole ramp instead of a sliver of one. Stops take the 8-digit form too, which is how you get a scrim that fades to nothing: `["#0A0A0A00", "#0A0A0AFF"]`.
 
 ### Outlines, with a real hole
 
-`stroke` draws a border just inside the shape's edge, its `width` in pixels of
-the output frame. Give the shape a `color` too and you get a filled shape with a
-border; `radius` rounds both together.
+`stroke` draws a border just inside the shape's edge, its `width` in pixels of the output frame. Give the shape a `color` too and you get a filled shape with a border; `radius` rounds both together.
 
-Leave `color` out and only the outline draws. What it surrounds is genuinely
-transparent, not filled with black, so the footage shows through the middle.
-That works on every kind except a path.
+Leave `color` out and only the outline draws. What it surrounds is genuinely transparent, not filled with black, so the footage shows through the middle. That works on every kind except a path.
 
 ```json
-{ "type": "shape", "shape": "ellipse",
-  "position": { "x": "62%", "y": "40%" },
-  "size": { "width": "26%", "height": "40%" },
-  "stroke": { "color": "#F59E0B", "width": 5 } }
+{
+  "asset": { "type": "shape", "shape": "ellipse", "stroke": { "color": "#F59E0B", "width": 5 } },
+  "transform": { "size": { "width": "26%", "height": "40%" }, "position": { "x": "62%", "y": "40%" } }
+}
 ```
 
 ### Rounded corners
 
-`radius` runs from `0` (square) to `1` (fully round) on a `rect`. At `1` a wide
-box becomes a pill and a square one becomes a circle.
+`radius` runs from `0` (square) to `1` (fully round) on a `rect`. At `1` a wide box becomes a pill and a square one becomes a circle.
 
 ### Drop shadows
 
-`shadow` follows the shape, including its outline, its rotation and its
-animation. Every field has a default, so `"shadow": {}` is a sensible shadow.
+`shadow` follows the shape, including its outline, its rotation and its animation. Every field has a default, so `"shadow": {}` is a sensible shadow.
 
 ```json
-{ "type": "shape", "color": ["#FFFFFF", "#E5E7EB"], "radius": 0.3,
-  "stroke": { "color": "#111827", "width": 3 },
-  "shadow": { "color": "#00000099", "blur": 14, "x": 8, "y": 10 },
-  "position": { "x": "30%", "y": "50%" }, "size": { "width": "34%", "height": "40%" } }
+{
+  "asset": {
+    "type": "shape",
+    "color": ["#FFFFFF", "#E5E7EB"],
+    "radius": 0.3,
+    "stroke": { "color": "#111827", "width": 3 },
+    "shadow": { "color": "#00000099", "blur": 14, "x": 8, "y": 10 }
+  },
+  "transform": { "size": { "width": "34%", "height": "40%" }, "position": { "x": "30%", "y": "50%" } }
+}
 ```
 
-### Rotation turns about the shape, not the frame
+### Rotation turns about the anchor, not the frame
 
-`rotate` is degrees clockwise about the shape's **own** centre, so a shape spins
-where it sits rather than orbiting the middle of the frame. A diagonal rule is a
-thin rect and one field:
+`transform.rotate` is degrees clockwise about the shape's own anchor, so it spins where it sits rather than orbiting the middle of the frame. A diagonal rule is a thin rect and one field:
 
 ```json
-{ "type": "shape", "color": "#FFFFFF", "rotate": 30,
-  "position": { "x": "50%", "y": "72%" },
-  "size": { "width": "40%", "height": "0.8%" } }
+{
+  "asset": { "type": "shape", "color": "#FFFFFF" },
+  "transform": { "rotate": 30, "size": { "width": "40%", "height": "0.8%" }, "position": { "x": "50%", "y": "72%" } }
+}
 ```
 
-There is no `line` type for the same reason there is no `square` type: a line is
-a rect with a small height, and `rotate` is what makes it diagonal.
+There is no `line` type for the same reason there is no `square` type: a line is a rect with a small height, and `rotate` is what makes it diagonal.
 
 ### Softness
 
-`softness` runs 0 to 1 and feathers the edge. At 0.2 to 0.4 an ellipse reads as
-a spotlight or a vignette rather than a hard-edged disc. A full-frame ellipse
-with `softness: 0.5` and a radial `["#00000000", "#000000CC"]` fill is a
-vignette with no image asset at all.
+`softness` runs 0 to 1 and feathers the edge. At 0.2 to 0.4 an ellipse reads as a spotlight or a vignette rather than a hard-edged disc. A full-frame ellipse with `softness: 0.5` and a radial `["#00000000", "#000000CC"]` fill is a vignette with no image asset at all.
 
 ### Paths
 
-`shape: "path"` takes SVG path data straight out of a design tool. `viewBox`
-gives the coordinate space it was drawn in, defaulting to `"0 0 100 100"`, and
-the path is scaled into `size` so the same data works at any size on any frame.
+`shape: "path"` takes SVG path data straight out of a design tool. `viewBox` gives the coordinate space it was drawn in, defaulting to `"0 0 100 100"`, and the path is scaled into the transform's `size` so the same data works at any size on any frame.
 
 ```json
-{ "type": "shape", "shape": "path", "viewBox": "0 0 24 24",
-  "path": "M12 21C12 21 3 14.5 3 8.5C3 5.5 5.5 3 8.5 3C10.4 3 12 4.5 12 4.5C12 4.5 13.6 3 15.5 3C18.5 3 21 5.5 21 8.5C21 14.5 12 21 12 21Z",
-  "color": "#E11D48", "position": { "x": "50%", "y": "50%" }, "size": { "width": "20%" } }
+{
+  "asset": {
+    "type": "shape",
+    "shape": "path",
+    "viewBox": "0 0 24 24",
+    "path": "M12 21C12 21 3 14.5 3 8.5C3 5.5 5.5 3 8.5 3C10.4 3 12 4.5 12 4.5C12 4.5 13.6 3 15.5 3C18.5 3 21 5.5 21 8.5C21 14.5 12 21 12 21Z",
+    "color": "#E11D48"
+  },
+  "transform": { "size": { "width": "20%" }, "position": { "x": "50%", "y": "50%" } }
+}
 ```
 
-`M L H V C S Q T Z` are supported, absolute and relative. Elliptical arcs (`A`)
-are refused rather than approximated, so re-export with arcs converted to
-curves. A path takes a fill, a gradient, a shadow, rotation and softness, but
-not a `stroke`: outlining arbitrary path data needs true path offsetting.
+`M L H V C S Q T Z` are supported, absolute and relative. Elliptical arcs (`A`) are refused rather than approximated, so re-export with arcs converted to curves. A path takes a fill, a gradient, a shadow, rotation and softness, but not a `stroke`: outlining arbitrary path data needs true path offsetting.
 
 ### Animation
 
-`animateTo` moves `position`, `size`, `rotate`, `color` and `radius` over the
-clip. `easing` is `linear` by default, which is what a progress bar or a timer
-wants, or `smooth` for an entrance.
+Everything that moves is [keyframes](#keyframes): `position`, `size` and `rotate` on the transform, `color` and `radius` on the shape. A progress bar is a width that grows.
 
 ```json
-{ "type": "shape", "color": "#FFFFFF", "anchor": "topLeft",
-  "position": { "x": "2%", "y": "86%" },
-  "size": { "width": "0%", "height": "1.5%" },
-  "animateTo": { "size": { "width": "96%" }, "easing": "smooth" } }
+{
+  "asset": { "type": "shape", "color": "#FFFFFF" },
+  "transform": {
+    "anchor": "topLeft",
+    "position": { "x": "2%", "y": "86%" },
+    "size": [
+      { "time": "0%", "value": { "width": "0%", "height": "1.5%" }, "easing": "smooth" },
+      { "time": "100%", "value": { "width": "96%", "height": "1.5%" } }
+    ]
+  }
+}
 ```
 
-A dimension you leave out of `animateTo` keeps its starting value, so the bar
-above grows sideways without changing height. A shape that is square in pixels
-stays square as it grows, so an animated circle does not turn into an ellipse
-halfway through. A solid colour can animate into a gradient, and a square can
-round itself off with `animateTo.radius`.
-
-An animated `rotate` has no limit: rotation is baked into the shape's own
-outline, so animating from 0 to 720 is two full turns.
+A shape that is square in pixels stays square as it grows, so an animated circle does not turn into an ellipse halfway through. A solid colour can animate into a gradient, and a square can round itself off with keyframes on `radius`. An animated `rotate` has no limit: 0 to 720 is two full turns.
 
 ### Combinations the API refuses
 
-Two engine primitives draw shapes and they have different abilities, so a few
-combinations are rejected at submit time rather than rendered wrong. Each error
-names the fix.
+Two engine primitives draw shapes and they have different abilities, so a few combinations are rejected at submit time rather than rendered wrong. Each error names the fix.
 
 | Not combinable | Why | What to do instead |
 | --- | --- | --- |
@@ -560,18 +624,13 @@ names the fix.
 | `radius` with no `color` | an outline-only shape is drawn by the primitive with no corner rounding | give it a fill |
 | `radius` with `rotate` or `softness` | the primitive that rounds corners cannot turn or feather | drop one of them |
 | `stroke` on a `path` | outlining arbitrary path data needs true path offsetting | draw the outline into the path itself |
-| `transform` on any shape | it moves the whole frame, not the shape in it, so the result lands somewhere neither value asked for | use `position`, `size` and `rotate` |
+| `speed` on a shape | there is no file to play faster | animate it with keyframes |
 
 ### What else a shape takes
 
-`blendMode` mixes it with the layer below, `blur` softens the whole thing,
-colour grading tints it, and opacity keyframes fade it in and out. A track
-holding only shapes composites as a base layer, so a solid colour background is
-a timeline that references no files at all.
+`blendMode` mixes it with the layer below, effects apply to it like any clip, and opacity keyframes fade it in and out. A track holding only shapes composites as a base layer, so a solid colour background is a timeline that references no files at all.
 
-There is no arbitrary path stroke and no per-corner radius. Anything past that
-is still an `image` asset.
-
+There is no arbitrary path stroke and no per-corner radius. Anything past that is still an `image` asset.
 
 ## Fonts
 
@@ -675,15 +734,56 @@ does not render in text assets.
 
 ## Set the canvas
 
-`output` controls the resolution, frame rate, and format. A `9:16` canvas with a `crop` on the clip turns landscape footage into a vertical Reel that fills the frame, no black bars.
+`output` controls the size, frame rate, format and encoder. Give it an explicit `resolution`, or a named `size` preset like `"1080p"`, `"tiktok"` or `"reels"`.
 
 ```json
 "output": { "format": "mp4", "resolution": { "width": 1080, "height": 1920 }, "fps": 30 }
 ```
 
+A 9:16 canvas with `"fit": "cover"` or a `crop` on the clip turns landscape footage into a vertical Reel that fills the frame, with no black bars. `"fit": "blur"` keeps all of the picture instead, over a blurred copy of itself.
+
+`background` fills whatever the clips do not cover. It takes a hex colour, or `"transparent"`, which png and webm keep as real alpha. mp4 has no transparency, so it refuses that rather than rendering black.
+
+```json
+{
+  "schemaVersion": 1,
+  "output": { "format": "webm", "size": "1080p" },
+  "timeline": {
+    "background": "transparent",
+    "tracks": [{ "clips": [{ "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" } }] }]
+  }
+}
+```
+
+`range` renders part of the timeline instead of all of it, and on `jpg` and `png` its `start` is the frame you get.
+
+```json
+"output": { "format": "png", "size": "1080p", "range": { "start": 4.5 } }
+```
+
 <Frame caption="Landscape footage reframed to a vertical 9:16 Reel (crop)">
   <video src="https://cdn.rendobar.com/assets/showcase/fx/reframe.mp4" autoPlay loop muted playsInline controls style={{ maxWidth: "300px" }} />
 </Frame>
+
+### Check it before you render
+
+`validate` parses a timeline exactly as a render would and costs nothing. It returns the params as the engine reads them, anything it had to upgrade from an older shape, and warnings for settings the render will ignore.
+
+<CodeGroup>
+
+```ts SDK
+const check = await client.compose.validate(params);
+if (!check.valid) console.error(check.problems);
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/compose/validate \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "params": { "schemaVersion": 1, "output": { "format": "mp4", "size": "1080p" }, "timeline": { "tracks": [{ "clips": [{ "asset": { "type": "video", "src": "https://example.com/a.mp4" } }] }] } } }'
+```
+
+</CodeGroup>
 
 ## Scene-first authoring
 
@@ -725,7 +825,7 @@ Professionals cut. Keep crossfades under 10% of your joins and pick ONE decorati
 | Almost every join | none (hard cut) | 0 |
 | Time passes, mood softens | `crossfade` | 0.6 to 1.0s |
 | Chapter break | `fade` | 1 to 2s |
-| Energy, social | `slide` or `zoom` | 0.3 to 0.7s |
+| Energy, social | `slide`, `push` or `zoom` | 0.3 to 0.7s |
 
 ### Text placement and size
 
@@ -748,11 +848,11 @@ With faces in frame stay inside saturation 0.7 to 1.3, hue within 8 degrees, tem
 
 ### Audio levels
 
-`volume` is linear gain. With speech at 1.0: music under speech 0.10 to 0.12, music alone 0.35 to 0.5, sound effects 0.25 to 0.32. Fade music in over 1 to 2 seconds and out over 3 to 5, ending on the last frame. To duck music under speech, split the music into three clips: before speech at 0.4 with a 0.4s fadeOut, under speech at 0.11, after speech at 0.4 with a 1.5s fadeIn.
+`volume` is linear gain. With speech at 1.0: music under speech 0.10 to 0.12, music alone 0.35 to 0.5, sound effects 0.25 to 0.32. Fade music in over 1 to 2 seconds and out over 3 to 5, ending on the last frame. To duck music under speech, keep one music clip and put keyframes on its `volume`: 0.4 before the first word, 0.11 under the speech, back to 0.4 after it. `fadeIn` and `fadeOut` work alongside those keyframes.
 
 ### Photos need motion
 
-A static photo in a video reads as a mistake. Give every image clip a gentle Ken Burns move: `"transform": { "scale": 1, "position": { "x": "50%", "y": "50%" }, "animateTo": { "scale": 1.12 } }`.
+A static photo in a video reads as a mistake. Give every image clip a gentle Ken Burns move: `"transform": { "position": { "x": "50%", "y": "50%" }, "scale": [{ "time": "0%", "value": 1, "easing": "easeInOutSine" }, { "time": "100%", "value": 1.12 }] }`.
 
 ## Reference
 
@@ -763,15 +863,17 @@ The `output` object controls the render target. Provide either an explicit `reso
 | Field | Values |
 | --- | --- |
 | `format` | `mp4` (default), `webm`, `gif` (no audio), `mp3` (audio only), `jpg`, `png` (still frame) |
-| `resolution` | `{ width, height }` (integer pixels). Wins over `size` when both are set |
+| `resolution` | `{ width, height }` (integer pixels). Wins over `size` when both are set, and `validate` warns when they are |
 | `size` | Named preset: `360p`, `720p`, `1080p`, `1440p`, `4k`, `tiktok`, `reels`, `shorts`, `instagram-story`, `instagram-feed`, `square`, `youtube-hd`, `youtube-4k`, `x-landscape`, `linkedin` |
 | `fps` | Frame rate (default `30`) |
 | `quality` | Encoder ladder: `draft` (fast preview), `standard` (default, web delivery), `high`, `max`. Sets rate factor, encoder speed, and audio bitrate together |
-| `videoCodec` | `h264`, `vp9` (optional, per-format default otherwise) |
+| `videoCodec` | `h264`, `vp9` (optional, per-format default otherwise). A codec the container cannot write is refused at submit |
 | `audioCodec` | `aac`, `opus`, `mp3` (optional) |
 | `crf` | Advanced: constant rate factor, lower is higher quality. Overrides `quality`. `0`..`51` for h264, up to `63` for vp9 |
 | `encoderPreset` | Advanced: h264 speed preset from `ultrafast` to `veryslow`. Slower means smaller files at the same quality |
-| `frameTime` | second of the timeline to capture for `jpg` / `png` (default `0`) |
+| `range` | `{ start, length? }` in seconds: render part of the timeline. On `jpg` and `png`, `start` is the frame captured (default `0`) |
+
+An mp3 needs no size and ignores one. A setting the chosen format has no use for is a `validate` warning, never a rejected job.
 
 ### Assets
 
@@ -779,12 +881,15 @@ A clip's `asset` is one of:
 
 | `type` | Fields |
 | --- | --- |
-| `video` | `src`, `trim` `{ from, to }` (seconds in the source), `volume` (default `1`, `0` mutes) |
+| `video` | `src`, `trim` `{ from, to }` (seconds in the source), `volume` (a number or keyframes, default `1`, `0` mutes) |
 | `image` | `src` |
-| `audio` | `src`, `trim`, `volume`, `fadeIn`, `fadeOut` (seconds) |
+| `audio` | `src`, `trim`, `volume` (a number or keyframes), `fadeIn`, `fadeOut` (seconds, and they work with volume keyframes) |
 | `text` | `text`, `style` |
-| `shape` | `shape` (`rect`, `ellipse`, `circle`, `triangle`, `diamond`, `path`), `color` (one colour, or two for a gradient; omit for outline-only), `gradient`, `stroke` `{ color, width }`, `shadow` `{ color, blur, x, y }`, `position` (the **centre** by default), `anchor`, `size` `{ width, height? }` (omit the height for a shape square in pixels), `radius`, `rotate`, `softness`, `path` + `viewBox`, `animateTo` `{ position, size, rotate, color, radius, easing }`. See [Shapes](#shapes) |
-| `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip. Every clip field below applies to a composition clip too, except `speed` (set speed on the clips inside the composition instead) |
+| `timer` | `direction` (`up` \| `down`), `format` (`SS`, `SS.S`, `SS.SS`, `MM:SS`, `MM:SS.SS`, `HH:MM:SS`), `style` |
+| `subtitles` | `cues` `[{ start, end, text }]` or `src` (an `.srt` or `.vtt` file), `reveal` (`lines` \| `typewriter`), `style` |
+| `animation` | `src`: a Lottie `.json` file, self-contained, with a transparent background. `trim` |
+| `shape` | `shape` (`rect`, `ellipse`, `circle`, `triangle`, `diamond`, `path`), `color` (one colour, or two for a gradient; omit for outline-only), `gradient`, `stroke` `{ color, width }`, `shadow` `{ color, blur, x, y }`, `radius`, `softness`, `path` + `viewBox`. Placed by the clip's `transform`. See [Shapes](#shapes) |
+| `composition` | `timeline`, a nested `{ tracks }` rendered and composited as a single clip. Every clip field applies to it too, except `speed`, which needs a file of its own. Compositions nest three levels deep |
 
 ### Clip fields
 
@@ -792,18 +897,22 @@ Every clip has an `asset`. `start` and `length` are optional, and `length` also 
 
 | Field | What it does |
 | --- | --- |
-| `opacity` | `0`..`1`, or keyframes `[{ time, value, easing: step \| linear \| smooth }]`. Keyframe `time` is in seconds from the clip's start |
-| `transform` | `position {x,y}` (percent strings, the clip's center by default), `scale`, `rotate` (degrees), `anchor` (`center` \| `topLeft`), `fit` (`contain` \| `fill`), `animateTo` (Ken Burns end state). Without `position` the clip pins to the top-left corner |
-| `transform.animateTo` | End state for an eased Ken Burns move over the clip's duration: any of `position`, `scale`, `rotate`. Omitted fields keep their start value, so `animateTo: { scale: 1.4 }` is a plain zoom |
-| `crop` | `top` / `right` / `bottom` / `left`, each a percent string like `"10%"`. The kept region scales back up to fill the frame |
-| `speed` | playback rate (`0.5` = slow motion, `2` = fast, and pitch shifts with speed). Avoid a slow-motion clip as the outgoing side of a transition, it can run out of frames mid-overlap |
-| `color` | `brightness` (-1..1), `contrast` (0..4), `saturation` (0..3), `gamma` (0.1..10), `hue` (-180..180), `temperature` (1000..40000 K) |
-| `filter` | `greyscale`, `negative`, `boost`, `muted`, `lighten`, `darken`, `contrast` (mutually exclusive with `color`) |
-| `blur` / `sharpen` | gaussian blur strength / unsharp amount |
-| `chromaKey` | `color` (hex), `similarity` (0..1, default 0.2). Key a clip on an overlay track so the removed color reveals the track below |
+| `effects` | The ordered list, on this clip. See [Effects](#effects) |
+| `opacity` | `0`..`1`, or [keyframes](#keyframes) |
+| `transform.position` | `{ x, y }`, each a percent string or a number of pixels. The clip's centre unless `anchor` says otherwise. Omit it and the clip is centred |
+| `transform.scale` | Size relative to the frame: `1` fills it, `0.3` is a corner picture-in-picture |
+| `transform.rotate` | Degrees clockwise about the anchor |
+| `transform.anchor` | `center` (default) or `topLeft`: what `position` points at |
+| `transform.size` | `{ width, height? }` in percent or pixels: a box of the clip's own shape. Omit the height for a box square in pixels. `fit` fills it |
+| `transform.fit` | `contain` (default), `cover` (fills, crops the overflow), `fill` (stretches), `blur` (fills the bars with a blurred copy; not with a placed or sized clip) |
+| `transform.corners` | `{ topLeft, topRight, bottomRight, bottomLeft }`, each `{ x, y }`: pins the clip onto a surface in the shot. The other form of a transform, so not combined with position, scale, rotate or fit |
+| `crop` | `top` / `right` / `bottom` / `left`, each a percent string. The kept region scales back up to fill the frame. `radius` `0`..`1` rounds its corners, which rides the transform into a rounded picture-in-picture |
+| `speed` | Playback rate (`0.5` = slow motion, `2` = fast, and pitch shifts with speed). Avoid a slow-motion clip as the outgoing side of a transition, it can run out of frames mid-overlap |
 | `blendMode` | `normal` (default), `multiply`, `screen`, `overlay`, `darken`, `lighten`, `add`, `difference`. Applies where the clip meets the layer below it |
-| `pan` | stereo balance, `-1` (left) to `1` (right) |
+| `pan` | Stereo balance, `-1` (left) to `1` (right) |
 | `flip` | `{ horizontal, vertical }` |
+
+Every one of `position`, `scale`, `rotate`, `size` and `corners` takes [keyframes](#keyframes) as well as a value.
 
 ### Transitions
 
@@ -813,9 +922,13 @@ Place between two clips on a track: `{ "type": "transition", "transition": <kind
 | --- | --- |
 | `crossfade` | A dissolves directly into B |
 | `fade` | A dips through black, then B fades up |
-| `slide` | B slides in from an edge (`direction`: left, right, up, down) |
-| `zoom` | B grows in from the center |
+| `slide` | B slides in over A from an edge (`direction`: left, right, up, down) |
+| `push` | B pushes A off the frame (`direction`) |
+| `wipe` | An edge travels across: `direction`, or a `shape` (`circle`, `box`, `barnDoorHorizontal`, `barnDoorVertical`), or your own greyscale `map` |
+| `zoom` | B grows in from the centre |
 | `none` | Hard cut, no blend |
+
+Leave the second clip's `start` out and the engine overlaps the pair by `duration`. When both clips are placed by hand, the overlap they have is what plays, and `validate` warns if it is not the duration you wrote.
 
 ### Scenes
 
@@ -830,23 +943,25 @@ The scene-first shape, when you use `scenes` instead of `tracks`:
 
 ### Text style
 
-Fields on a text asset's `style`:
+Fields on the `style` of a `text`, `timer` or `subtitles` asset:
 
 | Field | Notes |
 | --- | --- |
 | `font` | Font family, or a CSS fallback stack like `"Display, Inter, sans-serif"`. Any Google Fonts family works by name. Families you declare in the `fonts` input win over both. See [Fonts](#fonts) |
-| `size` | Point size |
+| `size` | Size in pixels of the output frame |
 | `weight` | 100..1000 (default 400) |
-| `color` | Hex fill |
+| `color` | Hex fill: `#RGB`, `#RRGGBB` or `#RRGGBBAA` |
 | `align` | `left`, `center`, `right` |
-| `position` | `{ x, y }` as percent strings |
 | `stroke` | `{ color, width }` outline |
 | `background` | Hex fill behind the text |
 | `shadow` | `{ color, opacity, offsetX, offsetY }` |
 | `animate` | `{ type, duration }` (type: fade, slideUp, slideDown, slideLeft, slideRight) |
 
+Where the text sits is the clip's `transform`, like any other clip.
+
 ## See also
 
+- [Effects reference](https://rendobar.com/compose/effects/): every effect and transition, rendered before and after
 - [Job output](/concepts/job#the-output): the output shape every job returns
 - [Animated captions](/jobs/captions/animate): word-level captions over a rendered video
 - [Compress](/jobs/compress): shrink the render to a size or quality budget
