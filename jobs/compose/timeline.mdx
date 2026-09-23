@@ -62,6 +62,20 @@ A watermark. It has no duration of its own, so it needs nothing at all.
 
 Both stop on the last frame, whatever the clips elsewhere add up to. Add another clip later and they still do.
 
+The music bed above, drawn out. Track 1 is the background and the two clips follow each other because neither names a `start`. The music names `length: "end"`, so it stops on the last frame whatever the video adds up to.
+
+```mermaid
+gantt
+    title Two clips and a music bed, in seconds
+    dateFormat X
+    axisFormat %S
+    section Track 2, music
+    audio, length "end" : 0, 12
+    section Track 1, video
+    river.mp4            : 0, 6
+    forest.mp4           : 6, 12
+```
+
 ## The rules that fall out of it
 
 

@@ -51,6 +51,10 @@ A `timer` counts over the clip's own length, up or down, in the format you name.
 
 `format` is `SS`, `SS.S`, `SS.SS`, `MM:SS`, `MM:SS.SS` or `HH:MM:SS`. It takes the same `style` as text.
 
+<Frame caption="timer, counting down from the clip's own length">
+  <video src="https://cdn.rendobar.com/compose/showcase/timer/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/timer/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
+
 ## Subtitles
 
 
@@ -66,6 +70,10 @@ One `subtitles` clip holds every line, either written in the timeline or read fr
 
 Or point it at a file: `{ "type": "subtitles", "src": "https://example.com/captions.srt" }`. For word-level captions burned from speech instead, see [animated captions](/jobs/captions/animate).
 
+<Frame caption="subtitles, every line in one clip, timed to the words">
+  <video src="https://cdn.rendobar.com/compose/showcase/subtitles/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/subtitles/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
+
 ## Lottie animations
 
 
@@ -76,5 +84,9 @@ An `animation` asset plays a Lottie `.json` file, the kind After Effects, Figma 
 ```
 
 Export it self-contained: a file that pulls images or fonts from elsewhere is refused, because nothing reaches the renderer except through the checked download.
+
+<Frame caption="a Lottie lower third sweeping in, its words a compose text clip">
+  <video src="https://cdn.rendobar.com/compose/showcase/animation/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/animation/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
 
 Fonts are their own page: [Fonts and languages](/docs/jobs/compose/fonts). Every text field is in the [text reference](/docs/jobs/compose/reference/text).

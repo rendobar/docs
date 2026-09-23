@@ -27,6 +27,17 @@ Any numeric field that moves takes a list instead of a value: `position`, `scale
 
 A Ken Burns push-in is the example above. A fade is the same shape on `opacity`, and ducking music under a voice is the same shape on `volume`.
 
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/keyframes/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/keyframes/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="scale 1 to 1.15, easeInOutSine, over 5 seconds">
+    <video src="https://cdn.rendobar.com/compose/showcase/keyframes/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/keyframes/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+A still photograph becomes a shot. Nothing else changed between the two.
+
 ## Where keyframes are accepted
 
 `transform.position`, `transform.scale`, `transform.rotate`, `transform.size`, clip `opacity`, clip `volume`, a shape's `color` and `radius`, and every effect parameter marked animatable in the [effect reference](/docs/jobs/compose/reference/effects).
