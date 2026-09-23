@@ -7,7 +7,7 @@ keywords: ["video keyframes api", "ken burns effect api", "video easing curves"]
 canonical: "https://rendobar.com/docs/jobs/compose/motion"
 ---
 
-Any numeric field that moves takes a list of keyframes instead of a value. One shape covers a Ken Burns push, a fade, a colour change and ducking music under a voice.
+One shape covers a Ken Burns push, a fade, a colour change and ducking music under a voice.
 
 
 Any numeric field that moves takes a list instead of a value: `position`, `scale`, `rotate`, `opacity`, `volume`, a shape's `color` and `radius`, a box's `size`, and any numeric effect parameter.
@@ -26,15 +26,6 @@ Any numeric field that moves takes a list instead of a value: `position`, `scale
 - 33 easings: `step`, `linear`, `smooth`, and the `easeIn`, `easeOut` and `easeInOut` families over Sine, Quad, Cubic, Quart, Quint, Expo, Circ, Back, Elastic and Bounce.
 
 A Ken Burns push-in is the example above. A fade is the same shape on `opacity`, and ducking music under a voice is the same shape on `volume`.
-
-<Columns cols={2}>
-  <Frame caption="before">
-    <video src="https://cdn.rendobar.com/compose/showcase/engine/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/engine/before.jpg" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="scale 1 to 1.12, easeInOutSine">
-    <video src="https://cdn.rendobar.com/compose/showcase/engine/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/engine/after.jpg" autoPlay loop muted playsInline controls />
-  </Frame>
-</Columns>
 
 ## Where keyframes are accepted
 
