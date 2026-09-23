@@ -78,7 +78,6 @@
                   {
                     "group": "Reference",
                     "icon": "table-list",
-                    "expanded": true,
                     "pages": [
                       "jobs/compose/reference/timeline",
                       "jobs/compose/reference/video",
