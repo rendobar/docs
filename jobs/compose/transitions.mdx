@@ -7,14 +7,17 @@ keywords: ["video transitions api", "crossfade video api", "wipe transition json
 canonical: "https://rendobar.com/docs/jobs/compose/transitions"
 ---
 
-Two clips next to each other on a track cut straight from one to the other. A `transition` on the second clip blends them instead. It always describes how this clip arrives, so it goes on the second of the pair.
+Two clips next to each other on a track cut straight from one to the other. To blend them, put a transition BETWEEN them. It is a clip like any other, with its own entry in the track's list, and there is no transition field on an ordinary clip.
 
 ```json
-{
-  "asset": { "type": "video", "src": "https://example.com/b.mp4" },
-  "transition": { "kind": "crossfade", "duration": 0.8 }
-}
+"clips": [
+  { "asset": { "type": "video", "src": "https://example.com/a.mp4" } },
+  { "type": "transition", "transition": "crossfade", "duration": 0.8 },
+  { "asset": { "type": "video", "src": "https://example.com/b.mp4" } }
+]
 ```
+
+A scene takes its own `transition` instead, which describes how that scene arrives from the one before it.
 
 The blend is taken out of the two clips, not added to the timeline, so a transition never makes the render longer.
 

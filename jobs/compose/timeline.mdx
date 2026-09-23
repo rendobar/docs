@@ -104,6 +104,15 @@ A second track renders over the first. This lays an animated title over the vide
 ]
 ```
 
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/background/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/background/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="background #059669">
+    <video src="https://cdn.rendobar.com/compose/showcase/background/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/background/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
 ## Scene-first authoring
 
 
@@ -125,6 +134,32 @@ Tracks give you precise multi-track control. For a sequential edit, you can inst
 ```
 
 A scene's clips can omit `start` and `length` to span the whole scene, and a scene can omit its own `duration` to take the length of the video inside it. Every clip field works the same as in tracks mode. `scenes` and `tracks` are mutually exclusive: a timeline uses one or the other.
+
+<Frame caption="two scenes, crossfaded">
+  <video src="https://cdn.rendobar.com/compose/showcase/scenes/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/scenes/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/overlays/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/overlays/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="a logo over both scenes">
+    <video src="https://cdn.rendobar.com/compose/showcase/overlays/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/overlays/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## A timeline as one clip
+
+A `composition` asset holds a whole timeline of its own, so a group of layers can be moved, scaled and faded together rather than one at a time.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/composition/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/composition/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="scaled and tilted as one clip">
+    <video src="https://cdn.rendobar.com/compose/showcase/composition/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/composition/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
 
 ## Where to go next
 
