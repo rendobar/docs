@@ -1,0 +1,131 @@
+---
+title: "Placing and framing a clip"
+sidebarTitle: "Framing"
+description: "Set a clip's position, scale, rotation, box, crop and opacity, and see every one of them before and after on one shot."
+icon: "crop-simple"
+keywords: ["video position api", "picture in picture api", "crop video json"]
+canonical: "https://rendobar.com/docs/jobs/compose/framing"
+---
+
+Every clip takes the same set of fields, whatever it holds. Each one below is the same shot on the same backdrop, changed in exactly one way.
+
+## Where it sits
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/position/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/position/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="position x 76%, y 26%">
+    <video src="https://cdn.rendobar.com/compose/showcase/position/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/position/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+`position` is the clip's centre by default, as a percent of the frame or in pixels. `anchor` changes what the point refers to.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/anchor/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/anchor/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="anchor topLeft, same coordinates">
+    <video src="https://cdn.rendobar.com/compose/showcase/anchor/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/anchor/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## How big it is
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/scale/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/scale/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="scale 0.34">
+    <video src="https://cdn.rendobar.com/compose/showcase/scale/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/scale/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+`scale` multiplies the clip's natural size. `size` gives it a box of its own, which the picture fills the way [fit](/docs/jobs/compose/output#how-a-picture-fills-its-box) says, so a box plus cover is how a wide shot becomes a tall panel.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/size/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/size/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="size 30% by 88%, fit cover">
+    <video src="https://cdn.rendobar.com/compose/showcase/size/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/size/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Turning and mirroring
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/rotate/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/rotate/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="rotate -7 degrees">
+    <video src="https://cdn.rendobar.com/compose/showcase/rotate/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/rotate/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/flip/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/flip/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="flip horizontal">
+    <video src="https://cdn.rendobar.com/compose/showcase/flip/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/flip/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Trimming the edges
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/crop/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/crop/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="crop 18% top and bottom, 12% each side">
+    <video src="https://cdn.rendobar.com/compose/showcase/crop/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/crop/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/crop-radius/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/crop-radius/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="crop radius 0.14">
+    <video src="https://cdn.rendobar.com/compose/showcase/crop-radius/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/crop-radius/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Pinning to a surface
+
+`corners` is the other form of a transform: four points instead of a position. It puts footage on a screen or a sign in the shot, and it does not combine with position, scale, rotate or fit.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/corners/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/corners/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="corners pinned to the laptop screen">
+    <video src="https://cdn.rendobar.com/compose/showcase/corners/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/corners/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## How solid, and how fast
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/opacity/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/opacity/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="opacity 0.45">
+    <video src="https://cdn.rendobar.com/compose/showcase/opacity/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/opacity/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+Keyframes on `opacity` are how a clip fades in or out. Anything that moves is on [Keyframes and easing](/docs/jobs/compose/motion).
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/speed/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/speed/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="speed 2">
+    <video src="https://cdn.rendobar.com/compose/showcase/speed/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/speed/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+Every field is in the [clip reference](/docs/jobs/compose/reference/timeline#clip).

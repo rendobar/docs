@@ -65,6 +65,7 @@
                 "pages": [
                   "jobs/compose",
                   "jobs/compose/timeline",
+                  "jobs/compose/framing",
                   "jobs/compose/transitions",
                   "jobs/compose/motion",
                   "jobs/compose/text",
