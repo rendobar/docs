@@ -58,21 +58,6 @@ Two of them read a file, which is fetched and checked like any clip source: `lut
 
 An effect that changes the picture is refused on a clip that has none, and one that changes the sound is refused on a silent clip, so a mistake is a 400 rather than a render that ignores it. Text and shapes draw their own outline and shadow, so `outline` and `dropShadow` are refused on them.
 
-<Columns cols={2}>
-  <Frame caption="Cinematic colour grade for mood (color)">
-    <video src="https://cdn.rendobar.com/assets/showcase/fx/color-grade.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="Lift flat, hazy footage (color)">
-    <video src="https://cdn.rendobar.com/assets/showcase/fx/social-pop.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="Dramatic black and white (look: greyscale)">
-    <video src="https://cdn.rendobar.com/assets/showcase/fx/black-white.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="Chroma key onto any background (chromaKey)">
-    <video src="https://cdn.rendobar.com/assets/showcase/fx/chroma.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-</Columns>
-
 ## Colour
 
 One `color` effect carries brightness, contrast, saturation, temperature and the rest, so there is one place to correct a picture rather than nine overlapping filters. `look` applies a promoted recipe in one word, and `lut` takes a `.cube` file you supply.

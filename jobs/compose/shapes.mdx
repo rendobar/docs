@@ -20,32 +20,24 @@ A `shape` asset draws a rect, ellipse, circle, triangle, diamond, or any SVG pat
 
 That is a bar across the lower third, dark enough to read a title on and thin enough to see the footage through. Put it on a track below the text.
 
-<Columns cols={3}>
-  <Frame caption="a bar, plus a text track">
-    <video src="https://cdn.rendobar.com/assets/showcase/shapes/lower-third.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="a width that grows">
-    <video src="https://cdn.rendobar.com/assets/showcase/shapes/progress-bar.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="radius with a shadow">
-    <video src="https://cdn.rendobar.com/assets/showcase/shapes/rounded-card.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="a circle, two colours">
-    <video src="https://cdn.rendobar.com/assets/showcase/shapes/gradient-badge.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="a stroke with no fill">
-    <video src="https://cdn.rendobar.com/assets/showcase/shapes/outline-box.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="pasted path data">
-    <video src="https://cdn.rendobar.com/assets/showcase/shapes/svg-path.mp4" autoPlay loop muted playsInline controls />
-  </Frame>
-</Columns>
-
 A shape is placed the way every clip is placed: by the clip's `transform`. `size` is its box, `position` its centre unless `anchor` says otherwise, and `rotate` turns it about that anchor. The asset itself only says what to draw.
 
 With no `size` a shape fills the frame, which is a scrim or a background in one line. Like text it has no duration of its own, so leaving `length` off runs it to the end of its container.
 
 `width` is a percent of the frame's width and `height` a percent of its height. Both also take pixels as plain numbers.
+
+<Frame caption="a bar and a text track">
+  <video src="https://cdn.rendobar.com/compose/showcase/lower-third/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/lower-third/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/progress-bar/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/progress-bar/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="width keyframed 2% to 86%">
+    <video src="https://cdn.rendobar.com/compose/showcase/progress-bar/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/progress-bar/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
 
 <Frame caption="rect, ellipse, circle, triangle, diamond">
   <video src="https://cdn.rendobar.com/compose/showcase/shape-kinds/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-kinds/after.jpg" autoPlay loop muted playsInline controls />
