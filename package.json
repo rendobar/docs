@@ -5,6 +5,7 @@
     "validate:nav": "node scripts/validate-nav-and-redirects.mjs",
     "validate:plan-limits": "node scripts/check-plan-limits.mjs",
     "validate:webhooks": "node scripts/check-webhooks-guide.mjs",
-    "validate:templates": "node scripts/check-template-links.mjs"
+    "validate:templates": "node scripts/check-template-links.mjs",
+    "validate:build": "mint validate"
   }
 }
