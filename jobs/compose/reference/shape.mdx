@@ -23,7 +23,7 @@ Set `asset.type` to `"shape"`. These are its own fields, on top of the [clip fie
 | `viewBox` | string | The coordinate space `path` is written in, like "0 0 24 24" for a pasted icon. Defaults to "0 0 100 100", so a path written in percentages needs no viewBox at all. |
 | `radius` | number \| object[] | Corner rounding on a rect. 0 is square, 1 is fully round, which gives a pill on a wide box and a circle on a square one. Keyframes round it off or square it up. Rectangles only, and not combinable with a turn or `softness`. default `0`. |
 | `softness` | number | Feathers the edge; 0 is a hard edge. 0.1 to 0.3 makes a soft spotlight or vignette instead of a hard-edged shape. Not available on a rect that has a `radius`. default `0`, min 0, max 1. |
-| `shadow` | object | A drop shadow behind the shape. Every field has a default, so "shadow": {} is a sensible one. It follows the shape, including its outline, its turn and its animation. |
+| `shadow` | object | A drop shadow behind the shape. Every field has a default, so "shadow": \{\} is a sensible one. It follows the shape, including its outline, its turn and its animation. |
 | `shadow.color` | string | Shadow colour, usually black with alpha like "#00000080". default `"#00000080"`, pattern `^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$`. |
 | `shadow.blur` | number | Blur radius in pixels. 8-20 reads as a soft drop shadow; 0 is a hard offset copy. default `12`, min 0. |
 | `shadow.x` | number | Horizontal offset in pixels, positive to the right. default `6`. |
