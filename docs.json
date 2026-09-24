@@ -62,8 +62,8 @@
                 "group": "Compose",
                 "icon": "film",
                 "expanded": true,
+                "root": "jobs/compose",
                 "pages": [
-                  "jobs/compose",
                   "jobs/compose/timeline",
                   "jobs/compose/framing",
                   "jobs/compose/transitions",

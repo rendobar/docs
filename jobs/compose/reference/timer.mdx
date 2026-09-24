@@ -1,6 +1,6 @@
 ---
 title: "Timer asset reference"
-sidebarTitle: "timer"
+sidebarTitle: "timer fields"
 description: "Add a clock that counts up or down over the length of its own clip, with every field the asset accepts listed."
 icon: "stopwatch"
 keywords: ["video countdown api", "timer overlay video", "clock on video"]
@@ -24,7 +24,7 @@ Set `asset.type` to `"timer"`. These are its own fields, on top of the [clip fie
 | `style.stroke` | object | Outline around the glyphs. A 2-4px black stroke keeps white text readable on bright footage. |
 | `style.background` | string | Solid box color behind the text, hex. Omit for no box. pattern `^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$`. |
 | `style.align` | `"left"` \| `"center"` \| `"right"` | How the lines line up, and which side of the text sits on the clip's transform.position x: left starts there, center is centred on it, right ends there. Place the text with the clip's transform, not here. default `"center"`. |
-| `style.animate` | object | Entrance animation. Omit for text that is simply present. |
+| `style.animate` | object | Entrance animation. Omit for text that is present from its first frame. |
 | `style.shadow` | object | Drop shadow behind the text, adds depth and readability. |
 
 Fields marked `*` are required. Every table on this page is generated from the schema the API validates with, so it cannot drift from what a render accepts.
