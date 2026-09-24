@@ -115,7 +115,35 @@ function main() {
     }
   }
 
-  // --- 3. Nav entries with no file behind them ---
+  // --- 3. A page file sitting beside a directory of the same name ---
+  //
+  // `jobs/compose.mdx` next to `jobs/compose/` shipped on 2026-09-24 and broke
+  // EVERY page under that directory in production: all 24 children served the
+  // parent's content. The sitemap and llms.txt listed them, so the build saw
+  // them; only the routing collapsed. `mint dev` does not reproduce it, which
+  // is why it reached the live site.
+  //
+  // The working shape is `<dir>/index.mdx`, which is what `storage/` and
+  // `automation/` already use. `/docs/<dir>` still serves it, so no URL moves.
+  for (const slug of [...pageSlugs].sort()) {
+    const asDir = join(ROOT, slug);
+    let isDir = false;
+    try {
+      isDir = statSync(asDir).isDirectory();
+    } catch {
+      // No directory of that name: nothing to collide with.
+    }
+    if (isDir) {
+      violations.push(
+        `"${slug}.mdx" sits beside the directory "${slug}/". On Mintlify's production build ` +
+          `every page under that directory serves "${slug}" instead of its own content, and ` +
+          `\`mint dev\` does not reproduce it. Move it to "${slug}/index.mdx" and list that ` +
+          `as the group's first page (see storage/index and automation/index).`
+      );
+    }
+  }
+
+  // --- 4. Nav entries with no file behind them ---
   for (const slug of [...navSlugs].sort()) {
     if (!pageSlugs.has(slug)) {
       violations.push(`Navigation lists "${slug}", but no matching .md/.mdx file exists.`);
