@@ -58,7 +58,44 @@
             "pages": [
               "jobs/ffmpeg",
               "jobs/ffprobe",
-              "jobs/compose",
+              {
+                "group": "Compose",
+                "icon": "film",
+                "expanded": true,
+                "root": "jobs/compose",
+                "pages": [
+                  "jobs/compose/timeline",
+                  "jobs/compose/framing",
+                  "jobs/compose/transitions",
+                  "jobs/compose/motion",
+                  "jobs/compose/text",
+                  "jobs/compose/fonts",
+                  "jobs/compose/shapes",
+                  "jobs/compose/effects",
+                  "jobs/compose/audio",
+                  "jobs/compose/output",
+                  "jobs/compose/craft",
+                  {
+                    "group": "Reference",
+                    "icon": "table-list",
+                    "pages": [
+                      "jobs/compose/reference/timeline",
+                      "jobs/compose/reference/video",
+                      "jobs/compose/reference/image",
+                      "jobs/compose/reference/audio",
+                      "jobs/compose/reference/text",
+                      "jobs/compose/reference/shape",
+                      "jobs/compose/reference/timer",
+                      "jobs/compose/reference/subtitles",
+                      "jobs/compose/reference/animation",
+                      "jobs/compose/reference/composition",
+                      "jobs/compose/reference/transition",
+                      "jobs/compose/reference/output",
+                      "jobs/compose/reference/effects"
+                    ]
+                  }
+                ]
+              },
               "jobs/compress",
               {
                 "group": "Captions",

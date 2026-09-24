@@ -1,0 +1,49 @@
+---
+title: "Keyframes and easing"
+sidebarTitle: "Motion"
+description: "Add keyframes to position, scale, rotation, opacity, volume and any numeric effect parameter, with 33 easings."
+icon: "chart-line"
+keywords: ["video keyframes api", "ken burns effect api", "video easing curves"]
+canonical: "https://rendobar.com/docs/jobs/compose/motion"
+---
+
+One shape covers a Ken Burns push, a fade, a colour change and ducking music under a voice.
+
+
+Any numeric field that moves takes a list instead of a value: `position`, `scale`, `rotate`, `opacity`, `volume`, a shape's `color` and `radius`, a box's `size`, and any numeric effect parameter.
+
+```json
+"transform": {
+  "scale": [
+    { "time": "0%", "value": 1, "easing": "easeInOutSine" },
+    { "time": "100%", "value": 1.12 }
+  ]
+}
+```
+
+- `time` is seconds from the clip's start, or a percent of its length, so `"100%"` means the last frame without knowing how long the clip is.
+- `easing` shapes the move **from that keyframe to the next one**, so it goes on the first of a pair. The last keyframe's easing is never used.
+- 33 easings: `step`, `linear`, `smooth`, and the `easeIn`, `easeOut` and `easeInOut` families over Sine, Quad, Cubic, Quart, Quint, Expo, Circ, Back, Elastic and Bounce.
+
+A Ken Burns push-in is the example above. A fade is the same shape on `opacity`, and ducking music under a voice is the same shape on `volume`.
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/keyframes/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/keyframes/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="scale 1 to 1.15, easeInOutSine, over 5 seconds">
+    <video src="https://cdn.rendobar.com/compose/showcase/keyframes/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/keyframes/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+A still photograph becomes a shot. Nothing else changed between the two.
+
+## Where keyframes are accepted
+
+`transform.position`, `transform.scale`, `transform.rotate`, `transform.size`, clip `opacity`, clip `volume`, a shape's `color` and `radius`, and every effect parameter marked animatable in the [effect reference](/docs/jobs/compose/reference/effects).
+
+## The 33 easings
+
+`step` holds the value until the next keyframe. `linear` moves at a constant rate. `smooth` eases in and out gently. The remaining 30 are the `easeIn`, `easeOut` and `easeInOut` families over Sine, Quad, Cubic, Quart, Quint, Expo, Circ, Back, Elastic and Bounce.
+
+Back, Elastic and Bounce overshoot the value you gave, which is the point of them, so leave room at the edges of the frame when you use one on `position`.

@@ -54,7 +54,14 @@ function toSlug(filePath) {
   return relative(ROOT, filePath).replace(/\\/g, '/').replace(/\.mdx?$/, '');
 }
 
-/** Recursively collect every page string under any `pages` array in the nav. */
+/**
+ * Recursively collect every page string in the nav.
+ *
+ * A page reaches the nav two ways: as an entry in a `pages` array, or as a
+ * group's `root`, which Mintlify renders as the group's own landing page. Only
+ * `pages` was collected here, so giving a group a `root` reported that page as
+ * an orphan even though it is the most reachable page in the section.
+ */
 function collectNavSlugs(node, out = new Set()) {
   if (Array.isArray(node)) {
     for (const item of node) collectNavSlugs(item, out);
@@ -62,7 +69,9 @@ function collectNavSlugs(node, out = new Set()) {
   }
   if (node && typeof node === 'object') {
     for (const [key, value] of Object.entries(node)) {
-      if (key === 'pages' && Array.isArray(value)) {
+      if (key === 'root' && typeof value === 'string') {
+        out.add(value);
+      } else if (key === 'pages' && Array.isArray(value)) {
         for (const page of value) {
           if (typeof page === 'string') out.add(page);
           else collectNavSlugs(page, out);

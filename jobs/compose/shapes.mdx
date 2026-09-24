@@ -1,0 +1,267 @@
+---
+title: "Shapes and masks"
+sidebarTitle: "Shapes"
+description: "Render rectangles, circles, paths and masks with fills, outlines, corners and shadows, and see which pairs are refused."
+icon: "shapes"
+keywords: ["video shape overlay api", "video mask api", "lower third bar api"]
+canonical: "https://rendobar.com/docs/jobs/compose/shapes"
+---
+
+
+
+A `shape` asset draws a rect, ellipse, circle, triangle, diamond, or any SVG path you paste in. No image to make, no file to host, and it stays sharp at any output resolution.
+
+```json
+{
+  "asset": { "type": "shape", "color": "#0A0A0ACC" },
+  "transform": { "size": { "width": "100%", "height": "22%" }, "position": { "x": "50%", "y": "86%" } }
+}
+```
+
+That is a bar across the lower third, dark enough to read a title on and thin enough to see the footage through. Put it on a track below the text.
+
+A shape is placed the way every clip is placed: by the clip's `transform`. `size` is its box, `position` its centre unless `anchor` says otherwise, and `rotate` turns it about that anchor. The asset itself only says what to draw.
+
+With no `size` a shape fills the frame, which is a scrim or a background in one line. Like text it has no duration of its own, so leaving `length` off runs it to the end of its container.
+
+`width` is a percent of the frame's width and `height` a percent of its height. Both also take pixels as plain numbers.
+
+<Frame caption="a bar and a text track">
+  <video src="https://cdn.rendobar.com/compose/showcase/lower-third/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/lower-third/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/progress-bar/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/progress-bar/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="width keyframed 2% to 86%">
+    <video src="https://cdn.rendobar.com/compose/showcase/progress-bar/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/progress-bar/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Frame caption="rect, ellipse, circle, triangle, diamond">
+  <video src="https://cdn.rendobar.com/compose/showcase/shape-kinds/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-kinds/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
+
+## Fills and edges
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-gradient/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-gradient/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="two colours, diagonal">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-gradient/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-gradient/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-outline/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-outline/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="stroke with no fill">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-outline/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-outline/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-radius/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-radius/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="radius 0.4">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-radius/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-radius/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-softness/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-softness/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="softness 0.3">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-softness/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-softness/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-shadow/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-shadow/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="a shadow behind it">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-shadow/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-shadow/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Paths
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-path/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-path/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="SVG path data">
+    <video src="https://cdn.rendobar.com/compose/showcase/shape-path/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/shape-path/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Leave the height out to get a circle
+
+
+Omit `size.height` and the box is made **square in pixels**. That is the only way to get a true circle or square on a frame that is not square, and it is the one thing about shapes worth memorising.
+
+A `10%` by `10%` box on a 16:9 frame is 192 by 108 pixels. Rounding it fully gives a pill, not a circle. Omit the height and the engine derives 17.8% for you.
+
+```json
+{
+  "asset": { "type": "shape", "shape": "circle", "color": "#059669" },
+  "transform": { "size": { "width": "12%" }, "position": { "x": "88%", "y": "18%" } }
+}
+```
+
+`shape: "circle"` is `ellipse` with that rule applied, so it rejects an explicit height rather than quietly ignoring one. The same omission works on every kind: a `rect` with no height is a square, a `diamond` with no height is a regular one.
+
+## Anchor
+
+
+`anchor: "topLeft"` points `position` at the box's corner instead of its centre. It is what makes letterbox bars arithmetic-free.
+
+```json
+{
+  "asset": { "type": "shape", "color": "#000000" },
+  "transform": { "anchor": "topLeft", "position": { "x": "0%", "y": "90%" }, "size": { "width": "100%", "height": "10%" } }
+}
+```
+
+## Fills, flat and gradient
+
+
+`color` takes `#RRGGBB`, or the 8-digit `#RRGGBBAA` for a constant translucency the way `#0A0A0ACC` does above.
+
+Do not reach for the clip's `opacity` instead. `opacity` fades the whole clip, so keep it for fades and put a constant translucency in the colour.
+
+Give `color` **two** colours and it is a gradient. `gradient` names the direction: `vertical` (the default), `horizontal`, `diagonal` or `radial`.
+
+```json
+{
+  "asset": { "type": "shape", "color": ["#E11D48", "#3B82F6"], "gradient": "diagonal" },
+  "transform": { "size": { "width": "40%", "height": "30%" }, "position": { "x": "50%", "y": "50%" } }
+}
+```
+
+The gradient maps to the **shape**, not the frame, so a small badge shows the whole ramp instead of a sliver of one. Stops take the 8-digit form too, which is how you get a scrim that fades to nothing: `["#0A0A0A00", "#0A0A0AFF"]`.
+
+## Outlines, with a real hole
+
+
+`stroke` draws a border just inside the shape's edge, its `width` in pixels of the output frame. Give the shape a `color` too and you get a filled shape with a border; `radius` rounds both together.
+
+Leave `color` out and only the outline draws. What it surrounds is genuinely transparent, not filled with black, so the footage shows through the middle. That works on every kind except a path.
+
+```json
+{
+  "asset": { "type": "shape", "shape": "ellipse", "stroke": { "color": "#F59E0B", "width": 5 } },
+  "transform": { "size": { "width": "26%", "height": "40%" }, "position": { "x": "62%", "y": "40%" } }
+}
+```
+
+## Rounded corners
+
+
+`radius` runs from `0` (square) to `1` (fully round) on a `rect`. At `1` a wide box becomes a pill and a square one becomes a circle.
+
+## Drop shadows
+
+
+`shadow` follows the shape, including its outline, its rotation and its animation. Every field has a default, so `"shadow": {}` is a sensible shadow.
+
+```json
+{
+  "asset": {
+    "type": "shape",
+    "color": ["#FFFFFF", "#E5E7EB"],
+    "radius": 0.3,
+    "stroke": { "color": "#111827", "width": 3 },
+    "shadow": { "color": "#00000099", "blur": 14, "x": 8, "y": 10 }
+  },
+  "transform": { "size": { "width": "34%", "height": "40%" }, "position": { "x": "30%", "y": "50%" } }
+}
+```
+
+## Rotation turns about the anchor, not the frame
+
+
+`transform.rotate` is degrees clockwise about the shape's own anchor, so it spins where it sits rather than orbiting the middle of the frame. A diagonal rule is a thin rect and one field:
+
+```json
+{
+  "asset": { "type": "shape", "color": "#FFFFFF" },
+  "transform": { "rotate": 30, "size": { "width": "40%", "height": "0.8%" }, "position": { "x": "50%", "y": "72%" } }
+}
+```
+
+There is no `line` type for the same reason there is no `square` type: a line is a rect with a small height, and `rotate` is what makes it diagonal.
+
+## Softness
+
+
+`softness` runs 0 to 1 and feathers the edge. At 0.2 to 0.4 an ellipse reads as a spotlight or a vignette rather than a hard-edged disc. A full-frame ellipse with `softness: 0.5` and a radial `["#00000000", "#000000CC"]` fill is a vignette with no image asset at all.
+
+## Paths
+
+
+`shape: "path"` takes SVG path data straight out of a design tool. `viewBox` gives the coordinate space it was drawn in, defaulting to `"0 0 100 100"`, and the path is scaled into the transform's `size` so the same data works at any size on any frame.
+
+```json
+{
+  "asset": {
+    "type": "shape",
+    "shape": "path",
+    "viewBox": "0 0 24 24",
+    "path": "M12 21C12 21 3 14.5 3 8.5C3 5.5 5.5 3 8.5 3C10.4 3 12 4.5 12 4.5C12 4.5 13.6 3 15.5 3C18.5 3 21 5.5 21 8.5C21 14.5 12 21 12 21Z",
+    "color": "#E11D48"
+  },
+  "transform": { "size": { "width": "20%" }, "position": { "x": "50%", "y": "50%" } }
+}
+```
+
+`M L H V C S Q T Z` are supported, absolute and relative. Elliptical arcs (`A`) are refused rather than approximated, so re-export with arcs converted to curves. A path takes a fill, a gradient, a shadow, rotation and softness, but not a `stroke`: outlining arbitrary path data needs true path offsetting.
+
+## Animation
+
+
+Everything that moves is [keyframes](#keyframes): `position`, `size` and `rotate` on the transform, `color` and `radius` on the shape. A progress bar is a width that grows.
+
+```json
+{
+  "asset": { "type": "shape", "color": "#FFFFFF" },
+  "transform": {
+    "anchor": "topLeft",
+    "position": { "x": "2%", "y": "86%" },
+    "size": [
+      { "time": "0%", "value": { "width": "0%", "height": "1.5%" }, "easing": "smooth" },
+      { "time": "100%", "value": { "width": "96%", "height": "1.5%" } }
+    ]
+  }
+}
+```
+
+A shape that is square in pixels stays square as it grows, so an animated circle does not turn into an ellipse halfway through. A solid colour can animate into a gradient, and a square can round itself off with keyframes on `radius`. An animated `rotate` has no limit: 0 to 720 is two full turns.
+
+## Combinations the API refuses
+
+
+Two engine primitives draw shapes and they have different abilities, so a few combinations are rejected at submit time rather than rendered wrong. Each error names the fix.
+
+| Not combinable | Why | What to do instead |
+| --- | --- | --- |
+| `radius` on anything but a `rect` | only rectangles have corners | drop it |
+| `radius` with no `color` | an outline-only shape is drawn by the primitive with no corner rounding | give it a fill |
+| `radius` with `rotate` or `softness` | the primitive that rounds corners cannot turn or feather | drop one of them |
+| `stroke` on a `path` | outlining arbitrary path data needs true path offsetting | draw the outline into the path itself |
+| `speed` on a shape | there is no file to play faster | animate it with keyframes |
+
+## What else a shape takes
+
+
+`blendMode` mixes it with the layer below, effects apply to it like any clip, and opacity keyframes fade it in and out. A track holding only shapes composites as a base layer, so a solid colour background is a timeline that references no files at all.
+
+There is no arbitrary path stroke and no per-corner radius. Anything past that is still an `image` asset.
+
+Every shape field is in the [shape reference](/docs/jobs/compose/reference/shape).
