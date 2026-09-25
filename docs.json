@@ -61,7 +61,6 @@
               {
                 "group": "Compose",
                 "icon": "film",
-                "expanded": true,
                 "pages": [
                   "jobs/compose/index",
                   "jobs/compose/timeline",
