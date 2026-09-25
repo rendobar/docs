@@ -3,9 +3,9 @@
   "name": "Rendobar",
   "theme": "mint",
   "colors": {
-    "primary": "#34d399",
-    "light": "#6ee7b7",
-    "dark": "#10b981"
+    "primary": "#047854",
+    "light": "#059669",
+    "dark": "#047854"
   },
   "background": {
     "color": {
