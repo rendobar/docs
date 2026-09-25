@@ -141,7 +141,7 @@ sequenceDiagram
 2. Rendobar starts the job and gives the job runner a signed URL for the input. The URL covers one object and expires, so the runner never holds your credential.
 3. The job runner downloads the input through the signed URL and runs the job.
 4. The job runner uploads the output to Rendobar. This copy is `output.file.url`.
-5. Rendobar writes the output to your bucket with the connection's credential. This copy is `deliveries[].url`, and the result is reported as a [delivery event](#delivery-events).
+5. Rendobar writes the whole output to your bucket with the connection's credential, as described in [what gets delivered](#what-gets-delivered). The result is reported as a [delivery event](#delivery-events).
 
 ## Delivery settings
 
@@ -196,6 +196,24 @@ By default, a delivery's `url` points to Rendobar. Set a public URL to return li
 
 Leave it empty for a private bucket. Inputs and outputs still work, and only the returned `url` changes.
 
+## What gets delivered
+
+A destination receives the job's whole `output`, whatever the job returns. The output path splits into a name and an extension, and every piece lands under that name:
+
+| The job returns | Written to your bucket, for the path `exports/clip.mp4` |
+|---|---|
+| One file | `exports/clip.mp4` |
+| Several files, such as an HLS ladder or image frames | The folder `exports/clip/`, each file under its own name and subfolder |
+| Structured data only, such as `ffprobe` | `exports/clip.json` |
+| A file and structured data, such as `captions.animate` | `exports/clip.mp4` and `exports/clip.json` |
+| Several files and structured data | The folder `exports/clip/` and `exports/clip.json` |
+
+If the file is itself `.json`, its data is written to `exports/clip.data.json` instead.
+
+There is no size limit on a delivery beyond your bucket's own. Large files and long file sets are written in parts over as many attempts as they need, and the delivery stays `pending` until the last part lands.
+
+With **Keep both**, Rendobar checks the output name and the `.json` name before writing. If either is taken, the job's suffix is added to the name, so every piece moves together, for example to `exports/clip-4a1b6e/`. Inside a folder, only its first file is checked, so add `{job_id}` to the output path if files from different jobs must never share a folder.
+
 ## Delivery results
 
 A completed job lists one entry in `deliveries` for each destination:
@@ -217,12 +235,12 @@ A completed job lists one entry in `deliveries` for each destination:
 |---|---|
 | `storageId` | The connection id |
 | `status` | `pending`, `delivered`, or `failed` |
-| `path` | The key written, after the template and any rename |
-| `url` | The public URL if one is set, otherwise a Rendobar URL |
+| `path` | The key written, after the template and any rename. A folder ends in `/` |
+| `url` | The public URL if one is set, otherwise a Rendobar URL. Absent for a folder |
 | `reason` | Why the delivery failed. Present only when `status` is `failed` |
 | `renamed` | `true` when **Keep both** added a suffix |
 
-`output.file.url` and `deliveries[].url` point to the same content. The first is a Rendobar URL that expires at `output.expiresAt`. The second points to the copy in your bucket, which Rendobar does not delete.
+For a single file, `output.file.url` and `deliveries[].url` point to the same content. The first is a Rendobar URL that expires at `output.expiresAt`. The second points to the copy in your bucket, which Rendobar does not delete. For a folder, each file's key is the folder `path` plus that file's `output.files[].path`.
 
 `deliveries` is returned by `GET /jobs/{id}`. It is not in the job list response, and it is absent when a job has no destinations.
 
@@ -269,7 +287,7 @@ A failed delivery includes one of these `reason` codes. Rendobar never forwards 
 | `already_exists` | An object already exists at that key | Add `{job_id}` to the output path, or use **Keep both** |
 | `object_too_large` | The bucket rejected the object as too large | Check the bucket's object size limit, or reduce the output size |
 | `destination_unavailable` | The bucket returned a 429 or 5xx, did not respond, or an attempt stopped without finishing for 30 minutes | Rendobar retries automatically. Retry manually if it stays failed |
-| `not_deliverable` | The job produced no file | Expected for jobs that return data only, such as `ffprobe` |
+| `not_deliverable` | The job failed, was cancelled, stored no output, or its output expired before a retry | Run the job again if you still need its output delivered |
 
 Errors returned when you create a connection are listed in [error codes](/support/errors).
 
