@@ -209,10 +209,6 @@
       "destination": "/jobs/captions/burn"
     },
     {
-      "source": "/jobs/compose/:slug*",
-      "destination": "/jobs/compose"
-    },
-    {
       "source": "/job-types/compose",
       "destination": "/jobs/compose"
     },
