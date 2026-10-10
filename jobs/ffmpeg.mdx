@@ -354,6 +354,7 @@ A command that writes one file sets `output.file` to that file, and `output.file
         "path": "output.mp4",
         "type": "video",
         "size": 4194304,
+        "sha256": "9f2c41d0b7a3e5f48c1d6e02a97b3c5f1e8d4a60b2c7f9e3d5a1b8c4e6f0a41e",
         "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
       },
       "files": [
@@ -362,6 +363,7 @@ A command that writes one file sets `output.file` to that file, and `output.file
           "path": "output.mp4",
           "type": "video",
           "size": 4194304,
+          "sha256": "9f2c41d0b7a3e5f48c1d6e02a97b3c5f1e8d4a60b2c7f9e3d5a1b8c4e6f0a41e",
           "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
         }
       ],
@@ -370,6 +372,8 @@ A command that writes one file sets `output.file` to that file, and `output.file
   }
 }
 ```
+
+`sha256` is the SHA-256 of the output file. To confirm a download or a delivered copy, hash it with `sha256sum` and compare the result with `output.file.sha256`. You do not need a second job with `-f hash` to get a checksum of an output.
 
 A command that writes a stream (HLS or DASH) sets `output.file` to the manifest, typed `playlist`. Point a player at `output.file.url` directly. `output.files` carries the manifest plus every segment:
 
@@ -394,12 +398,13 @@ A command that writes a stream (HLS or DASH) sets `output.file` to the manifest,
         "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8",
         "path": "master.m3u8",
         "type": "playlist",
-        "size": 412
+        "size": 412,
+        "sha256": null
       },
       "files": [
-        { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
-        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576 },
-        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "path": "seg_001.ts", "type": "video", "size": 1041203 }
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412, "sha256": null },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576, "sha256": null },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_001.ts", "path": "seg_001.ts", "type": "video", "size": 1041203, "sha256": null }
       ],
       "expiresAt": 1735689600000
     }
@@ -418,9 +423,9 @@ A command that writes an unordered set (image sequence, `-f segment`, a resoluti
       "data": null,
       "file": null,
       "files": [
-        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800 },
-        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120 },
-        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_002.png", "path": "frame_002.png", "type": "image", "size": 203904 }
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800, "sha256": null },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120, "sha256": null },
+        { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_002.png", "path": "frame_002.png", "type": "image", "size": 203904, "sha256": null }
       ],
       "expiresAt": 1735689600000
     }
