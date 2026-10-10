@@ -127,11 +127,14 @@ Each entry in `file` and `files` is the same shape:
   "path": "output.mp4",
   "type": "video",
   "size": 4194304,
+  "sha256": "9f2c41d0b7a3e5f48c1d6e02a97b3c5f1e8d4a60b2c7f9e3d5a1b8c4e6f0a41e",
   "meta": { "format": "mp4", "width": 1280, "height": 720, "durationMs": 30000 }
 }
 ```
 
 `url` is a signed link that expires at `output.expiresAt`. `path` is the filename the job wrote. `type` is an open enum (`video`, `image`, `audio`, `captions`, `playlist`, `data`, `other`), so tolerate values you do not recognize. `size` is bytes, and `meta` carries probed `format`, `width`, `height`, and `durationMs` when known.
+
+`sha256` is the SHA-256 of the file's bytes as 64 lowercase hex characters. Hash your download, or the copy delivered to your own bucket, and compare the two strings to confirm you have the file the job produced. The field is always present. It is `null` for a job that completed before 10 October 2026 and for the individual files of a multi-file output.
 
 ### Four patterns, one shape
 
@@ -145,9 +148,9 @@ The common case for transform jobs. `file` is the output, `files` lists it, `dat
 ```json
 {
   "data": null,
-  "file": { "url": "https://api.rendobar.com/dl/job_abc123?token=<token>", "path": "output.mp4", "type": "video", "size": 4194304 },
+  "file": { "url": "https://api.rendobar.com/dl/job_abc123?token=<token>", "path": "output.mp4", "type": "video", "size": 4194304, "sha256": "9f2c41d0b7a3e5f48c1d6e02a97b3c5f1e8d4a60b2c7f9e3d5a1b8c4e6f0a41e" },
   "files": [
-    { "url": "https://api.rendobar.com/dl/job_abc123?token=<token>", "path": "output.mp4", "type": "video", "size": 4194304 }
+    { "url": "https://api.rendobar.com/dl/job_abc123?token=<token>", "path": "output.mp4", "type": "video", "size": 4194304, "sha256": "9f2c41d0b7a3e5f48c1d6e02a97b3c5f1e8d4a60b2c7f9e3d5a1b8c4e6f0a41e" }
   ],
   "expiresAt": 1735689600000
 }
@@ -161,10 +164,10 @@ An HLS or DASH stream. `file` is the manifest, typed `playlist`. Point a player 
 ```json
 {
   "data": null,
-  "file": { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
+  "file": { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412, "sha256": null },
   "files": [
-    { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412 },
-    { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576 }
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/master.m3u8", "path": "master.m3u8", "type": "playlist", "size": 412, "sha256": null },
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/seg_000.ts", "path": "seg_000.ts", "type": "video", "size": 1048576, "sha256": null }
   ],
   "expiresAt": 1735689600000
 }
@@ -180,8 +183,8 @@ An unordered set with no single headline, such as an image sequence or a resolut
   "data": null,
   "file": null,
   "files": [
-    { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800 },
-    { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120 }
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_000.png", "path": "frame_000.png", "type": "image", "size": 204800, "sha256": null },
+    { "url": "https://api.rendobar.com/v/job_abc123/<token>/frame_001.png", "path": "frame_001.png", "type": "image", "size": 205120, "sha256": null }
   ],
   "expiresAt": 1735689600000
 }
