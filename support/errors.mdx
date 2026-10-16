@@ -40,7 +40,7 @@ Check the HTTP status and `error.code` before reading `data`.
 | `VALIDATION_ERROR` | 400 | Body failed schema validation. `details.path` points at the field |
 | `INVALID_JOB_TYPE` | 400 | Job type not registered or not on your plan |
 | `INSUFFICIENT_CREDITS` | 402 | Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing) |
-| `PLAN_LIMIT` | 403 | Plan limit hit (concurrency, file size). See [Limits](/support/limits) |
+| `PLAN_LIMIT` | 403 | Plan limit hit (job timeout, GPU, a compose frame or frame rate above the plan). See [Limits](/support/limits) |
 | `RATE_LIMITED` | 429 | Back off per `Retry-After` header |
 | `NOT_FOUND` | 404 | Resource doesn't exist or isn't visible to your org |
 | `CONFLICT` | 409 | Request conflicts with current state (e.g. cancelling a complete job) |

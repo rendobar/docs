@@ -39,9 +39,12 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compos
 | Max input file | 500 MB | 10 GB |
 | Job timeout | 1 hour | 9 hours |
 | Output retention | 7 days | 30 days |
+| Compose frame | Up to 1080p at 30 fps | Up to 4K at 60 fps |
+| Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
+| GPU FFmpeg (NVENC/CUDA) | No | Yes |
 | Priority queue | No | Yes |
 
-`ffmpeg`, MCP, and webhooks are on both plans. Full limits table: [Limits](/support/limits).
+`ffmpeg`, MCP, and webhooks are on both plans. Compose costs the same per output minute on both. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/support/limits).
 
 For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](https://rendobar.com/pricing/).
 
@@ -71,15 +74,9 @@ Because the submit gate checks `balance > 0` rather than an estimate, a single l
 
 `ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. The same per-second rate applies whether the job completes successfully or fails partway through. Every job type except compose bills this way.
 
-`compose` bills per second of the video you get back, with a 20-second minimum per render.
+`compose` bills per second of the video you get back, at \$0.04 per minute of output on every plan, with a 15-second minimum per render. Frame size and animated graphics do not change the rate. Plans differ in what they can render. 4K and 60 fps need Pro, and a video above your plan returns `403 PLAN_LIMIT` before it renders. An enterprise plan carries its own contract rate. Email `hello@rendobar.com`.
 
-| Plan | Compose price per output minute |
-| --- | --- |
-| Free (pay-as-you-go) | \$0.04 |
-| Pro | \$0.03 |
-| Enterprise | Contract rate. Email `hello@rendobar.com` |
-
-Animated graphics bill at 3x, and frames larger than 1080p (1440p, 4K) bill at 2x. A compose render that fails on Rendobar's side is free. When the failure may come from your input, such as the render tool exiting on a bad file, it pays for the compute it used at 2x. `POST /compose/validate` returns the price before you render. Full detail: [compose pricing](/jobs/compose/pricing).
+A compose render that fails on Rendobar's side is free. When the failure may come from your input, such as the render tool exiting on a bad file, it pays for the compute it used at 2x. `POST /compose/validate` returns the price before you render. Full detail: [compose pricing](/jobs/compose/pricing).
 
 If your balance is at or below zero when you submit:
 
@@ -120,7 +117,7 @@ Returns daily usage by job type: count, amount charged, and compute seconds.
 
 ## Practical advice
 
-- **Start on Free.** The $5 signup grant covers 125 minutes of compose output at the pay-as-you-go rate, or many hundreds of small FFmpeg jobs.
+- **Start on Free.** The $5 signup grant covers 125 minutes of compose output, or many hundreds of small FFmpeg jobs.
 - **Store `cost.nanodollars` from every response.** Reconcile against your monthly invoice.
 
 ## See also

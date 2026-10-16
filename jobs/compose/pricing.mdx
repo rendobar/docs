@@ -1,35 +1,42 @@
 ---
 title: "Compose pricing"
 sidebarTitle: "Pricing"
-description: "See what a compose render costs: a price per minute of output video, a 20-second minimum, animated graphics at 3x, and a quote before you render."
+description: "See what a compose render costs, one price per minute of output video on every plan with a 15-second minimum, and get a quote before you render."
 icon: "receipt"
 keywords: ["compose pricing", "json to video pricing", "video render cost per minute", "video api price per minute"]
 canonical: "https://rendobar.com/docs/jobs/compose/pricing"
 ---
 
-Compose bills per second of the video you get back, not per second of compute. You can read the price before anything renders.
+Compose bills per second of the video you get back, not per second of compute. The rate is \$0.04 per minute of output video. It is the same on every plan and for every video your plan can render, and you can read the price before anything renders.
 
-| Plan | Price per output minute |
+Each render bills at least 15 seconds, which is 1 cent. The price comes out of your [credit balance](/concepts/credits). The \$5 signup credit covers 125 minutes of compose output.
+
+| Render | Price |
 | --- | --- |
-| Free (pay-as-you-go) | \$0.04 |
-| Pro | \$0.03 |
-| Enterprise | Contract rate. Email `hello@rendobar.com` |
+| 10 s (bills the 15 s minimum) | \$0.01 |
+| 30 s | \$0.02 |
+| 2 min | \$0.08 |
+| 10 min | \$0.40 |
 
-Each render bills at least 20 seconds. The price comes out of your [credit balance](/concepts/credits). The \$5 signup credit covers 125 minutes of compose output at the pay-as-you-go rate.
+Frame size and animated graphics do not change the price. A 2-minute render costs the same at 720p, at 4K, or with kinetic text and 3D cards on it.
 
-## What changes the price
+## What each plan renders
 
-Animated graphics bill at 3x. That covers kinetic text, 3D cards, HTML and Lottie motion, and anything else the compose engine draws as animated graphics.
+Plans differ in what they can render, not in what a minute costs.
 
-Frames larger than 1080p (1440p, 2K, 4K) bill at 2x. Everything up to 1080p bills the same rate. The multipliers stack, so a 4K render with animated graphics bills at 6x.
+| Plan | Renders up to |
+| --- | --- |
+| Free (pay-as-you-go) | 1080p at 30 fps, animated graphics included |
+| Pro | 4K at 60 fps. Animated graphics up to 1080p at 30 fps |
+| Enterprise | Animated graphics above 1080p or 30 fps, at a contract rate. Email `hello@rendobar.com` |
 
-| Render | Free | Pro |
-| --- | --- | --- |
-| 10 s at 1080p (bills the 20 s minimum) | \$0.013 | \$0.01 |
-| 2 min at 1080p | \$0.08 | \$0.06 |
-| 2 min at 1080p with animated graphics | \$0.24 | \$0.18 |
-| 2 min at 4K | \$0.16 | \$0.12 |
-| 2 min at 4K with animated graphics | \$0.48 | \$0.36 |
+Animated graphics are kinetic text, 3D cards, HTML and Lottie motion, and anything else the compose engine draws as animated graphics. The frame counts by its pixels, so a portrait 1080x1920 video counts as 1080p.
+
+Pro costs \$9 a month and includes \$5 of credit each month. Its discount on compose is the 20% bonus on every credit purchase. See [credits and billing](/concepts/credits#plans).
+
+A video above your plan is refused at submit with `403 PLAN_LIMIT`, before anything renders or is charged. The message names the plan that renders it. Only video outputs (`mp4`, `webm`, `gif`) are checked. A `jpg`, `png` or `mp3` output renders on every plan.
+
+`GET /account/capabilities` returns your plan's limits as `composeMaxPixels` and `composeMaxFps` for a plain edit, and `composeAnimatedMaxPixels` and `composeAnimatedMaxFps` for one with animated graphics.
 
 ## Failed renders
 
@@ -39,13 +46,14 @@ When the failure may come from your input, such as the render tool exiting on a 
 
 ## Get the price before you render
 
-`POST /compose/validate` returns the quote with the rest of its checks, and validating is free. From an AI agent, the MCP tool `validate_compose` does the same.
+`POST /compose/validate` returns the quote with the rest of its checks, and validating is free. It runs the plan check too: a video above your plan comes back as `valid: false` with a problem at `["output"]`. From an AI agent, the MCP tool `validate_compose` does the same.
 
 <CodeGroup>
 
 ```ts SDK
 const check = await client.compose.validate(params);
 if (!check.valid) console.error(check.problems);
+else console.log(check.price); // { perMinuteUsd: 0.04, minSeconds: 15 }
 ```
 
 ```bash cURL
@@ -57,10 +65,18 @@ curl -X POST https://api.rendobar.com/compose/validate \
 
 </CodeGroup>
 
+A valid result carries `price`:
+
+```json
+"price": { "perMinuteUsd": 0.04, "minSeconds": 15 }
+```
+
+The charge is the video's length in minutes times `perMinuteUsd`, counted by the second, and never less than `minSeconds`.
+
 Every other job type, [FFmpeg](/jobs/ffmpeg) included, bills per second of compute. See [how a job is priced](/concepts/credits#how-is-a-job-priced).
 
 ## See also
 
 - [Output and validation](/jobs/compose/output): frame size, format, and the full validate response
 - [Credits and billing](/concepts/credits): balance, credit packs, and when the debit lands
-- [Plan limits](/support/limits): render time and file-size caps per plan
+- [Plan limits](/support/limits): render time, file-size and compose frame caps per plan

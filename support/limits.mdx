@@ -39,9 +39,12 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 | Max job timeout | 1 hour | 9 hours |
 | Output retention | 7 days | 30 days |
 | Total object storage | 5 GB | 250 GB |
+| Compose frame | Up to 1080p at 30 fps | Up to 4K at 60 fps |
+| Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
+| GPU FFmpeg (NVENC/CUDA) | No | Yes |
 | Priority queue | No | Yes |
 
-`ffmpeg`, MCP, and webhooks are on both plans.
+`ffmpeg`, MCP, and webhooks are on both plans. A compose video above your plan's frame or frame rate returns `403 PLAN_LIMIT` before it renders, and the message names the plan that renders it. Animated graphics above 1080p or 30 fps need an enterprise plan. `GET /account/capabilities` returns these as `composeMaxPixels`, `composeMaxFps`, `composeAnimatedMaxPixels` and `composeAnimatedMaxFps`. See [compose pricing](/jobs/compose/pricing).
 
 ## How long do output URLs last?
 
@@ -52,7 +55,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 
 ## Credit packs
 
-$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds +20% to every purchase. Credits never expire. Failed jobs are always refunded.
+\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro adds +20% to every purchase. Credits never expire. Failed jobs are not refunded automatically. See [credits and billing](/concepts/credits) for what a failed job pays.
 
 ## API response limits
 
