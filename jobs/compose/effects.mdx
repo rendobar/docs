@@ -163,12 +163,14 @@ One `color` effect carries brightness, contrast, saturation, temperature and the
 ## Anything the engine can do
 
 
-`{ "type": "engine" }` reaches the rest of the render engine by its own names, for the case a promoted effect does not cover. Every service and property is checked before the job starts, so a typo is a 400 and not a failed render.
+`{ "type": "engine" }` reaches the rest of the render engine's filters, for the case a promoted effect does not cover. Every filter and parameter is checked before the job starts, so a typo is a 400 and not a failed render.
 
 ```json
-{ "type": "engine", "service": "avfilter.colorize", "params": { "av.hue": 200, "av.saturation": 0.6 } }
+{ "type": "engine", "filter": "colorize", "params": { "hue": 200, "saturation": 0.6 } }
 ```
 
-An engine entry that duplicates a promoted effect is refused, so there is one way to ask for each thing. The names come from the engine and can change when it is upgraded, which the promoted names never do.
+An FFmpeg filter goes by its FFmpeg name and takes its FFmpeg option names, so `colorize` takes `hue`, `saturation` and `lightness`. Other filters go by a camelCase name, such as `cartoon` with `triplevel` and `diffspace`. `GET /compose/effects/engine` lists every filter an engine entry can name, with its parameters.
+
+An engine entry that duplicates a promoted effect is refused, so there is one way to ask for each thing. The list of filters comes from the engine and can change when it is upgraded, which the promoted effects never do.
 
 Every effect and every parameter is in the [effect reference](/docs/jobs/compose/reference/effects). Sound effects are on [Audio levels and effects](/docs/jobs/compose/audio).
