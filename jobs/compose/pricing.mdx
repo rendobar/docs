@@ -21,13 +21,15 @@ Each render bills at least 20 seconds. The price comes out of your [credit balan
 
 Animated graphics bill at 3x. That covers kinetic text, 3D cards, HTML and Lottie motion, and anything else the compose engine draws as animated graphics.
 
-Resolutions above 1080p are counted in 1080p frames, so a larger frame bills as more than one.
+Frames larger than 1080p (1440p, 2K, 4K) bill at 2x. Everything up to 1080p bills the same rate. The multipliers stack, so a 4K render with animated graphics bills at 6x.
 
 | Render | Free | Pro |
 | --- | --- | --- |
 | 10 s at 1080p (bills the 20 s minimum) | \$0.013 | \$0.01 |
 | 2 min at 1080p | \$0.08 | \$0.06 |
 | 2 min at 1080p with animated graphics | \$0.24 | \$0.18 |
+| 2 min at 4K | \$0.16 | \$0.12 |
+| 2 min at 4K with animated graphics | \$0.48 | \$0.36 |
 
 ## Failed renders
 
