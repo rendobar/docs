@@ -71,7 +71,7 @@ Call `list_job_types` first. It returns every active job type fresh, so it never
 | Tool | What it does | Returns |
 |---|---|---|
 | `list_job_types` | Every active job type: use cases, what it chains with, a params digest, and an example payload. With `type`, the full annotated parameter schema for that one type. | `{ jobTypes[], guidance }` or `{ type, paramsJsonSchema, example, guidance }` |
-| `validate_compose` | Check compose params without rendering. Free, nothing is stored, and it runs the same checks a submit does. Call it before `submit_job` on any timeline you wrote. | `{ valid, problems[], params?, warnings[] }` |
+| `validate_compose` | Check compose params without rendering and get the price of the render. Free, nothing is stored, and it runs the same checks a submit does. Call it before `submit_job` on any timeline you wrote. | `{ valid, problems[], params?, warnings[] }` |
 | `submit_job` | Submit a job. `inputs` accepts a URL string, `{ url }`, `{ content }` (inline text), or `{ job: "job_..." }` for chaining. A URL can be a `storage://` URI, and `destinations` writes the output to a connected bucket. | `{ jobId, status }` |
 | `get_job` | Check status and results. `wait: true` blocks up to 45 seconds instead of polling. A completed video job includes an inline poster image. | `{ id, status, output?, cost?, error? }` |
 | `list_jobs` | Recent jobs, filterable by `status` and `type`. | `{ jobs[], total }` |

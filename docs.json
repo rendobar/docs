@@ -73,6 +73,7 @@
                   "jobs/compose/effects",
                   "jobs/compose/audio",
                   "jobs/compose/output",
+                  "jobs/compose/pricing",
                   "jobs/compose/craft",
                   {
                     "group": "Reference",

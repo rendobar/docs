@@ -1,0 +1,64 @@
+---
+title: "Compose pricing"
+sidebarTitle: "Pricing"
+description: "See what a compose render costs: a price per minute of output video, a 20-second minimum, animated graphics at 3x, and a quote before you render."
+icon: "receipt"
+keywords: ["compose pricing", "json to video pricing", "video render cost per minute", "video api price per minute"]
+canonical: "https://rendobar.com/docs/jobs/compose/pricing"
+---
+
+Compose bills per second of the video you get back, not per second of compute. You can read the price before anything renders.
+
+| Plan | Price per output minute |
+| --- | --- |
+| Free (pay-as-you-go) | \$0.04 |
+| Pro | \$0.03 |
+| Enterprise | Contract rate. Email `hello@rendobar.com` |
+
+Each render bills at least 20 seconds. The price comes out of your [credit balance](/concepts/credits). The \$5 signup credit covers 125 minutes of compose output at the pay-as-you-go rate.
+
+## What changes the price
+
+Animated graphics bill at 3x. That covers kinetic text, 3D cards, HTML and Lottie motion, and anything else the compose engine draws as animated graphics.
+
+Resolutions above 1080p are counted in 1080p frames, so a larger frame bills as more than one.
+
+| Render | Free | Pro |
+| --- | --- | --- |
+| 10 s at 1080p (bills the 20 s minimum) | \$0.013 | \$0.01 |
+| 2 min at 1080p | \$0.08 | \$0.06 |
+| 2 min at 1080p with animated graphics | \$0.24 | \$0.18 |
+
+## Failed renders
+
+A render that fails on Rendobar's side is free. A job that never started is free.
+
+When the failure may come from your input, such as the render tool exiting on a bad file or the job hitting its time limit, the job pays for the compute it used at 2x. Check `error.code` on the job and the [error codes](/support/errors) to tell which case you hit.
+
+## Get the price before you render
+
+`POST /compose/validate` returns the quote with the rest of its checks, and validating is free. From an AI agent, the MCP tool `validate_compose` does the same.
+
+<CodeGroup>
+
+```ts SDK
+const check = await client.compose.validate(params);
+if (!check.valid) console.error(check.problems);
+```
+
+```bash cURL
+curl -X POST https://api.rendobar.com/compose/validate \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "params": { "schemaVersion": 1, "output": { "format": "mp4", "size": "1080p" }, "timeline": { "tracks": [{ "clips": [{ "asset": { "type": "video", "src": "https://example.com/a.mp4" } }] }] } } }'
+```
+
+</CodeGroup>
+
+Every other job type, [FFmpeg](/jobs/ffmpeg) included, bills per second of compute. See [how a job is priced](/concepts/credits#how-is-a-job-priced).
+
+## See also
+
+- [Output and validation](/jobs/compose/output): frame size, format, and the full validate response
+- [Credits and billing](/concepts/credits): balance, credit packs, and when the debit lands
+- [Plan limits](/support/limits): render time and file-size caps per plan
