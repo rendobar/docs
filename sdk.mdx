@@ -77,7 +77,7 @@ Every method takes an optional `{ signal }` to abort the request or the `wait` l
 | `jobs.download(id)` | the output as a raw `Response` |
 | `jobs.logs(id)` | execution log lines |
 | `jobs.types()` | job types available to your org |
-| `jobs.stats({ window })` | counts, success rate, and spend over `24h`, `7d`, or `30d` |
+| `jobs.stats({ window })` | counts, success rate, and spend over `24h`, `7d`, `30d`, `90d`, `365d`, or `all` (since your first job) |
 
 `type`, `inputs`, and `params` are per [job type](/jobs/ffmpeg). Pass `idempotencyKey` so a retried request returns the original job instead of a second one.
 
