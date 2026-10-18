@@ -27,30 +27,29 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compos
 
 ## Plans
 
-| | Free | Pro |
-|---|---|---|
-| Price | $0/mo | $9/mo |
-| Signup credits | $5 (one-time) | - |
-| Monthly credits included | - | $5 |
-| Credit-purchase bonus | - | +20% |
-| Concurrent jobs | 1 | 20 |
-| Queued backlog | 50 | 1000 |
-| API requests/min | 120 | 600 |
-| Max input file | 500 MB | 10 GB |
-| Job timeout | 1 hour | 9 hours |
-| Output retention | 7 days | 30 days |
-| Compose frame | Up to 1080p at 30 fps | Up to 4K at 60 fps |
-| Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
-| GPU FFmpeg (NVENC/CUDA) | No | Yes |
-| Priority queue | No | Yes |
+| | Free | Pro | Studio |
+|---|---|---|---|
+| Price | $0/mo | $9/mo | $29/mo |
+| Signup credits | $5 (one-time) | - | - |
+| Monthly credits included | - | $5 | $20 |
+| Credit-purchase bonus | - | +25% | +25% |
+| Concurrent jobs | 1 | 20 | 50 |
+| Queued backlog | 50 | 1000 | 2500 |
+| API requests/min | 120 | 600 | 1200 |
+| Max input file | 500 MB | 10 GB | 10 GB |
+| Job timeout | 1 hour | 9 hours | 9 hours |
+| Output retention | 7 days | 30 days | 30 days |
+| Compose frame | Up to 1080p at 30 fps | Up to 1440p at 30 fps | Up to 4K at 60 fps |
+| Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
+| GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
 
-`ffmpeg`, MCP, and webhooks are on both plans. Compose costs the same per output minute on both. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/support/limits).
+`ffmpeg`, MCP, and webhooks are on every plan. Compose costs the same per output minute on every plan. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/support/limits).
 
 For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](https://rendobar.com/pricing/).
 
 ## Credit packs
 
-\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro adds **+20%** to every purchase. Buy \$25, get \$30. Credits never expire.
+\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro and Studio add **+25%** to every purchase. Buy \$25, get \$31.25. Credits never expire.
 
 ## How does nanodollar billing work?
 
@@ -74,7 +73,7 @@ Because the submit gate checks `balance > 0` rather than an estimate, a single l
 
 `ffmpeg` bills per compute second, which is the wall-clock time FFmpeg ran your command, excluding upload and download. The same per-second rate applies whether the job completes successfully or fails partway through. Every job type except compose bills this way.
 
-`compose` bills per second of the video you get back, at \$0.04 per minute of output on every plan, with a 15-second minimum per render. Frame size and animated graphics do not change the rate. Plans differ in what they can render. 4K and 60 fps need Pro, and a video above your plan returns `403 PLAN_LIMIT` before it renders. An enterprise plan carries its own contract rate. Email `hello@rendobar.com`.
+`compose` bills per second of the video you get back, at \$0.04 per minute of output on every plan, with a 15-second minimum per render. Frame size and animated graphics do not change the rate. Plans differ in what they can render. 1440p needs Pro, 4K and 60 fps need Studio, and a video above your plan returns `403 PLAN_LIMIT` before it renders. An enterprise plan carries its own contract rate. Email `hello@rendobar.com`.
 
 A compose render that fails on Rendobar's side is free. When the failure may come from your input, such as the render tool exiting on a bad file, it pays for the compute it used at 2x. `POST /compose/validate` returns the price before you render. Full detail: [compose pricing](/jobs/compose/pricing).
 
