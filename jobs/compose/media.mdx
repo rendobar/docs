@@ -1,0 +1,126 @@
+---
+title: "Video, image, audio and Lottie clips"
+sidebarTitle: "Media clips"
+description: "Add footage, stills, sound and Lottie animation to a timeline, use part of a source, change its speed and opacity, and blend it into the layer below."
+icon: "photo-film"
+keywords: ["video clip api", "trim video json", "video blend mode api", "lottie in video api", "slow motion video api"]
+canonical: "https://rendobar.com/docs/jobs/compose/media"
+---
+
+A clip's `asset` sets what it plays. Four asset types read a file from a URL. Timing, placement and effects work the same for all four.
+
+| `asset.type` | Plays | Takes |
+| --- | --- | --- |
+| `video` | Footage, with its own sound | `src`, `trim`, `volume` |
+| `image` | A png or jpg still | `src` |
+| `audio` | Music, a voice-over or a sound effect | `src`, `trim`, `volume`, `fadeIn`, `fadeOut` |
+| `animation` | A Lottie `.json` file, with its transparency | `src`, `trim` |
+
+`src` is an https URL, or the URL of a file you uploaded to Rendobar. Text, timers, subtitles, shapes and nested timelines are clips without a file, each on its own page.
+
+## Video
+
+```json
+{
+  "asset": {
+    "type": "video",
+    "src": "https://cdn.rendobar.com/assets/examples/sea.mp4",
+    "trim": { "from": 4, "to": 9 },
+    "volume": 0.6
+  },
+  "start": 0
+}
+```
+
+`volume` is linear gain: `1` keeps the source level and `0` mutes it. Keyframe it to duck music under a voice. See [Audio and mixing](/docs/jobs/compose/audio).
+
+## Images
+
+An `image` shows one frame for the clip's `length`. A still with no motion looks like a mistake, so add a slow push-in: keyframe `transform.scale` from `1` to about `1.15` across the clip. See [Keyframes and easing](/docs/jobs/compose/motion).
+
+```json
+{
+  "asset": { "type": "image", "src": "https://example.com/listing.jpg" },
+  "transform": { "scale": [{ "time": "0%", "value": 1, "easing": "easeInOutSine" }, { "time": "100%", "value": 1.15 }] },
+  "length": 4
+}
+```
+
+## Audio
+
+An `audio` clip has no picture. Put music on its own track under the footage and set its level with `volume`. `fadeIn` and `fadeOut` fade it in from silence and out to silence, in seconds. See [Audio and mixing](/docs/jobs/compose/audio) for levels, ducking and sound effects.
+
+## Lottie animations
+
+An `animation` plays a Lottie `.json` file, as exported by After Effects, Figma or LottieFiles, with a transparent background. It plays once, for its own length. Place and size it with `transform`, like an image.
+
+```json
+{ "asset": { "type": "animation", "src": "https://example.com/logo-reveal.json" }, "transform": { "scale": 0.4, "position": { "x": "50%", "y": "50%" } } }
+```
+
+Export the file self-contained. The API refuses a file that loads images or fonts from elsewhere, because the render only gets files through a checked download.
+
+<Frame caption="a Lottie lower third sweeping in, its words a compose text clip">
+  <video src="https://cdn.rendobar.com/compose/showcase/animation/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/animation/after.jpg" autoPlay loop muted playsInline controls />
+</Frame>
+
+## Using part of a source
+
+`trim` picks which seconds of the source fill the clip. `{ "from": 4, "to": 9 }` plays seconds 4 to 9 of the file. `length` sets how long the clip lasts on the timeline. Without `trim`, the clip plays from the start of the source.
+
+## Speed
+
+`speed` plays a clip faster or slower. `2` is double speed and `0.5` is slow motion. At double speed a clip lasts half as long, and its sound changes pitch.
+
+```json
+{ "asset": { "type": "video", "src": "https://example.com/run.mp4" }, "speed": 0.5 }
+```
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/speed/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/speed/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="speed 2">
+    <video src="https://cdn.rendobar.com/compose/showcase/speed/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/speed/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+Shapes, nested timelines and Lottie animations do not accept `speed`. The first two have no file to speed up, and a Lottie plays at its own frame rate. Avoid slow motion on the outgoing clip of a transition, as it can run out of frames before the transition ends.
+
+## Opacity
+
+`opacity` runs from `0` (invisible) to `1` (solid). Keyframe it to fade a clip in or out.
+
+```json
+{ "asset": { "type": "video", "src": "https://example.com/b-roll.mp4" }, "opacity": [{ "time": 0, "value": 0 }, { "time": 0.5, "value": 1 }] }
+```
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/opacity/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/opacity/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="opacity 0.45">
+    <video src="https://cdn.rendobar.com/compose/showcase/opacity/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/opacity/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+## Blend modes
+
+`blendMode` sets how a clip mixes with the layers below, for example a light leak or texture over footage. It only works on a clip above another track.
+
+| `blendMode` | Use it for |
+| --- | --- |
+| `normal` | The clip sits over what is below. The default. |
+| `screen` | Light leaks, flares and glows: black disappears and light adds. |
+| `multiply` | Darkening textures and paper: white disappears and dark adds. |
+| `overlay` | More contrast from a texture without changing the overall brightness. |
+| `add` | Brighter than screen, for strong light. |
+| `lighten` | Keeps whichever of the two is lighter. |
+| `darken` | Keeps whichever of the two is darker. |
+| `difference` | A stylised inverted look. |
+
+```json
+{ "asset": { "type": "video", "src": "https://example.com/light-leak.mp4" }, "blendMode": "screen", "opacity": 0.8 }
+```
+
+The [video](/docs/jobs/compose/reference/video), [image](/docs/jobs/compose/reference/image), [audio](/docs/jobs/compose/reference/audio) and [animation](/docs/jobs/compose/reference/animation) references list every asset field. Clip fields are in the [timeline reference](/docs/jobs/compose/reference/timeline#clip).

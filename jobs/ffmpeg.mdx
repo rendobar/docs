@@ -173,7 +173,7 @@ This burns a subtitle track that lives only in the request, with no file to host
     </ResponseField>
   </Expandable>
 
-  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See [Input sources](#input-sources).
+  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See [Input sources](#what-can-i-use-as-an-input).
 </ParamField>
 
 <ParamField body="command" type="string" required>
@@ -185,7 +185,7 @@ This burns a subtitle track that lives only in the request, with no file to host
 </ParamField>
 
 <ParamField body="timeout" type="integer">
-  Max execution time in seconds. Defaults to your plan's full job budget (Free 1 hour, Pro 9 hours), so you only set this when you want a job to fail sooner. Asking for more than your plan allows is rejected at submit with `PLAN_LIMIT`.
+  Max execution time in seconds. Defaults to your plan's full job budget (Free 1 hour, Pro and Studio 9 hours), so you only set this when you want a job to fail sooner. Asking for more than your plan allows is rejected at submit with `PLAN_LIMIT`.
 </ParamField>
 
 <ParamField body="compute" type="enum" default="auto">
@@ -195,7 +195,7 @@ This burns a subtitle track that lives only in the request, with no file to host
   - `gpu`: force a GPU machine.
   - `cpu`: force a CPU machine. A command that calls an NVENC encoder is rejected with `VALIDATION_ERROR`.
 
-  GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require the Pro plan**. A GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan. See [GPU acceleration](#gpu-acceleration).
+  GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require a Pro or Studio plan**. A GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan. See [GPU acceleration](#can-i-use-gpu-acceleration).
 </ParamField>
 
 ## Can I validate a command without running it?
@@ -263,7 +263,7 @@ Set `compute` only to force a choice. `gpu` pins the job to a GPU. `cpu` pins it
 ```
 
 <Info>
-GPU jobs require the Pro plan and bill per second at GPU rates. A GPU job on the Free plan returns `403 PLAN_LIMIT`. CPU jobs run on every plan.
+GPU jobs require a Pro or Studio plan and bill per second at GPU rates. A GPU job on the Free plan returns `403 PLAN_LIMIT`. CPU jobs run on every plan.
 </Info>
 
 ## How is a command sandboxed?
@@ -279,7 +279,7 @@ Every command is validated before it runs, then executed in an isolated, network
 
 Priced per compute second from your [credit balance](/concepts/credits), the wall-clock time FFmpeg ran, excluding file transfer.
 
-Plan job budgets: 1 hour (Free), 9 hours (Pro). That is a bound on processing time, not on how long your output can be. See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `RUNNER_TIMEOUT`, and no credits are charged.
+Plan job budgets: 1 hour (Free), 9 hours (Pro and Studio). That is a bound on processing time, not on how long your output can be. See [plan limits](/docs/support/limits) for the full table. A job that runs past its budget fails with `JOB_TIMEOUT` and is billed for the compute it used. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged.
 
 ## Examples
 

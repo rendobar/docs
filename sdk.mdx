@@ -178,7 +178,9 @@ A WebSocket can't carry an `Authorization` header, so the SDK appends your API k
 
 ## Billing
 
-`billing.state()` returns balance and plan. `billing.usage({ start, end })` totals spend for a window, `billing.usageByClient({ days })` groups that spend by what submitted each job (`dashboard`, `sdk`, `cli`, `mcp`, `n8n`, `api`), and `billing.transactions({ page, limit })` reads the ledger.
+`billing.state()` returns balance and plan. `billing.usage({ start, end })` totals spend for a window, `billing.usageByClient({ days })` groups that spend by what submitted each job (`dashboard`, `sdk`, `cli`, `mcp`, `n8n`, `api`), and `billing.transactions({ page, limit })` reads the ledger. `billing.checkoutPlan("pro" | "studio")` returns a checkout URL, or moves an existing paid subscription to that plan. It replaces `billing.checkoutPro()`, which is deprecated.
+
+`compose.validate(params)` checks a [compose](/docs/jobs/compose) timeline for free and, when it is valid, returns its price. `compose.effects()` and `compose.engineEffects()` list the effects a timeline can name.
 
 `apiKeys`, `assets`, and `orgs` follow the same shape. Organization membership lives on `orgs.members` (`invite`, `changeRole`, `remove`) and `orgs.invitations` (`revoke`). The older `team` resource still works and is marked deprecated.
 
@@ -201,7 +203,7 @@ const browser = createClient({ credentials: "include" });  // first-party browse
 
 ## Errors
 
-A failed request throws an `ApiError` with `code`, `statusCode`, `message`, `details`, and `retryAfter` on `RATE_LIMITED`. Narrow it with `isApiError`.
+A failed request throws an `ApiError` with `code`, `statusCode`, `message`, `details`, and `retryAfter` on `RATE_LIMITED`. When the API refuses a request with a list of problems, `problems` holds them typed (`path`, `message`, and `upgradeTo` on a plan refusal). Narrow it with `isApiError`.
 
 ```ts
 import { isApiError } from "@rendobar/sdk";

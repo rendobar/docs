@@ -1,18 +1,17 @@
 ---
-title: "Text, titles and subtitles"
+title: "Text and titles"
 sidebarTitle: "Text"
-description: "Add text to a video as a title, a lower third, a running clock, a subtitles clip or a Lottie animation."
+description: "Add a styled title to a video, keep it readable over any footage, and animate it in and out a letter, word or line at a time."
 icon: "font"
-keywords: ["video text overlay api", "burn subtitles api", "lower third video api"]
+keywords: ["video text overlay api", "animated text video api", "kinetic typography api", "lower third video api"]
 canonical: "https://rendobar.com/docs/jobs/compose/text"
 ---
 
-A text clip carries its own words, its own style and its own box. Three neighbouring clip kinds cover the jobs text is usually asked to do: a clock that counts, a subtitles clip that holds every line, and a Lottie animation exported by a designer.
+A `text` clip renders a styled title. `style` holds `font`, `size`, `weight`, `italic`, `color`, `align`, a `stroke`, a `background` box, a `shadow` and `animate`, which sets the entrance (`fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`, `blur` or `scale`), whether it arrives a letter, word or line at a time, and the exit. `font` takes any Google Fonts family by name, a bundled family, or your own file. See [Fonts and languages](/docs/jobs/compose/fonts).
 
+Captions and timers are separate clips, on [Subtitles and timers](/docs/jobs/compose/captions). Lottie animations are on [Media clips](/docs/jobs/compose/media#lottie-animations).
 
-A `text` asset renders a styled title. `style` holds the type: `font`, `size`, `weight`, `color`, `align`, a `stroke`, a `background` box, a `shadow`, and an `animate` entrance (`fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`). `font` takes any Google Fonts family by name, or a family from your own file. See [Fonts](#fonts).
-
-Where it sits is the clip's `transform`, the same field that places every other clip.
+Place the text with `transform`, like any other clip.
 
 ```json
 {
@@ -34,11 +33,12 @@ Where it sits is the clip's `transform`, the same field that places every other 
 }
 ```
 
-Colours are hex: `#RGB`, `#RRGGBB`, or `#RRGGBBAA` with alpha.
+Colours are hex: `#RGB`, `#RRGGBB`, or `#RRGGBBAA` with alpha. `weight` runs from 100 to 1000, and `italic: true` slants the text. Text does not wrap to a width, so put a line break (`
+`) in `text` where each new line starts. Keep a title to two to six words.
 
 ## Keeping text readable
 
-White text over bright footage disappears. Three fields fix it, in order of how much they change the look.
+White text gets lost over bright footage. Three fields fix it, in order of how much they change the look.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -89,53 +89,58 @@ White text over bright footage disappears. Three fields fix it, in order of how 
   </Frame>
 </Columns>
 
-## A clock
+## Kinetic titles
 
-
-A `timer` counts over the clip's own length, up or down, in the format you name.
-
-```json
-{ "asset": { "type": "timer", "direction": "down", "format": "MM:SS", "style": { "font": "JetBrains Mono", "size": 96, "color": "#FFFFFF" } }, "start": 0, "length": 10 }
-```
-
-`format` is `SS`, `SS.S`, `SS.SS`, `MM:SS`, `MM:SS.SS` or `HH:MM:SS`. It takes the same `style` as text.
-
-<Frame caption="timer, counting down from the clip's own length">
-  <video src="https://cdn.rendobar.com/compose/showcase/timer/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/timer/after.jpg" autoPlay loop muted playsInline controls />
-</Frame>
-
-## Subtitles
-
-
-One `subtitles` clip holds every line, either written in the timeline or read from an `.srt` or `.vtt` file. Times are seconds from the clip's start.
+`by` splits the text so it arrives one unit at a time: `"letter"`, `"word"` or `"line"`. `duration` is when the last unit lands. `stagger` is the gap between the start of one unit and the next. `order` picks which unit goes first: `start`, `end`, `center`, `edges` or `random`. `random` uses a seed from the clip, so re-renders match.
 
 ```json
-{ "asset": { "type": "subtitles", "cues": [
-    { "start": 0, "end": 1.8, "text": "Subtitles live in the timeline." },
-    { "start": 2, "end": 4, "text": "One clip, every line." }
-  ], "reveal": "typewriter", "style": { "font": "Inter", "size": 44, "color": "#FFFFFF", "background": "#000000B0" } },
-  "transform": { "position": { "x": "50%", "y": "88%" }, "anchor": "topLeft" } }
+{
+  "asset": {
+    "type": "text",
+    "text": "AFTER DARK",
+    "style": {
+      "font": "Inter",
+      "size": 58,
+      "weight": 800,
+      "animate": { "type": "slideUp", "by": "word", "duration": 1.1 }
+    }
+  },
+  "transform": { "position": { "x": "50%", "y": "46%" } },
+  "start": 0,
+  "length": 6
+}
 ```
 
-Or point it at a file: `{ "type": "subtitles", "src": "https://example.com/captions.srt" }`. For word-level captions burned from speech instead, see [animated captions](/jobs/captions/animate).
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/text-split/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/text-split/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="slideUp by word over 1.1s">
+    <video src="https://cdn.rendobar.com/compose/showcase/text-split/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/text-split/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
 
-<Frame caption="subtitles, every line in one clip, timed to the words">
-  <video src="https://cdn.rendobar.com/compose/showcase/subtitles/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/subtitles/after.jpg" autoPlay loop muted playsInline controls />
-</Frame>
+Split at most one title per shot, on a top-level track or in `overlays`. On body text or captions, a split slows reading.
 
-## Lottie animations
+## Leaving
 
-
-An `animation` asset plays a Lottie `.json` file, the kind After Effects, Figma and LottieFiles export, with a transparent background. It plays once, for its own length, and fits the frame like an image.
+`out` animates the text away over the clip's last `duration` seconds, with any motion `type` takes and the same split and order. Without `out`, the text stays until the clip ends.
 
 ```json
-{ "asset": { "type": "animation", "src": "https://example.com/logo-reveal.json" }, "transform": { "scale": 0.4, "position": { "x": "50%", "y": "50%" } } }
+"animate": { "type": "fade", "duration": 0.6, "out": "blur" }
 ```
 
-Export it self-contained: a file that pulls images or fonts from elsewhere is refused, because nothing reaches the renderer except through the checked download.
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/text-exit/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/text-exit/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="out: blur">
+    <video src="https://cdn.rendobar.com/compose/showcase/text-exit/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/text-exit/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
 
-<Frame caption="a Lottie lower third sweeping in, its words a compose text clip">
-  <video src="https://cdn.rendobar.com/compose/showcase/animation/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/animation/after.jpg" autoPlay loop muted playsInline controls />
-</Frame>
+<Note>
+A split, an exit, or a `blur` or `scale` entrance makes the clip an animated graphic. It costs the same per minute, and renders up to 1080p at 30 fps on every self-serve plan. It works only on a top-level track or in `overlays`, not inside a scene or a composition. A `fade` or a slide of the whole title does not count as one. See [what each plan renders](/docs/jobs/compose/pricing#what-each-plan-renders).
+</Note>
 
-Fonts are their own page: [Fonts and languages](/docs/jobs/compose/fonts). Every text field is in the [text reference](/docs/jobs/compose/reference/text).
+Every text field is in the [text reference](/docs/jobs/compose/reference/text).

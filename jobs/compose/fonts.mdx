@@ -7,17 +7,15 @@ keywords: ["custom fonts video api", "arabic text video api", "video font fallba
 canonical: "https://rendobar.com/docs/jobs/compose/fonts"
 ---
 
-
-
 Name any [Google Fonts](https://fonts.google.com) family in `style.font` and it
-is fetched at render time. Nothing to upload, no configuration.
+loads at render time, with no upload or setup.
 
 ```json
 "style": { "font": "Bebas Neue", "size": 96, "weight": 700 }
 ```
 
-Seven families are bundled into the render image and resolve instantly, with no
-fetch: `Inter`, `Roboto`, `Montserrat`, `Poppins`, `Oswald`, `Anton`,
+Seven families ship in the render image and need no fetch:
+`Inter`, `Roboto`, `Montserrat`, `Poppins`, `Oswald`, `Anton`,
 `Bebas Neue`.
 
 <Frame caption="a display family for the headline, Arabic and Devanagari through the bundled fallbacks">
@@ -26,9 +24,8 @@ fetch: `Inter`, `Roboto`, `Montserrat`, `Poppins`, `Oswald`, `Anton`,
 
 ## Your own font files
 
-
-Put the file URLs in the job's `fonts` input, each under a family name **you**
-choose, then reference that name in `style.font`.
+List the file URLs in the job's `fonts` input, each under a family name you
+choose. Then use that name in `style.font`.
 
 ```json
 {
@@ -52,20 +49,18 @@ choose, then reference that name in `style.font`.
 }
 ```
 
-There is no limit on how many you declare. TTF, OTF, TTC, WOFF and WOFF2 all
-work, and an [uploaded asset's](/sdk#uploads) content URL works in
-`src` like any other input URL.
+You can declare any number. TTF, OTF, TTC, WOFF and WOFF2 all work, and `src`
+takes an [uploaded asset's](/docs/sdk#uploads) content URL like any other URL.
 
-Naming your own font is the point. The alternative is to reference the family
-name buried inside the file, which you have to discover with a font inspector
-and which is frequently not what the file is called. Omit `family` and that
-embedded name is read for you, so `{ "src": "..." }` on its own is also valid.
+Choosing a name means you never need the family name stored inside the file,
+which often differs from the file name and takes a font inspector to find. Omit
+`family` and the engine reads the stored name, so `{ "src": "..." }` alone is
+valid.
 
-A family you declare shadows a bundled one of the same name, exactly the way an
-`@font-face` rule beats a system font in CSS. Declare a font called `Inter` and
-yours is the one that renders.
+A family you declare overrides a bundled one with the same name, as an
+`@font-face` rule overrides a system font in CSS.
 
-For a single file, `inputs.font` is the shorthand. It is addressed as `custom`:
+For a single file, use the `inputs.font` shorthand and refer to it as `custom`:
 
 ```json
 "inputs": { "font": "https://cdn.example.com/BrandDisplay.ttf" },
@@ -74,17 +69,15 @@ For a single file, `inputs.font` is the shorthand. It is addressed as `custom`:
 
 ## Fallback stacks
 
-
-`style.font` takes a CSS-style list, and it falls through in order:
+`style.font` takes a CSS-style list and tries each entry in order:
 
 ```json
 "style": { "font": "Display, Bebas Neue, sans-serif" }
 ```
 
-This is a failure policy, not a preference. If your CDN is unreachable or
-a Google family cannot be fetched, the render continues with the next entry
-instead of failing the job or silently substituting whatever the system happens
-to have. Every substitution is reported on the job:
+If your CDN is down or a Google family cannot be fetched, the render uses the
+next entry. The job does not fail or fall back to a random system font, and it
+reports every substitution:
 
 ```json
 "steps": [
@@ -99,16 +92,15 @@ to have. Every substitution is reported on the job:
 ]
 ```
 
-A value naming nothing resolvable is rejected at submit, which catches the
-common mistake of pasting a font URL into `style.font` instead of into `fonts`.
+If `style.font` names no font that can be found, the API rejects the job at
+submit. This catches a font URL pasted into `style.font` instead of `fonts`.
 
 ## Weights and languages
 
-
-`weight` runs 100 to 1000. Variable fonts honour it exactly; a static family
-snaps to its nearest available cut, rounding up on a tie.
+`weight` runs from 100 to 1000. A variable font uses the exact value. A static
+family uses its nearest available weight, rounding up on a tie.
 
 Latin, Cyrillic, Greek, Vietnamese, Turkish, Arabic, Hebrew, Thai, Devanagari,
-Bengali, Tamil, Amharic, Khmer, Chinese, Japanese and Korean all render, with
-right-to-left joining and conjunct shaping handled by the engine. Colour emoji
-does not render in text assets.
+Bengali, Tamil, Amharic, Khmer, Chinese, Japanese and Korean all render. The
+engine handles right-to-left joining and conjunct shaping. Colour emoji does not
+render in text assets.

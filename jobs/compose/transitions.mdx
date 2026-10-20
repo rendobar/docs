@@ -1,13 +1,13 @@
 ---
 title: "Transitions between clips"
 sidebarTitle: "Transitions"
-description: "Add a crossfade, fade, slide, push, wipe or zoom between two clips, and see why a hard cut is the right default."
+description: "Use a crossfade, fade, slide, push, wipe or zoom between two clips, pick a wipe shape or your own wipe pattern, and see when a hard cut is better."
 icon: "shuffle"
 keywords: ["video transitions api", "crossfade video api", "wipe transition json"]
 canonical: "https://rendobar.com/docs/jobs/compose/transitions"
 ---
 
-Two clips next to each other on a track cut straight from one to the other. To blend them, put a transition BETWEEN them. It is a clip like any other, with its own entry in the track's list, and there is no transition field on an ordinary clip.
+Two clips side by side on a track cut straight from one to the other. To blend them, put a transition clip between them in the track's list. Ordinary clips have no transition field.
 
 ```json
 "clips": [
@@ -17,21 +17,21 @@ Two clips next to each other on a track cut straight from one to the other. To b
 ]
 ```
 
-A scene takes its own `transition` instead, which describes how that scene arrives from the one before it.
+A scene instead takes a `transition` field that sets how it enters from the scene before.
 
-The blend is taken out of the two clips, not added to the timeline, so a transition never makes the render longer.
+The blend overlaps the two clips, so a transition never makes the render longer.
 
 ## The seven kinds
 
-`crossfade` dissolves one picture into the other. `fade` goes through the background colour between them, which reads as a chapter break. `slide` moves the new clip in over the old one, `push` shoves the old one out of frame, and both take a `direction`. `wipe` reveals the new clip along a moving edge whose `shape` you choose. `zoom` scales into the new clip. `none` is the hard cut, and it is the default because it is what professional editors use for almost every join.
+`crossfade` dissolves one picture into the other. `fade` dips to black, like a chapter break. `slide` moves the new clip in over the old one. `push` moves the old one out of frame. `wipe` reveals the new clip in place, along a moving edge or through a shape. `zoom` scales into the new clip. `none` is a hard cut, which professional editors use for almost every join.
 
-Every one below joins the same two shots, so they can be compared.
+All the videos below join the same two shots.
 
 <Columns cols={2}>
 <Frame caption="crossfade">
   <video src="https://cdn.rendobar.com/compose/showcase/crossfade/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/crossfade/after.jpg" autoPlay loop muted playsInline controls />
 </Frame>
-<Frame caption="fade, through the background">
+<Frame caption="fade, through black">
   <video src="https://cdn.rendobar.com/compose/showcase/fade/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/fade/after.jpg" autoPlay loop muted playsInline controls />
 </Frame>
 </Columns>
@@ -54,18 +54,37 @@ Every one below joins the same two shots, so they can be compared.
 </Frame>
 </Columns>
 
+## Direction
+
+`slide`, `push` and an `edge` wipe take a `direction` for the way the picture moves: `left`, `right`, `up` or `down`.
+
+```json
+{ "type": "transition", "transition": "push", "direction": "up", "duration": 0.5 }
+```
+
 ## Wipe shapes
 
-`edge` is a straight line travelling in `direction`. `circle` opens from the centre, `box` opens as a rectangle, and `barnDoorHorizontal` and `barnDoorVertical` split from the middle outwards.
+A wipe's `shape` defaults to `edge`, a straight line moving in `direction`. `circle` opens from the centre, `box` opens as a rectangle, and `barnDoorHorizontal` and `barnDoorVertical` split from the middle outwards.
+
+```json
+{ "type": "transition", "transition": "wipe", "shape": "circle", "duration": 0.8 }
+```
+
+## Your own wipe
+
+`map` takes the URL of a greyscale image and wipes in its pattern. Black areas change first, white last, and greys in between. A radial gradient gives a circular iris and a brush stroke gives a painted reveal. A `map` replaces both `shape` and `direction`.
+
+```json
+{ "type": "transition", "transition": "wipe", "map": "https://example.com/brush-wipe.png", "duration": 1 }
+```
 
 ## How long it can be
 
-A transition cannot be longer than either clip it joins. Ask for more and the render clamps it to what fits and the job carries a warning, so a template built for long clips still works when a short one arrives. [Validate](/docs/jobs/compose/output#check-it-before-you-render) reports the same warning before you spend anything.
-
+A transition cannot be longer than either clip it joins. Ask for more and the render shortens it to fit and adds a warning to the job, so a template made for long clips still works with a short one. [Validation](/docs/jobs/compose/pricing#check-a-timeline-before-you-render) reports the same warning before you spend anything.
 
 ## How to use them
 
-Professionals cut. Keep crossfades under 10% of your joins and pick ONE decorative style (slide or zoom) per video, at section boundaries only.
+Cut hard for most joins and keep crossfades under 10% of them. Use one decorative style (slide or zoom) per video, and only between sections.
 
 | Use | Transition | Duration |
 | --- | --- | --- |

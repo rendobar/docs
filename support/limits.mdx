@@ -1,7 +1,7 @@
 ---
 title: "Plan limits and quotas"
 sidebarTitle: "Limits"
-description: "Compare Free and Pro plan limits across rate limits (120 vs 600/min), file size caps (500 MB vs 10 GB), retention, concurrency, storage."
+description: "Compare Free, Pro and Studio limits: rate limits (120 vs 600/min), file size caps (500 MB vs 10 GB), retention, concurrency, storage, compose frames."
 icon: "gauge"
 keywords: ["rendobar limits", "api rate limits", "plan limits", "file size limit", "concurrent jobs"]
 canonical: "https://rendobar.com/docs/support/limits"
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/support/limits"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/support/limits#article",
       "headline": "Plan limits and quotas",
-      "description": "Free and Pro plan limits: rate limits, file size caps, output retention, concurrent jobs, and storage quotas.",
+      "description": "Free, Pro and Studio plan limits: rate limits, file size caps, output retention, concurrent jobs, storage quotas and compose frames.",
       "datePublished": "2026-03-20",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
@@ -27,32 +27,39 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 
 ## Plan limits
 
-| | Free | Pro ($9/mo) |
-|---|---|---|
-| Signup credits | $5 (one-time) | - |
-| Monthly credits | - | $5/mo included |
-| Credit-purchase bonus | - | +20% |
-| Concurrent jobs | 1 | 20 |
-| Queued backlog | 50 | 1000 |
-| API requests / min | 120 | 600 |
-| Max input file | 500 MB | 10 GB |
-| Max job timeout | 1 hour | 9 hours |
-| Output retention | 7 days | 30 days |
-| Total object storage | 5 GB | 250 GB |
-| Priority queue | No | Yes |
+| | Free | Pro (\$9/mo) | Studio (\$29/mo) |
+|---|---|---|---|
+| Signup credits | $5 (one-time) | - | - |
+| Monthly credits | - | \$5/mo included | \$20/mo included |
+| Credit-purchase bonus | - | +25% | +25% |
+| Concurrent jobs | 1 | 20 | 50 |
+| Queued backlog | 50 | 1000 | 2500 |
+| API requests / min | 120 | 600 | 1200 |
+| Max input file | 500 MB | 10 GB | 10 GB |
+| Total input per job | 2 GB | 8 GB | 8 GB |
+| Max job timeout | 1 hour | 9 hours | 9 hours |
+| Output retention | 7 days | 30 days | 90 days |
+| Total object storage | 5 GB | 250 GB | 250 GB |
+| Compose frame | Up to 1080p at 30 fps | Up to 1440p at 30 fps | Up to 4K at 60 fps |
+| Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
+| GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
+| Team members | 2 | 3 | 10 |
+| Priority queue (jobs start first when runners are full) | No | No | Yes |
+| Audit log | No | No | Yes |
+| Priority support | No | No | Yes |
 
-`ffmpeg`, MCP, and webhooks are on both plans.
+`ffmpeg`, MCP, and webhooks are on every plan. A compose video above your plan's frame or frame rate returns `403 PLAN_LIMIT` before it renders, and `upgradeTo` in `error.details` names the plan that renders it. Animated graphics above 1080p or 30 fps need an enterprise plan. `GET /account/capabilities` returns these as `composeMaxPixels`, `composeMaxFps`, `composeAnimatedMaxPixels` and `composeAnimatedMaxFps`. See [compose pricing](/docs/jobs/compose/pricing).
 
 ## How long do output URLs last?
 
 - **Signed download URL** (`output.file.url`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
-- **Output retention**: 7 days (Free) or 30 days (Pro). After that, the file is deleted; the job record stays but the file URLs return 404.
+- **Output retention**: 7 days (Free), 30 days (Pro) or 90 days (Studio). After that, the file is deleted. The job record stays, but the file URLs return 404.
 - **Storage quota** caps total bytes across all your outputs. Delete old outputs or upgrade if you hit it.
 - **No separate per-output size limit**. Bounded by input cap and storage quota.
 
 ## Credit packs
 
-$10 / $25 / $50 / $100 (or custom, $10 minimum). Pro adds +20% to every purchase. Credits never expire. Failed jobs are always refunded.
+\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro and Studio add +25% to every purchase. Credits never expire. Failed jobs are not refunded automatically. See [credits and billing](/docs/concepts/credits) for what a failed job pays.
 
 ## API response limits
 

@@ -1,23 +1,81 @@
 ---
-title: "Output, size and validation"
+title: "Output format, size and quality"
 sidebarTitle: "Output"
-description: "Set the frame size, format, frame rate and quality of a render, and check a timeline for free before you pay for it."
+description: "Set what a compose render returns: mp4, webm, gif, mp3, jpg or png, a platform size preset or any resolution, the frame rate, and the encoder quality."
 icon: "file-video"
-keywords: ["video output format api", "video resolution api", "validate video json"]
+keywords: ["video output format api", "video resolution api", "tiktok video size api", "transparent video api", "render gif api"]
 canonical: "https://rendobar.com/docs/jobs/compose/output"
 ---
 
-
-
-`output` controls the size, frame rate, format and encoder. Give it an explicit `resolution`, or a named `size` preset like `"1080p"`, `"tiktok"` or `"reels"`.
+`output` sets the file you get back. Without it, you get a 1080p mp4 at 30 fps.
 
 ```json
-"output": { "format": "mp4", "resolution": { "width": 1080, "height": 1920 }, "fps": 30 }
+"output": { "format": "mp4", "size": "reels", "fps": 30, "quality": "high" }
 ```
 
-A 9:16 canvas with `"fit": "cover"` or a `crop` on the clip turns landscape footage into a vertical Reel that fills the frame, with no black bars. `"fit": "blur"` keeps all of the picture instead, over a blurred copy of itself.
+A compose job renders one file. For two sizes of the same edit, submit two jobs. They render at the same time.
 
-`background` fills whatever the clips do not cover. It takes a hex colour, or `"transparent"`, which png and webm keep as real alpha. mp4 has no transparency, so it refuses that rather than rendering black.
+## Formats
+
+| `format` | You get |
+| --- | --- |
+| `mp4` | Video with sound, H.264 and AAC. The default. |
+| `webm` | Video with sound, VP9 and Opus. Keeps a transparent background. |
+| `gif` | An animated image, with no sound. |
+| `mp3` | Sound alone. Needs no frame size. |
+| `jpg` | One frame, as a still. |
+| `png` | One frame, as a still. Keeps a transparent background. |
+
+## Size
+
+Set a `size` preset or an exact `resolution`. If you set both, `resolution` wins. Every format except `mp3` needs one of them.
+
+```json
+"output": { "format": "mp4", "resolution": { "width": 1080, "height": 1350 } }
+```
+
+| `size` | Pixels |
+| --- | --- |
+| `360p` | 640 x 360 |
+| `720p` | 1280 x 720 |
+| `1080p` | 1920 x 1080 |
+| `1440p` | 2560 x 1440 |
+| `4k` | 3840 x 2160 |
+| `tiktok`, `reels`, `shorts`, `instagram-story` | 1080 x 1920 |
+| `instagram-feed` | 1080 x 1350 |
+| `square` | 1080 x 1080 |
+| `youtube-hd`, `x-landscape`, `linkedin` | 1920 x 1080 |
+| `youtube-4k` | 3840 x 2160 |
+
+For a vertical Reel from landscape footage, set `"fit": "cover"` to fill the frame, or `"fit": "blur"` to show the whole picture over a blurred copy of itself. See [how a picture fills its box](/docs/jobs/compose/framing#how-a-picture-fills-its-box).
+
+## Frame rate
+
+`fps` sets the frame rate, 30 by default. Each plan caps frame size and frame rate together: 1080p at 30 fps on Free, 1440p at 30 fps on Pro, and 4K at 60 fps on Studio. Animated graphics render up to 1080p at 30 fps on every self-serve plan. A video above your plan returns `403 PLAN_LIMIT` at submit, and [validation](/docs/jobs/compose/pricing#check-a-timeline-before-you-render) catches it first. See [what each plan renders](/docs/jobs/compose/pricing#what-each-plan-renders).
+
+## Quality
+
+`quality` trades picture quality against file size and render time.
+
+| `quality` | For |
+| --- | --- |
+| `draft` | A fast preview |
+| `standard` | Web delivery. The default. |
+| `high` | A sharper master, slower to encode |
+| `max` | The highest fidelity, slowest to encode |
+
+To set the encoder yourself, these override `quality`:
+
+| Field | Takes |
+| --- | --- |
+| `videoCodec` | `h264` (the mp4 default) or `vp9`. webm is always vp9. |
+| `audioCodec` | `aac` (the mp4 default), `opus` or `mp3`. webm is always opus. |
+| `crf` | Constant rate factor. Lower means better quality and a larger file: 0 to 51 for h264, 0 to 63 for vp9. Not for gif, mp3 or stills. |
+| `encoderPreset` | `ultrafast` through `veryslow`, h264 only. Slower gives a smaller file at the same quality. |
+
+## Transparent video
+
+`timeline.background` fills any area the clips do not cover, with a hex colour (black by default) or `"transparent"`. png and webm keep transparency as an alpha channel, so you can render a lower third or a logo animation to lay over other video. mp4, gif and jpg have no transparency and refuse a transparent background instead of rendering it black.
 
 ```json
 {
@@ -25,51 +83,17 @@ A 9:16 canvas with `"fit": "cover"` or a `crop` on the clip turns landscape foot
   "output": { "format": "webm", "size": "1080p" },
   "timeline": {
     "background": "transparent",
-    "tracks": [{ "clips": [{ "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" } }] }]
+    "tracks": [{ "clips": [{ "asset": { "type": "image", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png" }, "length": 3 }] }]
   }
 }
 ```
 
-`range` renders part of the timeline instead of all of it, and on `jpg` and `png` its `start` is the frame you get.
+## Part of a timeline, or one frame
+
+`range` renders part of the timeline, from the second in `start` for `length` seconds. Leave out `length` to render to the end. On `jpg` and `png`, `start` is the moment captured, for a poster frame.
 
 ```json
 "output": { "format": "png", "size": "1080p", "range": { "start": 4.5 } }
 ```
 
-## How a picture fills its box
-
-A wide photograph in a phone-shaped box. `contain` shows all of it and leaves bars, `cover` fills the box and cuts what overflows.
-
-<Columns cols={2}>
-  <Frame caption="before">
-    <video src="https://cdn.rendobar.com/compose/showcase/fit/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/fit/before.jpg" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="fit cover">
-    <video src="https://cdn.rendobar.com/compose/showcase/fit/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/fit/after.jpg" autoPlay loop muted playsInline controls />
-  </Frame>
-</Columns>
-
-A compose job renders exactly one file. Two sizes of the same edit are two jobs, which is also how you get them rendered at the same time. `gif` carries no audio, `mp3` is audio only and needs no frame size, and `jpg` and `png` are a single frame.
-
-## Check it before you render
-
-
-`validate` parses a timeline exactly as a render would and costs nothing. It returns the params as the engine reads them, anything it had to upgrade from an older shape, and warnings for settings the render will ignore.
-
-<CodeGroup>
-
-```ts SDK
-const check = await client.compose.validate(params);
-if (!check.valid) console.error(check.problems);
-```
-
-```bash cURL
-curl -X POST https://api.rendobar.com/compose/validate \
-  -H "Authorization: Bearer rb_YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "params": { "schemaVersion": 1, "output": { "format": "mp4", "size": "1080p" }, "timeline": { "tracks": [{ "clips": [{ "asset": { "type": "video", "src": "https://example.com/a.mp4" } }] }] } } }'
-```
-
-</CodeGroup>
-
-Every output field is in the [output reference](/docs/jobs/compose/reference/output).
+The [output reference](/docs/jobs/compose/reference/output) lists every output field.

@@ -1,13 +1,13 @@
 ---
 title: "Placing and framing a clip"
 sidebarTitle: "Framing"
-description: "Set a clip's position, scale, rotation, box, crop and opacity, and see every one of them before and after on one shot."
+description: "Set where a clip sits in the frame: position, anchor, scale, box, fit, rotation, flip, crop and corner pin, each shown before and after with its JSON."
 icon: "crop-simple"
 keywords: ["video position api", "picture in picture api", "crop video json"]
 canonical: "https://rendobar.com/docs/jobs/compose/framing"
 ---
 
-Every clip takes the same set of fields, whatever it holds. Each one below is the same shot on the same backdrop, changed in exactly one way.
+Every clip takes these fields, whatever it holds. Most live in `transform`. Each example changes one thing on the same shot and backdrop. Position, scale, rotation, size and the corner pin all take keyframes. See [Keyframes and easing](/docs/jobs/compose/motion).
 
 ## Where it sits
 
@@ -20,7 +20,11 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
   </Frame>
 </Columns>
 
-`position` is the clip's centre by default, as a percent of the frame or in pixels. `anchor` changes what the point refers to.
+```json
+"transform": { "position": { "x": "76%", "y": "26%" } }
+```
+
+`position` places the clip's centre by default, as a percent of the frame or in pixels. `anchor` picks a different point of the clip to place.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -30,6 +34,10 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
     <video src="https://cdn.rendobar.com/compose/showcase/anchor/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/anchor/after.jpg" autoPlay loop muted playsInline controls />
   </Frame>
 </Columns>
+
+```json
+"transform": { "position": { "x": "30%", "y": "30%" }, "anchor": "topLeft" }
+```
 
 ## How big it is
 
@@ -42,7 +50,11 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
   </Frame>
 </Columns>
 
-`scale` multiplies the clip's natural size. `size` gives it a box of its own, which the picture fills the way [fit](/docs/jobs/compose/output#how-a-picture-fills-its-box) says, so a box plus cover is how a wide shot becomes a tall panel.
+```json
+"transform": { "scale": 0.34 }
+```
+
+`scale` multiplies the clip's natural size. `size` gives the clip its own box, and [fit](#how-a-picture-fills-its-box) sets how the picture fills it. A box with `fit` set to `cover` turns a wide shot into a tall panel.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -52,6 +64,10 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
     <video src="https://cdn.rendobar.com/compose/showcase/size/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/size/after.jpg" autoPlay loop muted playsInline controls />
   </Frame>
 </Columns>
+
+```json
+"transform": { "size": { "width": "30%", "height": "88%" }, "fit": "cover" }
+```
 
 ## Turning and mirroring
 
@@ -64,6 +80,10 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
   </Frame>
 </Columns>
 
+```json
+"transform": { "rotate": -7 }
+```
+
 <Columns cols={2}>
   <Frame caption="before">
     <video src="https://cdn.rendobar.com/compose/showcase/flip/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/flip/before.jpg" autoPlay loop muted playsInline controls />
@@ -72,6 +92,10 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
     <video src="https://cdn.rendobar.com/compose/showcase/flip/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/flip/after.jpg" autoPlay loop muted playsInline controls />
   </Frame>
 </Columns>
+
+```json
+"flip": { "horizontal": true }
+```
 
 ## Trimming the edges
 
@@ -84,6 +108,10 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
   </Frame>
 </Columns>
 
+```json
+"crop": { "top": "18%", "bottom": "18%", "left": "12%", "right": "12%" }
+```
+
 <Columns cols={2}>
   <Frame caption="before">
     <video src="https://cdn.rendobar.com/compose/showcase/crop-radius/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/crop-radius/before.jpg" autoPlay loop muted playsInline controls />
@@ -93,9 +121,14 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
   </Frame>
 </Columns>
 
+```json
+"transform": { "scale": 0.5 },
+"crop": { "radius": 0.14 }
+```
+
 ## Pinning to a surface
 
-`corners` is the other form of a transform: four points instead of a position. It puts footage on a screen or a sign in the shot, and it does not combine with position, scale, rotate or fit.
+`corners` places a clip by four points in place of a position, to put footage on a screen or a sign in the shot. It does not combine with position, scale, rotate or fit. Keyframe the points to follow a moving surface.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -106,26 +139,43 @@ Every clip takes the same set of fields, whatever it holds. Each one below is th
   </Frame>
 </Columns>
 
-## How solid, and how fast
+```json
+"transform": {
+  "corners": {
+    "topLeft": { "x": "45.0%", "y": "33.6%" },
+    "topRight": { "x": "62.6%", "y": "32.4%" },
+    "bottomRight": { "x": "61.0%", "y": "54.6%" },
+    "bottomLeft": { "x": "43.4%", "y": "54.0%" }
+  }
+}
+```
+
+## How a picture fills its box
+
+`fit` sets what happens when a clip's box has a different shape from its picture, such as a wide photo in a phone-shaped box.
+
+| `fit` | The picture |
+| --- | --- |
+| `contain` | Shows all of it, with bars where it does not reach. The default. |
+| `cover` | Fills the box and cuts off what overflows. |
+| `fill` | Stretches to the box and distorts. |
+| `blur` | Shows all of it over a blurred copy of itself, with no bars. |
 
 <Columns cols={2}>
   <Frame caption="before">
-    <video src="https://cdn.rendobar.com/compose/showcase/opacity/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/opacity/before.jpg" autoPlay loop muted playsInline controls />
+    <video src="https://cdn.rendobar.com/compose/showcase/fit/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/fit/before.jpg" autoPlay loop muted playsInline controls />
   </Frame>
-  <Frame caption="opacity 0.45">
-    <video src="https://cdn.rendobar.com/compose/showcase/opacity/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/opacity/after.jpg" autoPlay loop muted playsInline controls />
+  <Frame caption="fit cover">
+    <video src="https://cdn.rendobar.com/compose/showcase/fit/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/fit/after.jpg" autoPlay loop muted playsInline controls />
   </Frame>
 </Columns>
 
-Keyframes on `opacity` are how a clip fades in or out. Anything that moves is on [Keyframes and easing](/docs/jobs/compose/motion).
+```json
+"transform": { "size": { "width": 304, "height": 540 }, "fit": "cover" }
+```
 
-<Columns cols={2}>
-  <Frame caption="before">
-    <video src="https://cdn.rendobar.com/compose/showcase/speed/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/speed/before.jpg" autoPlay loop muted playsInline controls />
-  </Frame>
-  <Frame caption="speed 2">
-    <video src="https://cdn.rendobar.com/compose/showcase/speed/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/speed/after.jpg" autoPlay loop muted playsInline controls />
-  </Frame>
-</Columns>
+`blur` fills the whole frame around a clip that fills it, so it does not combine with position, size, scale or rotation.
+
+For opacity, speed and blend modes, see [Media clips](/docs/jobs/compose/media).
 
 Every field is in the [clip reference](/docs/jobs/compose/reference/timeline#clip).

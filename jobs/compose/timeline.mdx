@@ -1,42 +1,35 @@
 ---
 title: "How the timeline works"
 sidebarTitle: "Timeline"
-description: "Build a compose timeline from tracks and clips, and learn when to leave start and length out of it entirely."
+description: "Build a compose timeline from tracks and clips, and learn when you can leave start and length out of a clip."
 icon: "layer-group"
 keywords: ["video timeline api", "json video tracks", "video clip timing"]
 canonical: "https://rendobar.com/docs/jobs/compose/timeline"
 ---
 
-A timeline is tracks, and a track is clips. The first track is the background and every track after it draws over the one before. That is the whole model, and the rest of this page is what falls out of it.
+A timeline holds tracks, and each track holds clips.
 
-
-The model is two ideas:
-
-- **Tracks stack.** The first track is the background. Each later track composites on top of the ones below it: overlays, titles, picture-in-picture.
-- **Clips sit in time.** A clip can carry a `start` and a `length` in seconds, and it can leave both out. Two clips on the same track are joined by a transition. A gap between them plays nothing.
-
-So a multi-track timeline is layers (tracks) of sequences (clips). That is the whole structure.
+- **Tracks stack.** The first track is the background. Each later track draws on top of the ones below it, for overlays, titles and picture-in-picture.
+- **Clips sit in time.** A clip can have a `start` and a `length` in seconds, or leave both out. A transition joins two clips on the same track. A gap between clips plays nothing.
 
 ## Timing is optional
 
+Every clip sits in a container, which is its scene or the whole video.
 
-Every clip sits in a **container**: the scene it belongs to, or the whole video. Two sentences cover every case.
+- Omit `length` and the clip runs as long as its content, but never past its container.
+- Write `length: "end"` and it runs to the end of its container, however long its content is.
 
-- **Omit `length`** and the clip runs as long as its **content** does, never past its container.
-- **Write `length: "end"`** and it runs to the end of its **container**, whatever its content says.
+Content length is the source duration, the trim span, the source duration divided by `speed`, or a composition's own end. For example, `speed: 0.5` on a 4 second clip lasts 8 seconds.
 
-Content means the source's duration, or the trim span, or the source duration divided by `speed` (so `speed: 0.5` on a 4 second clip occupies 8 seconds), or a composition's own end.
+Text and images have no duration of their own, so both rules give the same result. A title with no `length` stays up for the whole video, which suits a watermark.
 
-Text and images have no duration of their own, so for them the two sentences say the same thing. A title with no `length` stays up for the whole video, which is what a watermark wants.
+`start` works the same way. Omit it and the clip begins after the clips already on its track, moved earlier by any transition right before it. Set a number and the clip starts that many seconds into its container.
 
-`start` follows the same shape: omit it and the clip begins after everything already placed on its track, pulled back by any transition immediately before it. Give it a number and that is seconds from the start of its container.
-
-Set either field wherever you want something else. Every timeline written with full timing keeps rendering exactly as it did.
+Set either field when you want different timing. Timelines that set every `start` and `length` render as they always did.
 
 ## Worked examples
 
-
-A music bed. The source is three minutes long, the video is not, and `"end"` is how you say so without totalling the clips above it.
+A music bed. The source is three minutes long and the video is shorter. `"end"` stops the music with the video, without you adding up the clips above it.
 
 ```json
 "tracks": [
@@ -51,7 +44,7 @@ A music bed. The source is three minutes long, the video is not, and `"end"` is 
 ]
 ```
 
-A watermark. It has no duration of its own, so it needs nothing at all.
+A watermark needs no timing fields at all.
 
 ```json
 { "clips": [
@@ -60,9 +53,9 @@ A watermark. It has no duration of its own, so it needs nothing at all.
 ] }
 ```
 
-Both stop on the last frame, whatever the clips elsewhere add up to. Add another clip later and they still do.
+Both stop on the last frame, however long the other clips run. If you add another clip later, they still do.
 
-The music bed above, drawn out. Track 1 is the background and the two clips follow each other because neither names a `start`. The music names `length: "end"`, so it stops on the last frame whatever the video adds up to.
+The music bed as a chart. On track 1 the two clips play in turn because neither sets a `start`. The music has `length: "end"`, so it stops on the last frame.
 
 ```mermaid
 gantt
@@ -78,19 +71,19 @@ gantt
 
 ## The rules that fall out of it
 
+A clip that runs to the end of the video is measured against every clip that does not, so two of them on different tracks both stop on the real last frame. Nothing may follow it on the same track. A timeline where no clip has a length of its own has no end to measure, and the API rejects it.
 
-A clip running to the end of the **video** is measured against every clip that is not, so two of them on different tracks both land on the real end rather than chasing each other. It runs to the last frame, so nothing may follow it on the same track, and a timeline where nothing has a length of its own has no end to measure and is rejected.
+If two clips on one track overlap with no transition between them, they dissolve into each other across the overlap, as if a `crossfade` sat there. For a cut, start the second clip where the first ends.
 
-A clip never runs past its container, so a 6 second video in a 3 second scene plays 3 seconds, and a 2 second video in a 5 second scene plays 2. That applies to a length you wrote as well as one the engine worked out.
+A clip never runs past its container. A 6 second video in a 3 second scene plays 3 seconds, and a 2 second video in a 5 second scene plays 2. This holds whether you wrote the length or left it out.
 
-`"end"` is the opposite request and does not cap: it asks for the container's full extent whatever the source holds. On a source shorter than the container that is impossible, and the job is rejected for outrunning its source. Leave the length off instead, or trim less.
+`"end"` does not cap. It asks for the full length of the container, however long the source is. If the source is shorter, the job is rejected for outrunning its source. Leave `length` off, or trim less.
 
-Inside a `composition`, `start` and `length` both stay required. A nested timeline's length is set by the clip hosting it, so there is nothing to append to and no container to measure against.
+Inside a `composition`, `start` and `length` are both required. The clip that holds the composition sets its length, so there is nothing to append to and no container to measure against.
 
 ## Add a layer
 
-
-A second track renders over the first. This lays an animated title over the video.
+A second track renders over the first. This example puts an animated title over the video.
 
 ```json
 "tracks": [
@@ -104,6 +97,17 @@ A second track renders over the first. This lays an animated title over the vide
 ]
 ```
 
+## Background
+
+`background` is the colour that shows wherever no clip draws, such as the bars around a boxed shot. The default is black. `"transparent"` makes those areas see-through on png and webm output. See [transparent video](/docs/jobs/compose/output#transparent-video).
+
+```json
+"timeline": {
+  "background": "#059669",
+  "tracks": [{ "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" }, "transform": { "size": { "width": "46%", "height": "100%" } } }] }]
+}
+```
+
 <Columns cols={2}>
   <Frame caption="before">
     <video src="https://cdn.rendobar.com/compose/showcase/background/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/background/before.jpg" autoPlay loop muted playsInline controls />
@@ -115,8 +119,7 @@ A second track renders over the first. This lays an animated title over the vide
 
 ## Scene-first authoring
 
-
-Tracks give you precise multi-track control. For a sequential edit, you can instead describe a list of scenes. Each scene is a self-contained segment with its own clips. A scene's `transition` blends INTO it from the previous scene, so put it on the second of two scenes. `overlays` is a flat list of clips that sit over the whole composition, like a persistent logo or watermark.
+Tracks give you precise multi-track control. For an edit that plays one segment after another, you can write a list of scenes. Each scene is a segment with its own clips. A scene's `transition` blends into it from the previous scene, so put it on the second of two scenes. `overlays` is a flat list of clips that sit over the whole video, such as a logo or watermark.
 
 ```json
 {
@@ -133,7 +136,7 @@ Tracks give you precise multi-track control. For a sequential edit, you can inst
 }
 ```
 
-A scene's clips can omit `start` and `length` to span the whole scene, and a scene can omit its own `duration` to take the length of the video inside it. Every clip field works the same as in tracks mode. `scenes` and `tracks` are mutually exclusive: a timeline uses one or the other.
+A scene's clips can omit `start` and `length` to fill the whole scene. A scene can omit `duration` to take the length of the video inside it. Clip fields work the same as with tracks, except that animated text and 3D turns work only on top-level tracks and in `overlays`, not inside a scene or a composition. A timeline uses `scenes` or `tracks`, never both.
 
 <Frame caption="two scenes, crossfaded">
   <video src="https://cdn.rendobar.com/compose/showcase/scenes/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/scenes/after.jpg" autoPlay loop muted playsInline controls />
@@ -150,7 +153,24 @@ A scene's clips can omit `start` and `length` to span the whole scene, and a sce
 
 ## A timeline as one clip
 
-A `composition` asset holds a whole timeline of its own, so a group of layers can be moved, scaled and faded together rather than one at a time.
+A `composition` asset holds a timeline of its own, so you can move, scale and fade a group of layers together. Its `timeline` takes `tracks` only, and every clip inside needs an explicit `start` and `length`. Compositions nest up to three levels deep.
+
+```json
+{
+  "asset": {
+    "type": "composition",
+    "timeline": {
+      "tracks": [
+        { "clips": [{ "asset": { "type": "video", "src": "https://cdn.rendobar.com/assets/examples/sea.mp4" }, "start": 0, "length": 6 }] },
+        { "clips": [{ "asset": { "type": "text", "text": "OPEN WATER", "style": { "font": "Bebas Neue", "size": 84, "color": "#FFFFFF" } }, "start": 0, "length": 6 }] }
+      ]
+    }
+  },
+  "transform": { "scale": 0.52, "rotate": -5 },
+  "start": 0,
+  "length": 6
+}
+```
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -163,4 +183,4 @@ A `composition` asset holds a whole timeline of its own, so a group of layers ca
 
 ## Where to go next
 
-Clips blend into each other on [Transitions](/docs/jobs/compose/transitions). Anything that moves is on [Keyframes and easing](/docs/jobs/compose/motion). Every field a clip takes is listed in the [clip reference](/docs/jobs/compose/reference/timeline).
+See [Transitions](/docs/jobs/compose/transitions) to blend clips together and [Keyframes and easing](/docs/jobs/compose/motion) to make things move. [Media clips](/docs/jobs/compose/media) covers what a clip can hold, and the [clip reference](/docs/jobs/compose/reference/timeline) lists every field.

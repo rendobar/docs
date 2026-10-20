@@ -82,7 +82,7 @@ flowchart LR
 | `failed` | Errored. Read `error.code` and `error.message`. |
 | `cancelled` | Stopped before it finished. |
 
-On any terminal status the job is billed for the compute it used, and a [webhook](/guides/webhooks) fires if you configured one. A job that never started settles free. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its plan's time limit fails with `JOB_TIMEOUT` and is billed for the compute it consumed. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged. Cancelling a `running` job stops the upstream execution too.
+On any terminal status the job is billed for the compute it used ([compose](/docs/jobs/compose/pricing) bills per second of output it delivers, and its failures follow their own rule), and a [webhook](/guides/webhooks) fires if you configured one. A job that never started settles free. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its plan's time limit fails with `JOB_TIMEOUT` and is billed for the compute it consumed, except a compose render, which is free. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged. Cancelling a `running` job stops the upstream execution too.
 
 ## What does a job return? {#the-output}
 
@@ -227,11 +227,11 @@ Poll `GET /jobs/{id}` every second or two until the status is terminal, or skip 
 
 ## See also
 
-- [Webhooks](/guides/webhooks): push status changes instead of polling
-- [Credits and billing](/concepts/credits): how the terminal debit works
-- [Error codes](/support/errors): every `error.code` a failed job returns
-- [FFmpeg](/jobs/ffmpeg): a job type end to end
-- [Compose](/jobs/compose): a render described as a JSON timeline
-- [Compress](/jobs/compress): a job that searches encodes to hit a budget
-- [Animated captions](/jobs/captions/animate): a job that transcribes and renders
-- [Generate an image](/jobs/image-generate): the same job shape on a diffusion model
+- [Webhooks](/docs/guides/webhooks): push status changes instead of polling
+- [Credits and billing](/docs/concepts/credits): how the terminal debit works
+- [Error codes](/docs/support/errors): every `error.code` a failed job returns
+- [FFmpeg](/docs/jobs/ffmpeg): a job type end to end
+- [Compose](/docs/jobs/compose): a render described as a JSON timeline
+- [Compress](/docs/jobs/compress): a job that searches encodes to hit a budget
+- [Animated captions](/docs/jobs/captions/animate): a job that transcribes and renders
+- [Generate an image](/docs/jobs/image-generate): the same job shape on a diffusion model

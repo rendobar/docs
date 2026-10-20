@@ -14,16 +14,28 @@ Set `asset.type` to `"text"`. These are its own fields, on top of the [clip fiel
 | Field | Type | What it does |
 | --- | --- | --- |
 | `text` * | string | The text to render. Keep titles short, 2-6 words reads best. |
-| `style` * | object |  |
+| `style` | object |  default `{}`. |
 | `style.font` | string | Font family, or a CSS fallback stack. Any Google Fonts family works by name. Bundled and instant: Inter, Bebas Neue, Anton, Montserrat, Poppins, Roboto, Oswald. Families declared in the `fonts` job input win over both. A stack falls through in CSS order, so "Display, Inter, sans-serif" tries each in turn. default `"Inter"`. |
-| `style.size` * | number | Font size in pixels of the output frame. ~64-96 for titles at 1080p, ~36-48 for lower thirds. over 0. |
+| `style.size` | number | Font size in pixels of the output frame. ~64-96 for titles at 1080p, ~36-48 for lower thirds. Defaults to 64. default `64`, over 0. |
 | `style.weight` | integer | Font weight 100..1000 (400 regular, 700 bold, 800+ display). Honoured exactly on variable fonts; snapped to the nearest available weight otherwise. default `400`, min 100, max 1000. |
 | `style.italic` | boolean | Render the italic cut of the family, when it has one. default `false`. |
 | `style.color` | string | Text fill color, hex like "#FFFFFF". default `"#FFFFFF"`, pattern `^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$`. |
 | `style.stroke` | object | Outline around the glyphs. A 2-4px black stroke keeps white text readable on bright footage. |
+| `style.stroke.color` * | string | Outline color, hex like "#000000". pattern `^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$`. |
+| `style.stroke.width` * | number | Outline width in pixels. 2 to 4 keeps text readable over busy footage. min 0. |
 | `style.background` | string | Solid box color behind the text, hex. Omit for no box. pattern `^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$`. |
 | `style.align` | `"left"` \| `"center"` \| `"right"` | How the lines line up, and which side of the text sits on the clip's transform.position x: left starts there, center is centred on it, right ends there. Place the text with the clip's transform, not here. default `"center"`. |
-| `style.animate` | object | Entrance animation. Omit for text that is present from its first frame. |
+| `style.animate` | object | How the text enters, and optionally leaves: \{"type":"slideUp","by":"word"\} brings a title in word by word. A split (`by`), a blur or scale entrance and an exit (`out`) render up to 1080p at 30 fps on self-serve plans. Omit for text that is present from its first frame to its last. |
+| `style.animate.type` * | `"fade"` \| `"slideUp"` \| `"slideDown"` \| `"slideLeft"` \| `"slideRight"` \| `"blur"` \| `"scale"` | How the text arrives: fade in place, slide in from the named direction while fading, blur comes into focus, scale grows from small. |
+| `style.animate.duration` | number | Seconds the whole entrance takes. With `by`, the last unit lands at this time. 0.4 to 0.8 reads polished for one piece of text, 0.8 to 1.5 for a split title. default `0.5`, over 0. |
+| `style.animate.by` | `"letter"` \| `"word"` \| `"line"` | Animate the text one letter, word or line at a time: kinetic titles and lower thirds. Omit it and the text moves as one piece. |
+| `style.animate.stagger` | number | Seconds between one unit starting and the next. Omit it and the units spread evenly over the first 40% of `duration`. min 0. |
+| `style.animate.order` | `"start"` \| `"end"` \| `"center"` \| `"edges"` \| `"random"` | Which unit starts first. center and edges start units at the same distance together. random is seeded by the clip, so a re-render is identical. default `"start"`. |
+| `style.animate.out` | `"fade"` \| `"slideUp"` \| `"slideDown"` \| `"slideLeft"` \| `"slideRight"` \| `"blur"` \| `"scale"` | How the text leaves over the clip's last `duration` seconds, with the same split and order. Omit it to hold until the clip ends. |
 | `style.shadow` | object | Drop shadow behind the text, adds depth and readability. |
+| `style.shadow.color` | string | Shadow color, hex. default `"#000000"`, pattern `^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$`. |
+| `style.shadow.opacity` | number | Shadow opacity 0..1. default `0.6`, min 0, max 1. |
+| `style.shadow.offsetX` | number | Horizontal shadow offset in pixels. default `4`. |
+| `style.shadow.offsetY` | number | Vertical shadow offset in pixels. default `4`. |
 
 Fields marked `*` are required. Every table on this page is generated from the schema the API validates with, so it cannot drift from what a render accepts.
