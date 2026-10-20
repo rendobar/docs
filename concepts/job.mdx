@@ -82,7 +82,7 @@ flowchart LR
 | `failed` | Errored. Read `error.code` and `error.message`. |
 | `cancelled` | Stopped before it finished. |
 
-On any terminal status the job is billed for the compute it used ([compose](/jobs/compose/pricing) bills per second of output instead), and a [webhook](/guides/webhooks) fires if you configured one. A job that never started settles free. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its plan's time limit fails with `JOB_TIMEOUT` and is billed for the compute it consumed. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged. Cancelling a `running` job stops the upstream execution too.
+On any terminal status the job is billed for the compute it used ([compose](/docs/jobs/compose/pricing) bills per second of output it delivers, and its failures follow their own rule), and a [webhook](/guides/webhooks) fires if you configured one. A job that never started settles free. Failures carry an `error.code` from the [error catalogue](/support/errors). A job that runs past its plan's time limit fails with `JOB_TIMEOUT` and is billed for the compute it consumed, except a compose render, which is free. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged. Cancelling a `running` job stops the upstream execution too.
 
 ## What does a job return? {#the-output}
 

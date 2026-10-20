@@ -70,7 +70,7 @@ const ok = await verifyWebhook(rawBody, req.headers, process.env.WEBHOOK_SECRET)
 if (!ok) throw new Error("invalid signature");
 ```
 
-`verifyWebhook` rebuilds the signed string, checks the HMAC, rejects stale deliveries so a captured request cannot be replayed, and accepts either secret during a [rotation](#secret-rotation). It has no dependencies and runs on Node, Deno, Bun, Cloudflare Workers, and the browser.
+`verifyWebhook` rebuilds the signed string, checks the HMAC, rejects stale deliveries so a captured request cannot be replayed, and accepts either secret during a [rotation](#how-do-i-rotate-the-signing-secret). It has no dependencies and runs on Node, Deno, Bun, Cloudflare Workers, and the browser.
 
 A full receiver on Express. The one rule: verify the raw bytes, before any JSON parser touches them.
 

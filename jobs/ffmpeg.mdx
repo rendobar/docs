@@ -173,7 +173,7 @@ This burns a subtitle track that lives only in the request, with no file to host
     </ResponseField>
   </Expandable>
 
-  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See [Input sources](#input-sources).
+  Filters that read a file by name (`subtitles=`, `lut3d=`, `drawtext fontfile=`, `concat` lists) must get that file through `inputs`. They are not `-i` arguments. See [Input sources](#what-can-i-use-as-an-input).
 </ParamField>
 
 <ParamField body="command" type="string" required>
@@ -195,7 +195,7 @@ This burns a subtitle track that lives only in the request, with no file to host
   - `gpu`: force a GPU machine.
   - `cpu`: force a CPU machine. A command that calls an NVENC encoder is rejected with `VALIDATION_ERROR`.
 
-  GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require a Pro or Studio plan**. A GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan. See [GPU acceleration](#gpu-acceleration).
+  GPU jobs run the hardware encoders `h264_nvenc`, `hevc_nvenc`, and `av1_nvenc` on NVIDIA L4 GPUs, billed per second. `gpu` and `auto`-routed GPU jobs **require a Pro or Studio plan**. A GPU job on the Free plan returns `403 PLAN_LIMIT`. `cpu` and `auto` work on every plan. See [GPU acceleration](#can-i-use-gpu-acceleration).
 </ParamField>
 
 ## Can I validate a command without running it?

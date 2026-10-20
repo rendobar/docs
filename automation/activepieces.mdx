@@ -105,7 +105,7 @@ When the job ends, Rendobar's callback resumes the flow. The step then re-reads 
 
 If Rendobar cannot reach this Activepieces from the internet, there is nowhere to call back to. The step polls instead for up to **Maximum Wait (seconds)**, 300 by default, then returns the job as it stands. Keep that below the flow timeout. The job keeps running on Rendobar either way.
 
-Turn **Wait for the Result** off to submit and move on, then pick up the result with [Finished Job](#start-a-flow-when-a-job-finishes). Two more settings shape the step:
+Turn **Wait for the Result** off to submit and move on, then pick up the result with [Finished Job](#how-do-i-start-a-flow-when-a-job-finishes). Two more settings shape the step:
 
 - **Fail This Step if the Job Fails** is on by default, so a failed job runs the flow's error path. Turn it off to branch on `succeeded` instead.
 - **Idempotency Key** is derived from the run, the step and the submission when left empty. An automatic retry then settles on the job it already created instead of billing a second one.

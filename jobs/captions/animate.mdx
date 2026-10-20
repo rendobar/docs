@@ -105,7 +105,7 @@ curl -X POST https://api.rendobar.com/jobs \
 
 <ParamField body="style" type="object">
   Style overrides layered on top of `preset`. Any field set here wins. Unset fields fall through to the preset. Key fields:
-  - `font`: font family name. A [bundled family](#fonts) or the family name of a custom font you pass via the `font` input.
+  - `font`: font family name. A [bundled family](#which-fonts-can-i-use) or the family name of a custom font you pass via the `font` input.
   - `layout`: `phrase` (up to two balanced lines) or `word` (one word at a time).
   - `position`: `top`, `center`, or `bottom`.
   - `entrance`: `fade`, `pop`, or `bounce`. Each word reveals at its spoken moment.
@@ -136,7 +136,7 @@ curl -X POST https://api.rendobar.com/jobs \
 </ParamField>
 
 <ParamField body="font" type="string">
-  URL of your own font file (TTF, OTF, TTC, WOFF, WOFF2). Captions render in it, and it takes priority over `style.font`, so you do not need to know the family name inside your own file. See [Fonts](#fonts).
+  URL of your own font file (TTF, OTF, TTC, WOFF, WOFF2). Captions render in it, and it takes priority over `style.font`, so you do not need to know the family name inside your own file. See [Fonts](#which-fonts-can-i-use).
 </ParamField>
 
 ## Which fonts can I use?

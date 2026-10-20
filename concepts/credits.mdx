@@ -1,7 +1,7 @@
 ---
 title: "Credits and billing"
 sidebarTitle: "Credits"
-description: "Get per-job nanodollar billing from a prepaid credit balance. Free includes a signup grant, Pro adds monthly credits, and credits never expire."
+description: "Get per-job nanodollar billing from a prepaid credit balance. Free includes a signup grant, Pro and Studio add monthly credits, and credits never expire."
 icon: "coins"
 keywords: ["credit-based billing", "nanodollar pricing", "rendobar credits", "video api credits", "prepaid balance"]
 canonical: "https://rendobar.com/docs/concepts/credits"
@@ -15,7 +15,7 @@ canonical: "https://rendobar.com/docs/concepts/credits"
       "@type": "TechArticle",
       "@id": "https://rendobar.com/docs/concepts/credits#article",
       "headline": "Credits and billing",
-      "description": "Get per-job nanodollar billing from a prepaid credit balance. Free includes a signup grant, Pro adds monthly credits, and credits never expire.",
+      "description": "Get per-job nanodollar billing from a prepaid credit balance. Free includes a signup grant, Pro and Studio add monthly credits, and credits never expire.",
       "datePublished": "2026-03-20",
       "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
       "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
@@ -38,7 +38,7 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compos
 | API requests/min | 120 | 600 | 1200 |
 | Max input file | 500 MB | 10 GB | 10 GB |
 | Job timeout | 1 hour | 9 hours | 9 hours |
-| Output retention | 7 days | 30 days | 30 days |
+| Output retention | 7 days | 30 days | 90 days |
 | Compose frame | Up to 1080p at 30 fps | Up to 1440p at 30 fps | Up to 4K at 60 fps |
 | Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
 | GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
@@ -58,7 +58,7 @@ Every job is billed in nanodollars (one-billionth of a US dollar) drawn from you
 - **Cost matches the work.** Compute-billed jobs pay for the seconds they ran, and compose pays for the seconds of video it delivers. A 30-second 1080p job shouldn't cost the same as a 10-minute 4K render of a large master.
 - **Prepaid means predictable budgets.** You top up when you want; jobs run only if affordable. No end-of-month surprise bill.
 
-## When do credits expire?
+## When is a job charged?
 
 1. **Submit gate.** Submit is atomic and does not reject on concurrency. If your balance is greater than zero the job is accepted. Jobs run at your plan's concurrency and any extra wait in a queue, starting in order as slots free. We do not estimate cost at submit. For compose, `POST /compose/validate` returns the price before you submit. A zero balance returns `402 INSUFFICIENT_CREDITS`, and a full queue returns `429 QUEUE_FULL`.
 2. **Execution.** Job runs. Balance untouched.
