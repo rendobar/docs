@@ -136,7 +136,7 @@ Tracks give you precise multi-track control. For an edit that plays one segment 
 }
 ```
 
-A scene's clips can omit `start` and `length` to fill the whole scene. A scene can omit `duration` to take the length of the video inside it. Clip fields work the same as with tracks. A timeline uses `scenes` or `tracks`, never both.
+A scene's clips can omit `start` and `length` to fill the whole scene. A scene can omit `duration` to take the length of the video inside it. Clip fields work the same as with tracks, except that animated text and 3D turns work only on top-level tracks and in `overlays`, not inside a scene or a composition. A timeline uses `scenes` or `tracks`, never both.
 
 <Frame caption="two scenes, crossfaded">
   <video src="https://cdn.rendobar.com/compose/showcase/scenes/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/scenes/after.jpg" autoPlay loop muted playsInline controls />

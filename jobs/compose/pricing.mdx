@@ -18,7 +18,7 @@ Each render bills at least 15 seconds, which is 1 cent. You pay from your [credi
 | 2 min | \$0.08 |
 | 10 min | \$0.40 |
 
-Frame size and animated graphics do not change the price. A 2-minute render costs the same at 720p or 4K, with or without animated text and 3D turns.
+Frame size and animated graphics do not change the price. A 2-minute render costs the same at 720p or 4K. Animated text and 3D turns render up to 1080p at 30 fps, and adding them does not change the price.
 
 ## What each plan renders
 
@@ -41,7 +41,7 @@ A `fade` or a slide of a whole title, a Lottie animation and a 2D transform do n
 
 Pro costs \$9 a month and includes \$5 of monthly credit. Studio costs \$29 a month and includes \$20 of monthly credit. Their compose discount is a 25% bonus on every credit purchase, so \$25 buys \$31.25 of credit. See [credits and billing](/docs/concepts/credits#plans).
 
-A video above your plan returns `403 PLAN_LIMIT` at submit, before anything renders or is charged. The message names the plan that can render it. Only video outputs (`mp4`, `webm`, `gif`) are checked. A `jpg`, `png` or `mp3` output renders on every plan.
+A video above your plan returns `403 PLAN_LIMIT` at submit, before anything renders or is charged. `upgradeTo` in `error.details` names the plan that can render it, or is `null` when only an enterprise plan can. Only video outputs (`mp4`, `webm`, `gif`) are checked. A `jpg`, `png` or `mp3` output renders on every plan.
 
 `GET /account/capabilities` returns your plan's limits: `composeMaxPixels` and `composeMaxFps` for a plain edit, and `composeAnimatedMaxPixels` and `composeAnimatedMaxFps` for one with animated graphics.
 
@@ -49,7 +49,7 @@ A video above your plan returns `403 PLAN_LIMIT` at submit, before anything rend
 
 You pay nothing for a render that fails on Rendobar's side, or for a job that never started.
 
-If the failure may come from your input, such as the render tool exiting on a bad file, you pay for the compute the job used at 2x. To see which case you hit, check `error.code` on the job against the [error codes](/docs/support/errors).
+If the failure may come from your input, such as the render tool exiting on a bad file, you pay for the compute the job used at 2x. `GET /jobs/{id}` returns the job's `cost` once it is billed, so you can see what a failed render was charged.
 
 ## Check a timeline before you render
 
@@ -77,7 +77,7 @@ The response contains:
 | Field | Holds |
 | --- | --- |
 | `valid` | Whether the timeline would be accepted |
-| `problems` | What is wrong, each with the path of its field. A plan limit appears at `["output"]`, with the plan that can render it. |
+| `problems` | What is wrong, each with the path of its field. A plan limit appears at `["output"]`, with `upgradeTo` set to `"pro"` or `"studio"`, or `null` when only an enterprise plan renders it. |
 | `params` | The timeline as the engine reads it, with every default filled in |
 | `upgraded` | Anything written for an older API version and upgraded to the current shape. Old timelines keep rendering. |
 | `warnings` | Settings the render will ignore or adjust, such as a transition longer than a clip, or a font that falls back |
