@@ -1,16 +1,13 @@
 ---
 title: "Keyframes and easing"
 sidebarTitle: "Motion"
-description: "Add keyframes to position, scale, rotation, opacity, volume and any numeric effect parameter, with 33 easings."
+description: "Add keyframes to position, scale, rotation, 3D turns, opacity, volume and any numeric effect parameter, with 33 easings."
 icon: "chart-line"
 keywords: ["video keyframes api", "ken burns effect api", "video easing curves"]
 canonical: "https://rendobar.com/docs/jobs/compose/motion"
 ---
 
-One shape covers a Ken Burns push, a fade, a colour change and ducking music under a voice.
-
-
-Any numeric field that moves takes a list instead of a value: `position`, `scale`, `rotate`, `opacity`, `volume`, a shape's `color` and `radius`, a box's `size`, and any numeric effect parameter.
+To animate a numeric field, give it a list of keyframes instead of a value. [Where keyframes are accepted](#where-keyframes-are-accepted) lists every field that takes one.
 
 ```json
 "transform": {
@@ -21,11 +18,10 @@ Any numeric field that moves takes a list instead of a value: `position`, `scale
 }
 ```
 
-- `time` is seconds from the clip's start, or a percent of its length, so `"100%"` means the last frame without knowing how long the clip is.
-- `easing` shapes the move **from that keyframe to the next one**, so it goes on the first of a pair. The last keyframe's easing is never used.
-- 33 easings: `step`, `linear`, `smooth`, and the `easeIn`, `easeOut` and `easeInOut` families over Sine, Quad, Cubic, Quart, Quint, Expo, Circ, Back, Elastic and Bounce.
+- `time` is seconds from the clip's start or a percent of its length. `"100%"` is the last frame, whatever the clip's length.
+- `easing` sets the curve from that keyframe to the next, so put it on the first of a pair. The last keyframe's easing is never used. There are 33 easings, listed below.
 
-A Ken Burns push-in is the example above. A fade is the same shape on `opacity`, and ducking music under a voice is the same shape on `volume`.
+The example above is a Ken Burns push-in. Use the same keyframes on `opacity` for a fade, on a shape's `color` for a colour change, or on `volume` to duck music under a voice.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -36,14 +32,44 @@ A Ken Burns push-in is the example above. A fade is the same shape on `opacity`,
   </Frame>
 </Columns>
 
-A still photograph becomes a shot. Nothing else changed between the two.
+The scale keyframes are the only difference between the two videos.
 
 ## Where keyframes are accepted
 
-`transform.position`, `transform.scale`, `transform.rotate`, `transform.size`, clip `opacity`, clip `volume`, a shape's `color` and `radius`, and every effect parameter marked animatable in the [effect reference](/docs/jobs/compose/reference/effects).
+`transform.position`, `transform.scale`, `transform.rotate`, `transform.rotateX`, `transform.rotateY`, `transform.size` (a box's size), `transform.corners` (the four corners of a pin), clip `opacity`, `asset.volume` on video and audio, a shape's `color` and `radius`, and every effect parameter marked animatable in the [effect reference](/docs/jobs/compose/reference/effects).
+
+## Turning in 3D
+
+`rotateY` turns a clip around its vertical axis and `rotateX` tips it around its horizontal axis. Both are in degrees and take keyframes. `perspective` is the viewer's distance from the frame in pixels. 600 looks dramatic, 2000 looks subtle, and the default is 1200. The clip turns about its `anchor`.
+
+```json
+"transform": {
+  "scale": 0.62,
+  "rotateY": [
+    { "time": 0, "value": -80, "easing": "easeOutCubic" },
+    { "time": 1.4, "value": -18 }
+  ],
+  "perspective": 900
+}
+```
+
+<Columns cols={2}>
+  <Frame caption="before">
+    <video src="https://cdn.rendobar.com/compose/showcase/rotate-3d/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/rotate-3d/before.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+  <Frame caption="rotateY from -80 to -18, perspective 900">
+    <video src="https://cdn.rendobar.com/compose/showcase/rotate-3d/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/rotate-3d/after.jpg" autoPlay loop muted playsInline controls />
+  </Frame>
+</Columns>
+
+Use a turn on a card, a picture-in-picture or a product reveal. On full-frame footage, it shows the frame's edges.
+
+<Note>
+A 3D turn makes the clip an animated graphic. It costs the same per second, and renders up to 1080p at 30 fps on every self-serve plan. See [what each plan renders](/docs/jobs/compose/pricing#what-each-plan-renders).
+</Note>
 
 ## The 33 easings
 
-`step` holds the value until the next keyframe. `linear` moves at a constant rate. `smooth` eases in and out gently. The remaining 30 are the `easeIn`, `easeOut` and `easeInOut` families over Sine, Quad, Cubic, Quart, Quint, Expo, Circ, Back, Elastic and Bounce.
+`step` holds the value until the next keyframe. `linear` moves at a constant rate. `smooth` curves through every keyframe, so a move across several keyframes has no sharp corners. The other 30 are the `easeIn`, `easeOut` and `easeInOut` families over Sine, Quad, Cubic, Quart, Quint, Expo, Circ, Back, Elastic and Bounce.
 
-Back, Elastic and Bounce overshoot the value you gave, which is the point of them, so leave room at the edges of the frame when you use one on `position`.
+Back, Elastic and Bounce overshoot the value you set, by design. When you use one on `position`, leave room at the edges of the frame.

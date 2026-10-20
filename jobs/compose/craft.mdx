@@ -7,21 +7,32 @@ keywords: ["video editing best practices", "social video pacing", "video title s
 canonical: "https://rendobar.com/docs/jobs/compose/craft"
 ---
 
-
-
-You do not need editing experience to get professional results. These are the conventions working editors follow, translated into compose fields. AI agents get the same rules automatically through the MCP compose reference.
+These are the rules working editors follow, written as compose fields. You need no editing experience to use them. AI agents get the same rules from the MCP compose reference.
 
 ## Pacing
 
+Clip `length` sets the pace:
 
-Clip `length` is the pacing lever. Social clips run 0.8 to 3 seconds each with a visual change at least every 3 seconds, vlogs 2 to 6, tutorials 5 to 15 (cut at step boundaries), cinematic 4 to 8 with varied lengths. Shorten clips as the video builds, then hold the final shot about twice as long. The first clip is the hook: no fade-in, no logo, the payoff visible or promised within 3 seconds. A 20 to 35 second total is the highest-completion band on social.
+- Social: 0.8 to 3 seconds, with a visual change at least every 3 seconds
+- Vlog: 2 to 6 seconds
+- Tutorial: 5 to 15 seconds, cut where a step ends
+- Cinematic: 4 to 8 seconds, with varied lengths
 
-Cutting to music: seconds per beat is 60 divided by BPM. Cut every 2 or 4 beats, every beat only at the climax. For 120 BPM music that means 1 or 2 second clips.
+Shorten clips as the video builds, then hold the final shot about twice as long. Make the first clip the hook, with no fade-in or logo, and show or promise the payoff within 3 seconds. On social, 20 to 35 second videos have the highest completion rate.
+
+To cut to music, one beat lasts 60 divided by BPM seconds. Cut every 2 or 4 beats, and on every beat only at the climax. At 120 BPM that gives 1 or 2 second clips.
 
 ## Text placement and size
 
+On vertical video, keep all text inside x 8 to 92% and y 13.5 to 83%, clear of the platform's interface. Put captions at y 60 to 75%.
 
-On vertical video keep every text element inside x 8 to 92%, y 13.5 to 83% (platform UI covers the rest). Captions sit at y 60 to 75%. Sizes at 1080x1920: titles 135 to 190px, lower thirds 70 to 80px, captions 90 to 105px. Always add a stroke (black, width 4 to 8), a shadow, or a background box. Titles are 6 words or fewer, 2 lines maximum. Pair one display font (Oswald, Anton, Bebas Neue) with one body font (Inter, Roboto).
+Sizes at 1080x1920:
+
+- Titles: 135 to 190px
+- Lower thirds: 70 to 80px
+- Captions: 90 to 105px
+
+Give all text a stroke (black, width 4 to 8), a shadow or a background box. Keep titles to 6 words or fewer and 2 lines at most. Pair one display font (Oswald, Anton, Bebas Neue) with one body font (Inter, Roboto).
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -34,7 +45,6 @@ On vertical video keep every text element inside x 8 to 92%, y 13.5 to 83% (plat
 
 ## Color looks
 
-
 Apply one look to every clip in the video:
 
 | Look | `color` value |
@@ -46,11 +56,10 @@ Apply one look to every clip in the video:
 | Bright social | `{ "temperature": 6800, "saturation": 1.3, "gamma": 1.15 }` |
 | Night | `{ "temperature": 11000, "saturation": 0.6, "gamma": 0.8, "brightness": -0.15 }` |
 
-With faces in frame stay inside saturation 0.7 to 1.3, hue within 8 degrees, temperature 4500 to 12000K. To match two clips shot differently: fix brightness first, then temperature, then saturation.
+When faces are in frame, keep saturation at 0.7 to 1.3, hue within 8 degrees and temperature at 4500 to 12000K. To match two clips shot differently, fix brightness first, then temperature, then saturation.
 
 ## Photos need motion
 
+A still photo in a video looks like a mistake. Give every image clip a slow zoom (a Ken Burns move): `"transform": { "position": { "x": "50%", "y": "50%" }, "scale": [{ "time": "0%", "value": 1, "easing": "easeInOutSine" }, { "time": "100%", "value": 1.12 }] }`.
 
-A static photo in a video reads as a mistake. Give every image clip a gentle Ken Burns move: `"transform": { "position": { "x": "50%", "y": "50%" }, "scale": [{ "time": "0%", "value": 1, "easing": "easeInOutSine" }, { "time": "100%", "value": 1.12 }] }`.
-
-Pacing and transitions have their own longer treatment on [Transitions](/docs/jobs/compose/transitions), and levels on [Audio](/docs/jobs/compose/audio).
+For more on pacing and transitions, see [Transitions](/docs/jobs/compose/transitions). For levels, see [Audio](/docs/jobs/compose/audio).

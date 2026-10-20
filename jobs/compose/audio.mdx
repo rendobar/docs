@@ -1,45 +1,115 @@
 ---
-title: "Audio levels and effects"
-sidebarTitle: "Audio"
-description: "Set levels and fades, clean up a voice recording, and draw sound onto the picture as a waveform or bars."
+title: "Audio levels, mixing and effects"
+sidebarTitle: "Audio and mixing"
+description: "Set each clip's level, fade and duck music under a voice, pan and mix tracks, clean up a recording, and draw the sound onto the picture."
 icon: "waveform-lines"
-keywords: ["video audio api", "audio normalize api", "audiogram api"]
+keywords: ["video audio api", "duck music under voice api", "audio normalize api", "audiogram api", "mix audio json"]
 canonical: "https://rendobar.com/docs/jobs/compose/audio"
 ---
 
-Sound is a clip like any other, and a `volume` on any clip that has audio sets its level. Fades sit next to it. Everything past that is an effect on the `sound` medium, and the same effect list works on a clip or on a whole track.
+Sound comes from `audio` clips and from the sound in `video` clips. All tracks with sound play at once in one mix. Set each clip's level, then shape the sound with effects on a clip, a track or the whole mix.
 
 ```json
 {
-  "asset": { "type": "audio", "src": "https://example.com/music.mp3", "volume": 0.35, "fadeIn": 1.5, "fadeOut": 2 },
+  "asset": { "type": "audio", "src": "https://example.com/music.mp3", "volume": 0.35, "fadeIn": 1.5, "fadeOut": 3 },
   "length": "end"
 }
 ```
 
-## Levels that work
+`length: "end"` runs the music to the end of the video, however long it is.
 
+## Levels
 
-`volume` is linear gain. With speech at 1.0: music under speech 0.10 to 0.12, music alone 0.35 to 0.5, sound effects 0.25 to 0.32. Fade music in over 1 to 2 seconds and out over 3 to 5, ending on the last frame. To duck music under speech, keep one music clip and put keyframes on its `volume`: 0.4 before the first word, 0.11 under the speech, back to 0.4 after it. `fadeIn` and `fadeOut` work alongside those keyframes.
+`volume` is linear gain on a `video` or `audio` asset. `1` keeps the source level and `0` mutes it. Under speech at `1`, set music to `0.2` to `0.4`. On its own, set it to `0.35` to `0.5`.
 
-## Cleaning up a recording
+`fadeIn` and `fadeOut` fade an audio clip in from silence and out to silence, in seconds. Fade music in over 1 to 2 seconds and out over 3 to 5, ending on the last frame.
 
-`loudness` brings a quiet recording to a streaming target. `voiceDenoise` removes steady background noise from under speech. `gate` closes the microphone between phrases, `highPass` cuts rumble below the voice, `eq` shapes it, and `compressor` evens out loud and quiet words.
+## Ducking music under a voice
 
-## Shaping and colour
+Use one music clip and keyframe its `volume`: up before the first word, down under the speech, up again after. `fadeIn` and `fadeOut` still apply on top.
 
-`reverb`, `echo`, `pitch`, `lowPass` and `limiter`. A limiter makes music louder without letting peaks clip.
+```json
+{
+  "asset": {
+    "type": "audio",
+    "src": "https://example.com/music.mp3",
+    "volume": [
+      { "time": 0, "value": 0.4 },
+      { "time": 2.5, "value": 0.2, "easing": "easeInOutSine" },
+      { "time": 9, "value": 0.2 },
+      { "time": 9.6, "value": 0.4 }
+    ],
+    "fadeOut": 3
+  },
+  "length": "end"
+}
+```
+
+## Panning
+
+`pan` places a clip's sound from `-1` (full left) through `0` (centred) to `1` (full right). It works on any clip with sound.
+
+```json
+{ "asset": { "type": "audio", "src": "https://example.com/door-knock.mp3" }, "start": 4, "pan": -0.6 }
+```
+
+## The mix
+
+Music, a voice-over and the footage's own sound need no separate mixing step. An `effects` list works on a clip, a track or the timeline:
+
+- On a clip, it changes that clip's sound.
+- On a track (`track.effects`), it changes everything on the track, such as every line of a voice-over at once.
+- On the timeline (`timeline.effects`), it changes the final mix. Put a `limiter` or a `loudness` target here.
+
+```json
+"timeline": {
+  "tracks": [
+    { "clips": [{ "asset": { "type": "video", "src": "https://example.com/interview.mp4" } }] },
+    { "clips": [{ "asset": { "type": "audio", "src": "https://example.com/music.mp3", "volume": 0.25 }, "length": "end" }] }
+  ],
+  "effects": [{ "type": "loudness" }, { "type": "limiter" }]
+}
+```
+
+## Sound effects
+
+Each effect is an entry with a `type` and only the settings you change.
+
+| Effect | What it does |
+| --- | --- |
+| `loudness` | Sets sound to a standard loudness. Use -16 LUFS for online video and podcasts, -23 for broadcast. |
+| `voiceDenoise` | Removes steady background noise from under speech: a river, a fan, a street. Not for music. |
+| `gate` | Mutes the sound between phrases, so room noise drops out in the pauses. |
+| `highPass` | Cuts everything below a frequency. Wind, traffic and handling noise sit below the voice. |
+| `lowPass` | Cuts everything above a frequency: music from the next room, or a voice on the phone. |
+| `eq` | Three-band tone control: more bass and treble on music, or less boom on a voice. |
+| `compressor` | Evens out a voice so quiet and loud words play at the same level. |
+| `limiter` | Stops peaks from clipping, with optional gain to make a track louder. |
+| `pitch` | Raises or lowers the pitch without changing the speed. |
+| `echo` | Adds a repeat behind the sound. |
+| `reverb` | Makes a dry voice sound like it is in a hall. |
+
+A typical voice chain is `highPass`, then `voiceDenoise`, then `compressor`, then `loudness`.
+
+```json
+"effects": [{ "type": "highPass", "cutoff": 80 }, { "type": "voiceDenoise" }, { "type": "compressor" }, { "type": "loudness" }]
+```
 
 ## Sound drawn on the picture
 
-`visualizer` draws the sound onto the frame for an audiogram or a podcast clip, as a waveform, bars or a level meter.
+`visualizer` draws the sound over the picture as a `waveform` or a `spectrum`, for an audiogram or a podcast clip. On the timeline, its usual place, it draws the final mix. On a track or a clip, it draws only that sound.
+
+```json
+"effects": [{ "type": "visualizer", "kind": "waveform", "color": "#34D399", "y": "80%", "width": "76%", "height": "20%" }]
+```
 
 <Columns cols={2}>
   <Frame caption="before">
     <video src="https://cdn.rendobar.com/compose/showcase/visualizer/before.mp4" poster="https://cdn.rendobar.com/compose/showcase/visualizer/before.jpg" autoPlay loop muted playsInline controls />
   </Frame>
-  <Frame caption="visualizer">
+  <Frame caption="visualizer, waveform">
     <video src="https://cdn.rendobar.com/compose/showcase/visualizer/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/visualizer/after.jpg" autoPlay loop muted playsInline controls />
   </Frame>
 </Columns>
 
-Every sound effect and its parameters are in the [effect reference](/docs/jobs/compose/reference/effects).
+The [effect reference](/docs/jobs/compose/reference/effects) lists every sound effect and its settings. The [Compose features page](https://rendobar.com/compose/features/#sound) plays each one before and after, with sound.

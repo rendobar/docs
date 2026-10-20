@@ -7,9 +7,7 @@ keywords: ["video effects api", "video color grading api", "chroma key api"]
 canonical: "https://rendobar.com/docs/jobs/compose/effects"
 ---
 
-
-
-Effects are one ordered list. The same list sits on a clip, on a track, or on the whole timeline, and it runs in the order you write it.
+Effects are a list that runs in the order you write it. Put it on a clip, a track or the whole timeline.
 
 ```json
 {
@@ -23,7 +21,7 @@ Effects are one ordered list. The same list sits on a clip, on a track, or on th
 }
 ```
 
-On a **track**, the list covers every clip on it. On the **timeline**, it covers the finished video, which is where one grade for the whole edit belongs.
+On a track, it applies to every clip. On the timeline, it applies to the finished video, so put a grade for the whole edit there.
 
 ```json
 "timeline": {
@@ -34,33 +32,53 @@ On a **track**, the list covers every clip on it. On the **timeline**, it covers
 }
 ```
 
-Every entry takes an optional `start` and `length`, in seconds or as a percent of what it sits on, so an effect can run for part of a clip. Numeric parameters take keyframes, so they can move while it runs.
+Set an optional `start` and `length`, in seconds or as a percent of what the effect sits on, to run it for part of a clip. Keyframe any numeric parameter to change it over time.
 
 ```json
 { "type": "blur", "radius": [{ "time": "0%", "value": 14, "easing": "easeOutCubic" }, { "time": 1, "value": 0 }] }
 ```
 
-There are 34 effects, for picture and for sound, each with its own parameters in real units. The full list, with a rendered before and after for each one, is the [effects reference](https://rendobar.com/compose/effects/). The groups:
+There are 34 built-in effects, 23 for the picture and 11 for sound, with parameters in real units. The [Compose features page](https://rendobar.com/compose/features/#picture) shows each one before and after. Picture effects:
 
-| Group | Examples |
+| Effect | What it does |
 | --- | --- |
-| Colour and looks | `color`, `look`, `lut`, `denoise`, `glow`, `grain`, `vignette`, `sharpen`, `blur` |
-| Stylise | `shake`, `glitch`, `mosaic`, `posterize`, `rgbShift`, `scanLines`, `sketch`, `trails` |
-| Layers and masking | `chromaKey`, `mask`, `blurRegion`, `outline`, `dropShadow` |
-| Sound | `eq`, `compressor`, `limiter`, `gate`, `highPass`, `lowPass`, `loudness`, `pitch`, `echo`, `reverb`, `voiceDenoise` |
-| Sound made visible | `visualizer` |
+| `color` | Grade by hand: brightness, contrast, saturation, gamma, hue and temperature. Every setting is optional. |
+| `look` | A one-word look: greyscale, boost, muted, lighten, darken, contrast, negative, sepia or oldFilm. |
+| `lut` | Grade with a `.cube` LUT, the file a colourist or a grading app exports. |
+| `blur` | Soften the picture. 5 to 15 makes a backdrop that keeps text over it readable. |
+| `sharpen` | Sharpen soft footage. |
+| `denoise` | Remove the grain a small camera sensor adds in low light. |
+| `glow` | Make the bright parts bloom. Best on lights against a dark frame. |
+| `grain` | Add film grain, so digital footage looks less clinical. |
+| `vignette` | Darken the corners to pull the eye to the middle. |
+| `shake` | Make a steady shot look handheld. The picture zooms in a little so its edges never show. |
+| `glitch` | Blocks of the picture jump sideways and the colours tear. Give it a short length. |
+| `pixelate` | Large square pixels over the whole picture. |
+| `posterize` | Flatten the picture into a few steps of each colour, like a screen print. |
+| `rgbShift` | Pull the red and blue channels apart for an analogue look. |
+| `scanLines` | The dark lines of a CRT monitor. |
+| `sketch` | Turn the picture into a pencil drawing. |
+| `trails` | Moving lights and people leave streaks. Needs a camera that does not move. |
+| `chromaKey` | Remove a green screen or any solid colour, so the track below shows through. |
+| `mask` | Show the clip only where an image says: white or opaque keeps it, black or clear cuts it. |
+| `blurRegion` | Blur one part of the picture: a face, a number plate, a screen. |
+| `outline` | Draw a line around a layer with transparency, such as a keyed subject or a logo. |
+| `dropShadow` | Add a soft shadow under a layer with transparency, so it stands out from the background. |
+| `visualizer` | Draw the sound over the picture as a waveform or a spectrum. |
 
-Two of them read a file, which is fetched and checked like any clip source: `lut` takes a `.cube` grade, and `mask` takes a picture that decides what of the clip shows.
+The 11 sound effects are on [Audio and mixing](/docs/jobs/compose/audio#sound-effects).
+
+Two effects read a file. `lut` takes a `.cube` grade and `mask` takes an image that sets which parts of the clip show. The file is fetched and checked like any clip source.
 
 ```json
 { "type": "mask", "src": "https://cdn.rendobar.com/assets/brand/logo-mark.png", "channel": "alpha" }
 ```
 
-An effect that changes the picture is refused on a clip that has none, and one that changes the sound is refused on a silent clip, so a mistake is a 400 rather than a render that ignores it. Text and shapes draw their own outline and shadow, so `outline` and `dropShadow` are refused on them.
+A picture effect on a clip with no picture, or a sound effect on a silent clip, returns a 400. Text and shapes draw their own outline and shadow, so you cannot put `outline` or `dropShadow` on them.
 
 ## Colour
 
-One `color` effect carries brightness, contrast, saturation, temperature and the rest, so there is one place to correct a picture rather than nine overlapping filters. `look` applies a promoted recipe in one word, and `lut` takes a `.cube` file you supply.
+`color` holds brightness, contrast, saturation, temperature and the rest in one effect. `look` applies a ready-made look in one word. `lut` takes a `.cube` file you supply.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -91,7 +109,7 @@ One `color` effect carries brightness, contrast, saturation, temperature and the
 
 ## Stylise
 
-`glitch`, `pixelate`, `posterize`, `rgbShift`, `scanLines`, `sketch`, `trails` and `shake`. Used for a beat or a scene change rather than a whole video.
+`glitch`, `pixelate`, `posterize`, `rgbShift`, `scanLines`, `sketch`, `trails` and `shake`. Use them for a beat or a scene change, not across a whole video.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -122,7 +140,7 @@ One `color` effect carries brightness, contrast, saturation, temperature and the
 
 ## Layers
 
-`chromaKey` removes a solid background, `mask` cuts a clip to a shape, `blurRegion` hides a face or a plate, and `outline` and `dropShadow` edge a layer that has transparency.
+`chromaKey` removes a solid background. `mask` cuts a clip to a shape. `blurRegion` hides a face or a number plate. `outline` and `dropShadow` add an edge or a shadow to a layer with transparency.
 
 <Columns cols={2}>
   <Frame caption="before">
@@ -162,15 +180,14 @@ One `color` effect carries brightness, contrast, saturation, temperature and the
 
 ## Anything the engine can do
 
-
-`{ "type": "engine" }` reaches the rest of the render engine's filters, for the case a promoted effect does not cover. Every filter and parameter is checked before the job starts, so a typo is a 400 and not a failed render.
+If no built-in effect fits, `{ "type": "engine" }` reaches more than 300 other filters by name. A typo in a filter or parameter returns a 400 before the job starts.
 
 ```json
 { "type": "engine", "filter": "colorize", "params": { "hue": 200, "saturation": 0.6 } }
 ```
 
-An FFmpeg filter goes by its FFmpeg name and takes its FFmpeg option names, so `colorize` takes `hue`, `saturation` and `lightness`. Other filters go by a camelCase name, such as `cartoon` with `triplevel` and `diffspace`. `GET /compose/effects/engine` lists every filter an engine entry can name, with its parameters.
+FFmpeg filters use their FFmpeg name and option names, so `colorize` takes `hue`, `saturation` and `lightness`. Other filters use a camelCase name, such as `cartoon` with `triplevel` and `diffspace`. `GET /compose/effects/engine` lists every filter an engine entry can name, with its parameters. `GET /compose/effects` does the same for the built-in effects.
 
-An engine entry that duplicates a promoted effect is refused, so there is one way to ask for each thing. The list of filters comes from the engine and can change when it is upgraded, which the promoted effects never do.
+An engine entry that repeats a built-in effect is refused. The engine's filter list can change when the engine is upgraded. The built-in effects do not.
 
-Every effect and every parameter is in the [effect reference](/docs/jobs/compose/reference/effects). Sound effects are on [Audio levels and effects](/docs/jobs/compose/audio).
+The [effect reference](/docs/jobs/compose/reference/effects) lists every effect and parameter. Sound effects are on [Audio and mixing](/docs/jobs/compose/audio).

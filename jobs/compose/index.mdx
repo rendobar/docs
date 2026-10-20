@@ -23,12 +23,362 @@ canonical: "https://rendobar.com/docs/jobs/compose"
   }}
 />
 
-`compose` renders a video from a JSON timeline. Start with one clip, then layer up: more clips, transitions, overlays, and effects. This page builds from the smallest render to the full model. Each step adds one idea.
+<Frame caption="An illustrated story rendered by Compose from the request below: each drawing sketches itself in, then fills with colour, under its caption.">
+  <video src="https://cdn.rendobar.com/compose/site/make/subtitles.mp4?v=9" poster="https://cdn.rendobar.com/compose/site/make/subtitles.jpg?v=9" autoPlay loop muted playsInline controls />
+</Frame>
+
+```json The request that made it expandable
+{
+  "schemaVersion": 1,
+  "output": {
+    "format": "mp4",
+    "resolution": { "width": 1920, "height": 1080 },
+    "fps": 30
+  },
+  "timeline": {
+    "tracks": [
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#F3EAD7"
+            },
+            "length": 1.8,
+            "start": 0
+          },
+          {
+            "type": "transition",
+            "transition": "wipe",
+            "map": "https://cdn.rendobar.com/compose/player/media/sk1-draw.jpg",
+            "duration": 1.6
+          },
+          {
+            "asset": {
+              "type": "image",
+              "src": "https://cdn.rendobar.com/compose/player/media/sk1.png"
+            },
+            "transform": {
+              "fit": "cover",
+              "scale": [
+                { "time": 0, "value": 1, "easing": "linear" },
+                { "time": 3.2, "value": 1.05 }
+              ]
+            },
+            "length": 3.2
+          },
+          {
+            "type": "transition",
+            "transition": "crossfade",
+            "duration": 0.4
+          },
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#F3EAD7"
+            },
+            "length": 1.9
+          },
+          {
+            "type": "transition",
+            "transition": "wipe",
+            "map": "https://cdn.rendobar.com/compose/player/media/sk2-draw.jpg",
+            "duration": 1.4
+          },
+          {
+            "asset": {
+              "type": "image",
+              "src": "https://cdn.rendobar.com/compose/player/media/sk2.png"
+            },
+            "transform": {
+              "fit": "cover",
+              "scale": [
+                { "time": 0, "value": 1, "easing": "linear" },
+                { "time": 3.2, "value": 1.05 }
+              ]
+            },
+            "length": 3.2
+          },
+          {
+            "type": "transition",
+            "transition": "crossfade",
+            "duration": 0.4
+          },
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#F3EAD7"
+            },
+            "length": 1.9
+          },
+          {
+            "type": "transition",
+            "transition": "wipe",
+            "map": "https://cdn.rendobar.com/compose/player/media/sk3-draw.jpg",
+            "duration": 1.4
+          },
+          {
+            "asset": {
+              "type": "image",
+              "src": "https://cdn.rendobar.com/compose/player/media/sk3.png"
+            },
+            "transform": {
+              "fit": "cover",
+              "scale": [
+                { "time": 0, "value": 1, "easing": "linear" },
+                { "time": 3.2, "value": 1.05 }
+              ]
+            },
+            "length": 3.2
+          },
+          {
+            "type": "transition",
+            "transition": "crossfade",
+            "duration": 0.4
+          },
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#F3EAD7"
+            },
+            "length": 0.4
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#FBF6EA",
+              "radius": 0.5
+            },
+            "transform": {
+              "size": { "width": 720, "height": 96 },
+              "position": { "x": 960, "y": 112 }
+            },
+            "start": 0.2,
+            "length": 9.8,
+            "opacity": [
+              { "time": 0, "value": 0, "easing": "easeOutQuad" },
+              { "time": 0.4, "value": 1 },
+              { "time": 9.4, "value": 1, "easing": "easeInQuad" },
+              { "time": 9.8, "value": 0 }
+            ]
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "text",
+              "text": "The Last Keeper  ·  Part 1",
+              "style": {
+                "font": "Lora",
+                "size": 48,
+                "weight": 600,
+                "italic": true,
+                "color": "#2B2118",
+                "animate": { "type": "fade", "duration": 0.5 }
+              }
+            },
+            "transform": { "position": { "x": 960, "y": 112 } },
+            "start": 0.3,
+            "length": 9.7,
+            "opacity": [
+              { "time": 0, "value": 1 },
+              { "time": 9.35, "value": 1, "easing": "easeInQuad" },
+              { "time": 9.7, "value": 0 }
+            ]
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#FBF6EA",
+              "radius": 0.12,
+              "shadow": {
+                "color": "#00000033",
+                "blur": 24,
+                "x": 0,
+                "y": 8
+              }
+            },
+            "transform": {
+              "size": { "width": 1440, "height": 170 },
+              "position": { "x": 960, "y": 925 }
+            },
+            "start": 1,
+            "length": 2.3,
+            "opacity": [
+              { "time": 0, "value": 0, "easing": "easeOutQuad" },
+              { "time": 0.4, "value": 1 },
+              { "time": 1.9, "value": 1, "easing": "easeInQuad" },
+              { "time": 2.3, "value": 0 }
+            ]
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "text",
+              "text": "He kept the light for forty years.",
+              "style": {
+                "font": "Lora",
+                "size": 84,
+                "weight": 500,
+                "italic": true,
+                "color": "#2B2118",
+                "animate": {
+                  "type": "fade",
+                  "by": "word",
+                  "duration": 0.9,
+                  "out": "fade"
+                }
+              }
+            },
+            "transform": { "position": { "x": 960, "y": 925 } },
+            "start": 1.15,
+            "length": 2.15
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#FBF6EA",
+              "radius": 0.12,
+              "shadow": {
+                "color": "#00000033",
+                "blur": 24,
+                "x": 0,
+                "y": 8
+              }
+            },
+            "transform": {
+              "size": { "width": 1440, "height": 170 },
+              "position": { "x": 960, "y": 925 }
+            },
+            "start": 4.4,
+            "length": 2.3,
+            "opacity": [
+              { "time": 0, "value": 0, "easing": "easeOutQuad" },
+              { "time": 0.4, "value": 1 },
+              { "time": 1.9, "value": 1, "easing": "easeInQuad" },
+              { "time": 2.3, "value": 0 }
+            ]
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "text",
+              "text": "Every night he climbed the stairs.",
+              "style": {
+                "font": "Lora",
+                "size": 84,
+                "weight": 500,
+                "italic": true,
+                "color": "#2B2118",
+                "animate": {
+                  "type": "fade",
+                  "by": "word",
+                  "duration": 0.9,
+                  "out": "fade"
+                }
+              }
+            },
+            "transform": { "position": { "x": 960, "y": 925 } },
+            "start": 4.550000000000001,
+            "length": 2.15
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "shape",
+              "shape": "rect",
+              "color": "#FBF6EA",
+              "radius": 0.12,
+              "shadow": {
+                "color": "#00000033",
+                "blur": 24,
+                "x": 0,
+                "y": 8
+              }
+            },
+            "transform": {
+              "size": { "width": 1440, "height": 170 },
+              "position": { "x": 960, "y": 925 }
+            },
+            "start": 7.7,
+            "length": 2,
+            "opacity": [
+              { "time": 0, "value": 0, "easing": "easeOutQuad" },
+              { "time": 0.4, "value": 1 },
+              { "time": 1.6, "value": 1, "easing": "easeInQuad" },
+              { "time": 2, "value": 0 }
+            ]
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "text",
+              "text": "Then, one night, a ship came home.",
+              "style": {
+                "font": "Lora",
+                "size": 84,
+                "weight": 500,
+                "italic": true,
+                "color": "#2B2118",
+                "animate": {
+                  "type": "fade",
+                  "by": "word",
+                  "duration": 0.9,
+                  "out": "fade"
+                }
+              }
+            },
+            "transform": { "position": { "x": 960, "y": 925 } },
+            "start": 7.8500000000000005,
+            "length": 1.85
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The same request, built up step by step, is the [illustrated story recipe](https://rendobar.com/compose/recipes/illustrated-story/).
+
+`compose` renders a video from a JSON timeline. You start with one clip and add more clips, transitions, overlays and effects as you need them.
 
 ## Your simplest render
 
-
-The smallest timeline is one track with one clip. This renders the first three seconds of a video to MP4. The whole API call:
+The smallest timeline is one track with one clip. This call renders the first three seconds of a video to MP4.
 
 <CodeGroup>
 
@@ -37,7 +387,8 @@ import { createClient, outputUrl } from "@rendobar/sdk";
 
 const client = createClient({ apiKey: "rb_YOUR_KEY" });
 
-const job = await client.jobs.create({
+// run() creates the job and waits for it to finish.
+const job = await client.jobs.run({
   type: "compose",
   params: {
     schemaVersion: 1,
@@ -65,8 +416,7 @@ const job = await client.jobs.create({
   },
 });
 
-const result = await client.jobs.wait(job.id);
-console.log(outputUrl(result));
+console.log(outputUrl(job));
 ```
 
 ```python Python
@@ -144,12 +494,9 @@ curl -X POST https://api.rendobar.com/jobs \
 **Assets:** video, image, audio, text, timer, subtitles, shape, animation (Lottie), composition · **Output:** mp4 / webm / gif / mp3 (audio only) / jpg / png (still frame)
 </Info>
 
-Without `trim`, a clip plays its source from the start for `length` seconds, or for the whole source when `length` is left off. To use a specific segment instead, add `trim: { from, to }` (in source seconds) to the asset. `length` is always the timeline duration. `trim` only chooses which part of the source fills it.
-
-That is the shape of every render. Everything below is one more clip, one more track, or one more field.
+Without `trim`, a clip plays its source from the start for `length` seconds. Leave `length` off and it plays the whole source. To play one segment, add `trim: { from, to }` to the asset, in source seconds. `length` sets how long the clip lasts on the timeline, and `trim` picks which part of the source fills that time.
 
 ## Join two clips
-
 
 Put a second clip on the same track and a transition between them.
 
@@ -161,9 +508,9 @@ Put a second clip on the same track and a transition between them.
 ]
 ```
 
-No timing anywhere. Each clip plays its whole source, the second follows the first, and the transition overlaps them by its own `duration`. You do not need to know how long either file is.
+You set no timing here. Each clip plays its whole source, the second starts after the first, and the transition overlaps them by its `duration`. You do not need to know how long either file is.
 
-Writing the timing out by hand gives the same render. The second clip starts `duration` seconds before the first ends, which is what the engine works out for you above.
+You can also write the timing out. This gives the same render, with the second clip starting `duration` seconds before the first ends.
 
 ```json
 "clips": [
@@ -173,56 +520,49 @@ Writing the timing out by hand gives the same render. The second clip starts `du
 ]
 ```
 
-| Transition | Effect |
-| --- | --- |
-| `crossfade` | A dissolves directly into B |
-| `fade` | A dips through black, then B fades up |
-| `slide` | B slides in over A from an edge |
-| `push` | B pushes A off the frame |
-| `wipe` | An edge travels across, in a shape or along your own greyscale map |
-| `zoom` | B grows in from the centre |
-| `none` | A hard cut, no blend |
-
-`slide`, `push` and `wipe` take a `direction`: `left`, `right`, `up` or `down`. A wipe takes a `shape` instead (`circle`, `box`, `barnDoorHorizontal`, `barnDoorVertical`), or a `map`: a greyscale image of your own, where black turns over first and white last.
-
-```json
-{ "type": "transition", "transition": "wipe", "shape": "circle", "duration": 0.8 }
-```
+See [Transitions](/docs/jobs/compose/transitions) for the seven transition kinds, wipe shapes, directions and your own wipe patterns.
 
 ## Everything else
 
-This page is the first render and the shape of a request. Each idea past that has its own page.
-
 <CardGroup cols={2}>
   <Card title="How the timeline works" icon="layer-group" href="/docs/jobs/compose/timeline">
-    Tracks, clips and timing, and why you can leave most of the timing out.
+    Tracks, clips, scenes, and when you can leave timing out.
+  </Card>
+  <Card title="Media clips" icon="photo-film" href="/docs/jobs/compose/media">
+    Video, images, audio and Lottie, with trim, speed, opacity and blend modes.
   </Card>
   <Card title="Placing and framing a clip" icon="crop-simple" href="/docs/jobs/compose/framing">
-    Position, scale, rotate, crop, pin and fade a clip, each shown before and after.
+    Position, scale, rotate, crop, fit and pin a clip, each shown before and after.
+  </Card>
+  <Card title="Text and titles" icon="font" href="/docs/jobs/compose/text">
+    Readable titles, entrances and exits, and kinetic titles a word at a time.
+  </Card>
+  <Card title="Subtitles and timers" icon="closed-captioning" href="/docs/jobs/compose/captions">
+    Every caption in one clip, from cues or an .srt file, and countdowns.
+  </Card>
+  <Card title="Fonts and languages" icon="text-size" href="/docs/jobs/compose/fonts">
+    Google fonts by name, bundled families, your own files, and other scripts.
+  </Card>
+  <Card title="Shapes" icon="shapes" href="/docs/jobs/compose/shapes">
+    Bars, cards, circles and SVG paths, with gradients, outlines and shadows.
+  </Card>
+  <Card title="Keyframes and easing" icon="chart-line" href="/docs/jobs/compose/motion">
+    Animate anything numeric with 33 easings, and turn clips in 3D.
   </Card>
   <Card title="Transitions" icon="shuffle" href="/docs/jobs/compose/transitions">
-    Crossfade, fade, slide, push, wipe and zoom, each one shown playing.
-  </Card>
-  <Card title="Motion" icon="chart-line" href="/docs/jobs/compose/motion">
-    Keyframes on anything numeric, and all 33 easings.
-  </Card>
-  <Card title="Text and subtitles" icon="font" href="/docs/jobs/compose/text">
-    Titles, lower thirds, a running clock, and subtitles from a file.
-  </Card>
-  <Card title="Shapes and masks" icon="shapes" href="/docs/jobs/compose/shapes">
-    Bars, circles, paths and masks, with fills, outlines and shadows.
+    Crossfade, fade, slide, push, wipe and zoom, and your own wipe patterns.
   </Card>
   <Card title="Effects" icon="wand-magic-sparkles" href="/docs/jobs/compose/effects">
-    Colour, looks, stylised filters and layer effects, before and after.
+    Colour, looks, stylised filters, keying and every other filter by name.
   </Card>
-  <Card title="Audio" icon="waveform-lines" href="/docs/jobs/compose/audio">
-    Levels, fades, voice clean-up, and sound drawn on the picture.
+  <Card title="Audio and mixing" icon="waveform-lines" href="/docs/jobs/compose/audio">
+    Levels, ducking, panning, the mix, voice clean-up and audiograms.
   </Card>
-  <Card title="Output and validation" icon="file-video" href="/docs/jobs/compose/output">
-    Frame size, format, quality, and a free check before you render.
+  <Card title="Output" icon="file-video" href="/docs/jobs/compose/output">
+    Formats, size presets, frame rate, quality and transparent video.
   </Card>
-  <Card title="Pricing" icon="receipt" href="/docs/jobs/compose/pricing">
-    Billed per minute of output video, with the price known before you render.
+  <Card title="Pricing and validation" icon="receipt" href="/docs/jobs/compose/pricing">
+    One price per minute of output, and a free check before you render.
   </Card>
   <Card title="Edit like a professional" icon="clapperboard" href="/docs/jobs/compose/craft">
     The pacing, transition and text conventions working editors follow.
@@ -234,11 +574,10 @@ This page is the first render and the shape of a request. Each idea past that ha
 
 ## See also
 
-
-- [Effects reference](https://rendobar.com/compose/effects/): every effect and transition, rendered before and after
-- [Job output](/concepts/job#the-output): the output shape every job returns
-- [Animated captions](/jobs/captions/animate): word-level captions over a rendered video
-- [Compress](/jobs/compress): shrink the render to a size or quality budget
-- [FFmpeg](/jobs/ffmpeg): drop to a raw command when the timeline cannot express it
-- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
-- [Plan limits](/support/limits): render duration and file-size caps per plan
+- [Compose features](https://rendobar.com/compose/features/): every engine feature, searchable, most shown before and after
+- [Job output](/docs/concepts/job#the-output): the output shape every job returns
+- [Animated captions](/docs/jobs/captions/animate): word-level captions over a rendered video
+- [Compress](/docs/jobs/compress): shrink the render to a size or quality budget
+- [FFmpeg](/docs/jobs/ffmpeg): drop to a raw command when the timeline cannot express it
+- [Webhooks](/docs/guides/webhooks): receive `job.completed` instead of polling
+- [Plan limits](/docs/support/limits): render duration and file-size caps per plan
