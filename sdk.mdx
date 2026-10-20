@@ -203,7 +203,7 @@ const browser = createClient({ credentials: "include" });  // first-party browse
 
 ## Errors
 
-A failed request throws an `ApiError` with `code`, `statusCode`, `message`, `details`, and `retryAfter` on `RATE_LIMITED`. Narrow it with `isApiError`.
+A failed request throws an `ApiError` with `code`, `statusCode`, `message`, `details`, and `retryAfter` on `RATE_LIMITED`. When the API refuses a request with a list of problems, `problems` holds them typed (`path`, `message`, and `upgradeTo` on a plan refusal). Narrow it with `isApiError`.
 
 ```ts
 import { isApiError } from "@rendobar/sdk";
