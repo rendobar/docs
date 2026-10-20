@@ -14,11 +14,11 @@ What the render produces. One compose job renders exactly one file.
 | Field | Type | What it does |
 | --- | --- | --- |
 | `format` | `"mp4"` \| `"webm"` \| `"gif"` \| `"mp3"` \| `"jpg"` \| `"png"` | Output container/format. mp4=H.264+AAC, webm=VP9+Opus, gif=animated (no audio), mp3=audio only and needs no size, jpg/png=single frame. default `"mp4"`. |
-| `size` | `"360p"` \| `"720p"` \| `"1080p"` \| `"1440p"` \| `"4k"` \| `"tiktok"` \| `"reels"` \| `"shorts"` \| `"instagram-story"` \| `"instagram-feed"` \| `"square"` \| `"youtube-hd"` \| `"youtube-4k"` \| `"x-landscape"` \| `"linkedin"` | Named resolution preset (dimensions only): a generic ladder ("1080p", "4k") or a platform alias ("tiktok", "reels", "youtube-4k"). An explicit `resolution` overrides this. Not used by mp3. |
+| `size` | `"360p"` \| `"720p"` \| `"1080p"` \| `"1440p"` \| `"4k"` \| `"tiktok"` \| `"reels"` \| `"shorts"` \| `"instagram-story"` \| `"instagram-feed"` \| `"square"` \| `"youtube-hd"` \| `"youtube-4k"` \| `"x-landscape"` \| `"linkedin"` | Named resolution preset (dimensions only): a generic ladder ("1080p", "4k") or a platform alias ("tiktok", "reels", "youtube-4k"). An explicit `resolution` overrides this. Not used by mp3. Free renders up to 1080p at 30 fps, Pro 1440p at 30 fps, Studio 4K at 60 fps. |
 | `resolution` | object | Explicit output dimensions. Wins over `size`. Every format but mp3 needs this or `size`. |
 | `resolution.width` * | integer | Output width in pixels. over 0, max 9007199254740991. |
 | `resolution.height` * | integer | Output height in pixels. over 0, max 9007199254740991. |
-| `fps` | number | Output frame rate. Defaults to 30. default `30`, over 0. |
+| `fps` | number | Output frame rate. Defaults to 30. Free renders up to 1080p at 30 fps, Pro 1440p at 30 fps, Studio 4K at 60 fps. default `30`, over 0. |
 | `quality` | `"draft"` \| `"standard"` \| `"high"` \| `"max"` | Encoder quality ladder (crf + speed + audio bitrate). draft=fast preview, standard=web delivery (default), high/max=higher fidelity, slower. Explicit `crf`/`encoderPreset` override the ladder. default `"standard"`. |
 | `videoCodec` | `"h264"` \| `"vp9"` | The video codec. mp4 takes h264 (default) or vp9. webm is always vp9. gif is always GIF, so it takes none. |
 | `audioCodec` | `"aac"` \| `"opus"` \| `"mp3"` | The audio codec. mp4 takes aac (default), opus or mp3. webm is always opus and mp3 always mp3. |

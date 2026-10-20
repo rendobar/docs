@@ -17,7 +17,7 @@ Set `asset.type` to `"subtitles"`. These are its own fields, on top of the [clip
 | `cues.start` * | number | When the line appears, in seconds from the start of THIS clip. min 0. |
 | `cues.end` * | number | When the line goes, in seconds from the start of this clip. over 0. |
 | `cues.text` * | string | The line. Keep it to two short rows. |
-| `src` | string | An .srt or .vtt file with the lines, instead of `cues`: what a transcription service, or the caption.extract job, gives you. Its times count from the start of the clip. |
+| `src` | string | An .srt or .vtt file with the lines, instead of `cues`: what a transcription service gives you. Its times count from the start of the clip. |
 | `reveal` | `"line"` \| `"typewriter"` | line shows each cue at once, typewriter types it out word by word, the social-video style. default `"line"`. |
 | `style` | object |  default `{}`. |
 | `style.font` | string | Font family, or a CSS fallback stack. Any Google Fonts family works by name. Bundled and instant: Inter, Bebas Neue, Anton, Montserrat, Poppins, Roboto, Oswald. Families declared in the `fonts` job input win over both. A stack falls through in CSS order, so "Display, Inter, sans-serif" tries each in turn. default `"Inter"`. |
@@ -30,7 +30,7 @@ Set `asset.type` to `"subtitles"`. These are its own fields, on top of the [clip
 | `style.stroke.width` * | number | Outline width in pixels. 2 to 4 keeps text readable over busy footage. min 0. |
 | `style.background` | string | Solid box color behind the text, hex. Omit for no box. pattern `^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$`. |
 | `style.align` | `"left"` \| `"center"` \| `"right"` | How the lines line up, and which side of the text sits on the clip's transform.position x: left starts there, center is centred on it, right ends there. Place the text with the clip's transform, not here. default `"center"`. |
-| `style.animate` | object | How the text enters, and optionally leaves: \{"type":"slideUp","by":"word"\} brings a title in word by word. A split (`by`), a blur or scale entrance and an exit (`out`) render up to 1080p at 30 fps on self-serve plans. Omit for text that is present from its first frame to its last. |
+| `style.animate` | object | How the text enters: \{"type":"fade"\} or one of the slides. A split (`by`), a blur or scale entrance and an exit (`out`) are not available here, because the text changes as it plays. |
 | `style.animate.type` * | `"fade"` \| `"slideUp"` \| `"slideDown"` \| `"slideLeft"` \| `"slideRight"` \| `"blur"` \| `"scale"` | How the text arrives: fade in place, slide in from the named direction while fading, blur comes into focus, scale grows from small. |
 | `style.animate.duration` | number | Seconds the whole entrance takes. With `by`, the last unit lands at this time. 0.4 to 0.8 reads polished for one piece of text, 0.8 to 1.5 for a split title. default `0.5`, over 0. |
 | `style.animate.by` | `"letter"` \| `"word"` \| `"line"` | Animate the text one letter, word or line at a time: kinetic titles and lower thirds. Omit it and the text moves as one piece. |
