@@ -1,7 +1,7 @@
 ---
 title: "API error codes reference"
 sidebarTitle: "Error codes"
-description: "View all 26 API error codes, their HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on every endpoint."
+description: "View all 27 API error codes, their HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on every endpoint."
 icon: "triangle-exclamation"
 keywords: ["rendobar error codes", "api error reference", "ffmpeg error troubleshooting", "insufficient credits", "rate limited"]
 canonical: "https://rendobar.com/docs/support/errors"
@@ -39,13 +39,14 @@ Check the HTTP status and `error.code` before reading `data`.
 | `FORBIDDEN` | 403 | Authenticated but not allowed for this resource |
 | `VALIDATION_ERROR` | 400 | Body failed schema validation. `details.path` points at the field |
 | `INVALID_JOB_TYPE` | 400 | Job type not registered or not on your plan |
+| `FEATURE_NOT_ENABLED` | 400 | A compose job uses animated text or 3D turns, which are still rolling out and not enabled for your account yet. Render without them, or contact support to get access |
 | `INSUFFICIENT_CREDITS` | 402 | Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing) |
-| `PLAN_LIMIT` | 403 | Plan limit hit (job timeout, GPU, a compose frame or frame rate above the plan). See [Limits](/support/limits) |
+| `PLAN_LIMIT` | 403 | Plan limit hit (job timeout, GPU, a compose frame or frame rate above the plan). See [Limits](/docs/support/limits) and [which plan lifts it](#plan-limit-upgrade) |
 | `RATE_LIMITED` | 429 | Back off per `Retry-After` header |
 | `NOT_FOUND` | 404 | Resource doesn't exist or isn't visible to your org |
 | `CONFLICT` | 409 | Request conflicts with current state (e.g. cancelling a complete job) |
 | `RUNNER_ERROR` | 502 | Processing failed on the runner. Check `error.message` for details |
-| `RUNNER_TIMEOUT` | 504 | The job did not finish in time. No credits charged |
+| `RUNNER_TIMEOUT` | 504 | A runner accepted the job but never started it, or lost the run. No credits charged |
 | `ORG_SUSPENDED` | 403 | Contact `hello@rendobar.com` |
 | `INTERNAL_ERROR` | 500 | Server bug. Persist? Contact support with the request ID |
 | `STORAGE_QUOTA_EXCEEDED` | 402 | Stored assets exceed the plan quota. Delete assets or upgrade |
@@ -61,6 +62,22 @@ Check the HTTP status and `error.code` before reading `data`.
 | `UPSTREAM_ERROR` | 502 | A third-party service the job depends on failed. Retry |
 | `NOT_CONFIGURED` | 503 | The capability is not configured on this deployment. Contact support |
 | `NOT_IMPLEMENTED` | 501 | The endpoint exists but does nothing yet |
+
+## Which plan lifts a PLAN_LIMIT? {#plan-limit-upgrade}
+
+A compose video above your plan and a GPU job on Free return `PLAN_LIMIT` with `error.details`, a list of problems shaped `{ path, message, upgradeTo }`. `upgradeTo` is `"pro"` or `"studio"`, the cheapest plan that runs the job. It is `null` when only an enterprise plan does. Read `upgradeTo` instead of parsing the message.
+
+```json
+{
+  "error": {
+    "code": "PLAN_LIMIT",
+    "message": "A 3840x2160 video at 30 fps is above your plan, which renders compose up to 1080p at 30 fps. Studio ($29/month) renders it.",
+    "details": [
+      { "path": ["output"], "message": "A 3840x2160 video at 30 fps is above your plan, which renders compose up to 1080p at 30 fps. Studio ($29/month) renders it.", "upgradeTo": "studio" }
+    ]
+  }
+}
+```
 
 ## Storage connections
 

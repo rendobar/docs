@@ -279,7 +279,7 @@ Every command is validated before it runs, then executed in an isolated, network
 
 Priced per compute second from your [credit balance](/concepts/credits), the wall-clock time FFmpeg ran, excluding file transfer.
 
-Plan job budgets: 1 hour (Free), 9 hours (Pro and Studio). That is a bound on processing time, not on how long your output can be. See [plan limits](/support/limits) for the full table. Exceeding the timeout returns `RUNNER_TIMEOUT`, and no credits are charged.
+Plan job budgets: 1 hour (Free), 9 hours (Pro and Studio). That is a bound on processing time, not on how long your output can be. See [plan limits](/docs/support/limits) for the full table. A job that runs past its budget fails with `JOB_TIMEOUT` and is billed for the compute it used. A job a runner accepted but never started fails with `RUNNER_TIMEOUT` and is not charged.
 
 ## Examples
 

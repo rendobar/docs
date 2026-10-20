@@ -23,15 +23,15 @@ canonical: "https://rendobar.com/docs/concepts/credits"
   }}
 />
 
-Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compose](/jobs/compose/pricing) bills per minute of the video you get back. Every other job type bills for the compute it consumed, including jobs that fail.
+Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compose](/docs/jobs/compose/pricing) bills per minute of the video you get back. Every other job type bills for the compute it consumed, including jobs that fail.
 
 ## Plans
 
 | | Free | Pro | Studio |
 |---|---|---|---|
-| Price | $0/mo | $9/mo | $29/mo |
+| Price | \$0/mo | \$9/mo | \$29/mo |
 | Signup credits | $5 (one-time) | - | - |
-| Monthly credits included | - | $5 | $20 |
+| Monthly credits included | - | \$5 | \$20 |
 | Credit-purchase bonus | - | +25% | +25% |
 | Concurrent jobs | 1 | 20 | 50 |
 | Queued backlog | 50 | 1000 | 2500 |
@@ -43,7 +43,7 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compos
 | Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
 | GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
 
-`ffmpeg`, MCP, and webhooks are on every plan. Compose costs the same per output minute on every plan. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/support/limits).
+`ffmpeg`, MCP, and webhooks are on every plan. Compose costs the same per output minute on every plan. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/docs/support/limits).
 
 For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](https://rendobar.com/pricing/).
 
@@ -56,7 +56,7 @@ For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](ht
 Every job is billed in nanodollars (one-billionth of a US dollar) drawn from your prepaid balance. This differs from tier-based quotas where you buy a plan with a bucket of minutes:
 
 - **Cost matches the work.** Compute-billed jobs pay for the seconds they ran, and compose pays for the seconds of video it delivers. A 30-second 1080p job shouldn't cost the same as a 10-minute 4K render of a large master.
-- **Prepaid means predictable budgets.** You top up when you want; jobs run only if affordable. No end-of-month surprise bill.
+- **Prepaid means predictable budgets.** You top up when you want. Jobs run only if affordable. No end-of-month surprise bill.
 
 ## When is a job charged?
 
@@ -75,7 +75,7 @@ Because the submit gate checks `balance > 0` rather than an estimate, a single l
 
 `compose` bills per second of the video you get back, at \$0.04 per minute of output on every plan, with a 15-second minimum per render. Frame size and animated graphics do not change the rate. Plans differ in what they can render. 1440p needs Pro, 4K and 60 fps need Studio, and a video above your plan returns `403 PLAN_LIMIT` before it renders. An enterprise plan carries its own contract rate. Email `hello@rendobar.com`.
 
-A compose render that fails on Rendobar's side is free. When the failure may come from your input, such as the render tool exiting on a bad file, it pays for the compute it used at 2x. `POST /compose/validate` returns the price before you render. Full detail: [compose pricing](/jobs/compose/pricing).
+A compose render that fails on Rendobar's side is free. When the failure may come from your input, such as the render tool exiting on a bad file, it pays for the compute it used at 2x. `POST /compose/validate` returns the price before you render. Full detail: [compose pricing](/docs/jobs/compose/pricing).
 
 If your balance is at or below zero when you submit:
 
@@ -123,8 +123,8 @@ Returns daily usage by job type: count, amount charged, and compute seconds.
 
 - [Job lifecycle](/concepts/job): where the debit happens
 - [Limits](/support/limits): full quota table
-- [FFmpeg reference](/jobs/ffmpeg): the per-compute-second cost model
-- [Compose pricing](/jobs/compose/pricing): the per-output-minute cost model
+- [FFmpeg reference](/docs/jobs/ffmpeg): the per-compute-second cost model
+- [Compose pricing](/docs/jobs/compose/pricing): the per-output-minute cost model
 
 ## Related
 

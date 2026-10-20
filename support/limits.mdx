@@ -27,34 +27,39 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 
 ## Plan limits
 
-| | Free | Pro ($9/mo) | Studio ($29/mo) |
+| | Free | Pro (\$9/mo) | Studio (\$29/mo) |
 |---|---|---|---|
 | Signup credits | $5 (one-time) | - | - |
-| Monthly credits | - | $5/mo included | $20/mo included |
+| Monthly credits | - | \$5/mo included | \$20/mo included |
 | Credit-purchase bonus | - | +25% | +25% |
 | Concurrent jobs | 1 | 20 | 50 |
 | Queued backlog | 50 | 1000 | 2500 |
 | API requests / min | 120 | 600 | 1200 |
 | Max input file | 500 MB | 10 GB | 10 GB |
+| Total input per job | 2 GB | 8 GB | 8 GB |
 | Max job timeout | 1 hour | 9 hours | 9 hours |
 | Output retention | 7 days | 30 days | 90 days |
 | Total object storage | 5 GB | 250 GB | 250 GB |
 | Compose frame | Up to 1080p at 30 fps | Up to 1440p at 30 fps | Up to 4K at 60 fps |
 | Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
 | GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
+| Team members | 2 | 3 | 10 |
+| Priority queue (jobs start first when runners are full) | No | No | Yes |
+| Audit log | No | No | Yes |
+| Priority support | No | No | Yes |
 
-`ffmpeg`, MCP, and webhooks are on every plan. A compose video above your plan's frame or frame rate returns `403 PLAN_LIMIT` before it renders, and the message names the plan that renders it. Animated graphics above 1080p or 30 fps need an enterprise plan. `GET /account/capabilities` returns these as `composeMaxPixels`, `composeMaxFps`, `composeAnimatedMaxPixels` and `composeAnimatedMaxFps`. See [compose pricing](/jobs/compose/pricing).
+`ffmpeg`, MCP, and webhooks are on every plan. A compose video above your plan's frame or frame rate returns `403 PLAN_LIMIT` before it renders, and `upgradeTo` in `error.details` names the plan that renders it. Animated graphics above 1080p or 30 fps need an enterprise plan. `GET /account/capabilities` returns these as `composeMaxPixels`, `composeMaxFps`, `composeAnimatedMaxPixels` and `composeAnimatedMaxFps`. See [compose pricing](/docs/jobs/compose/pricing).
 
 ## How long do output URLs last?
 
 - **Signed download URL** (`output.file.url`) is valid for **1 hour**. Re-fetch via `GET /jobs/{id}` for a fresh URL.
-- **Output retention**: 7 days (Free), 30 days (Pro) or 90 days (Studio). After that, the file is deleted; the job record stays but the file URLs return 404.
+- **Output retention**: 7 days (Free), 30 days (Pro) or 90 days (Studio). After that, the file is deleted. The job record stays, but the file URLs return 404.
 - **Storage quota** caps total bytes across all your outputs. Delete old outputs or upgrade if you hit it.
 - **No separate per-output size limit**. Bounded by input cap and storage quota.
 
 ## Credit packs
 
-\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro and Studio add +25% to every purchase. Credits never expire. Failed jobs are not refunded automatically. See [credits and billing](/concepts/credits) for what a failed job pays.
+\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro and Studio add +25% to every purchase. Credits never expire. Failed jobs are not refunded automatically. See [credits and billing](/docs/concepts/credits) for what a failed job pays.
 
 ## API response limits
 
