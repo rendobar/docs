@@ -36,12 +36,13 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compos
 | Concurrent jobs | 1 | 20 | 50 |
 | Queued backlog | 50 | 1000 | 2500 |
 | API requests/min | 120 | 600 | 1200 |
-| Max input file | 500 MB | 10 GB | 10 GB |
+| Max input file | 500 MB | 10 GB | 20 GB |
 | Job timeout | 1 hour | 9 hours | 9 hours |
 | Output retention | 7 days | 30 days | 90 days |
 | Compose frame | Up to 1080p at 30 fps | Up to 1440p at 30 fps | Up to 4K at 60 fps |
 | Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
 | GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
+| Faster output delivery (an output of 512 MB or more streams into your bucket while it uploads) | No | No | Yes |
 
 `ffmpeg`, MCP, and webhooks are on every plan. Compose costs the same per output minute on every plan. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/docs/support/limits).
 

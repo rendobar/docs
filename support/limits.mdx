@@ -35,7 +35,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 | Concurrent jobs | 1 | 20 | 50 |
 | Queued backlog | 50 | 1000 | 2500 |
 | API requests / min | 120 | 600 | 1200 |
-| Max input file | 500 MB | 10 GB | 10 GB |
+| Max input file | 500 MB | 10 GB | 20 GB |
 | Total input per job | 2 GB | 8 GB | 8 GB |
 | Max job timeout | 1 hour | 9 hours | 9 hours |
 | Output retention | 7 days | 30 days | 90 days |
@@ -43,6 +43,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 | Compose frame | Up to 1080p at 30 fps | Up to 1440p at 30 fps | Up to 4K at 60 fps |
 | Compose with animated graphics | Up to 1080p at 30 fps | Up to 1080p at 30 fps | Up to 1080p at 30 fps |
 | GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
+| Faster output delivery (an output of 512 MB or more streams into your bucket while it uploads) | No | No | Yes |
 | Team members | 2 | 3 | 10 |
 | Priority queue (jobs start first when runners are full) | No | No | Yes |
 | Audit log | No | No | Yes |
