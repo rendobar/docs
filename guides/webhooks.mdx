@@ -7,22 +7,6 @@ keywords: ["webhooks", "hmac signature", "job status webhook", "rendobar webhook
 canonical: "https://rendobar.com/docs/guides/webhooks"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/guides/webhooks#article",
-      "headline": "Webhooks for job events",
-      "description": "Receive job status events via signed HMAC POST. Create an endpoint in the dashboard, verify the signature, and handle retries.",
-      "datePublished": "2026-03-20",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 Webhooks push events to your server the moment a [job](/concepts/job) changes status or your balance runs low. No polling. Rendobar POSTs a signed JSON payload, your server verifies it and reacts.
 
 <Note>

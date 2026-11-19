@@ -8,22 +8,6 @@ canonical: "https://rendobar.com/docs/jobs/ffprobe"
 tag: "Live"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/jobs/ffprobe#article",
-      "headline": "Probe media metadata",
-      "description": "Run ffprobe on a video, audio, or image URL and get a normalized summary plus the full raw report: codec, resolution, duration, fps, rotation, HDR, audio.",
-      "datePublished": "2026-07-17",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 You write the `command` and Rendobar runs `ffprobe` as written, the same model as [FFmpeg](/jobs/ffmpeg). A bare media URL is a valid command: the defaults get filled in and you get a normalized `summary` next to the raw `format`, `streams`, and `chapters`.
 
 <Check>

@@ -47,11 +47,11 @@ Set a `size` preset or an exact `resolution`. If you set both, `resolution` wins
 | `youtube-hd`, `x-landscape`, `linkedin` | 1920 x 1080 |
 | `youtube-4k` | 3840 x 2160 |
 
-For a vertical Reel from landscape footage, set `"fit": "cover"` to fill the frame, or `"fit": "blur"` to show the whole picture over a blurred copy of itself. See [how a picture fills its box](/docs/jobs/compose/framing#how-a-picture-fills-its-box).
+For a vertical Reel from landscape footage, set `"fit": "cover"` to fill the frame, or `"fit": "blur"` to show the whole picture over a blurred copy of itself. See [how a picture fills its box](/jobs/compose/framing#how-a-picture-fills-its-box).
 
 ## Frame rate
 
-`fps` sets the frame rate, 30 by default. Each plan caps frame size and frame rate together: 1080p at 30 fps on Free, 1440p at 30 fps on Pro, and 4K at 60 fps on Studio. Animated graphics render up to 1080p at 30 fps on every self-serve plan. A video above your plan returns `403 PLAN_LIMIT` at submit, and [validation](/docs/jobs/compose/pricing#check-a-timeline-before-you-render) catches it first. See [what each plan renders](/docs/jobs/compose/pricing#what-each-plan-renders).
+`fps` sets the frame rate, 30 by default. Each plan caps frame size and frame rate together: 1080p at 30 fps on Free, 1440p at 30 fps on Pro, and 4K at 60 fps on Studio. Animated graphics render up to 1080p at 30 fps on every self-serve plan. A video above your plan returns `403 PLAN_LIMIT` at submit, and [validation](/jobs/compose/pricing#check-a-timeline-before-you-render) catches it first. See [what each plan renders](/jobs/compose/pricing#what-each-plan-renders).
 
 ## Quality
 
@@ -96,4 +96,4 @@ To set the encoder yourself, these override `quality`:
 "output": { "format": "png", "size": "1080p", "range": { "start": 4.5 } }
 ```
 
-The [output reference](/docs/jobs/compose/reference/output) lists every output field.
+The [output reference](/jobs/compose/reference/output) lists every output field.

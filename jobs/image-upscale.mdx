@@ -7,22 +7,6 @@ keywords: ["image upscale api", "ai image upscaler api", "super resolution api",
 canonical: "https://rendobar.com/docs/jobs/image-upscale"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/jobs/image-upscale#article",
-      "headline": "Upscale an image",
-      "description": "Run an image through a one-step diffusion restoration model to raise its resolution. Ask for a factor or a target height, and transparency survives.",
-      "datePublished": "2026-08-03",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 `image.upscale` increases an image's resolution on a hosted one-step diffusion model. Ask for a factor or a target height and the other side follows the source aspect ratio. The result is a png returned as a signed URL, the same async job shape as everything else on Rendobar.
 
 This model reconstructs detail rather than only sharpening what is already there. A compressed or soft source comes back rebuilt, not just enlarged. That is a different job from a faithful resize, and it is worth knowing which one you asked for.

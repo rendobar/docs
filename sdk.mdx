@@ -7,23 +7,9 @@ keywords: ["typescript sdk", "node sdk", "@rendobar/sdk", "javascript client", "
 canonical: "https://rendobar.com/docs/sdk"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/sdk#article",
-      "headline": "Use the TypeScript SDK",
-      "description": "Submit a job from Node, Deno, Bun, or Workers with @rendobar/sdk, wait for it to finish, and read the signed output URL.",
-      "datePublished": "2026-06-22",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 `@rendobar/sdk` is the TypeScript client for the Rendobar API: typed methods, automatic retries, and responses already unwrapped from the `{ data }` envelope. ESM and CommonJS builds run on Node 18+, Deno, Bun, Workers, and the browser.
+
+Overview and examples: [TypeScript SDK integration](https://rendobar.com/integrations/typescript-sdk/).
 
 ```bash
 npm install @rendobar/sdk
@@ -180,7 +166,7 @@ A WebSocket can't carry an `Authorization` header, so the SDK appends your API k
 
 `billing.state()` returns balance and plan. `billing.usage({ start, end })` totals spend for a window, `billing.usageByClient({ days })` groups that spend by what submitted each job (`dashboard`, `sdk`, `cli`, `mcp`, `n8n`, `api`), and `billing.transactions({ page, limit })` reads the ledger. `billing.checkoutPlan("pro" | "studio")` returns a checkout URL, or moves an existing paid subscription to that plan. It replaces `billing.checkoutPro()`, which is deprecated.
 
-`compose.validate(params)` checks a [compose](/docs/jobs/compose) timeline for free and, when it is valid, returns its price. `compose.effects()` and `compose.engineEffects()` list the effects a timeline can name.
+`compose.validate(params)` checks a [compose](/jobs/compose) timeline for free and, when it is valid, returns its price. `compose.effects()` and `compose.engineEffects()` list the effects a timeline can name.
 
 `apiKeys`, `assets`, and `orgs` follow the same shape. Organization membership lives on `orgs.members` (`invite`, `changeRole`, `remove`) and `orgs.invitations` (`revoke`). The older `team` resource still works and is marked deprecated.
 

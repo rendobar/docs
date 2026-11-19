@@ -8,22 +8,6 @@ canonical: "https://rendobar.com/docs/jobs/compress"
 tag: "Live"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/jobs/compress#article",
-      "headline": "Compress media to a target quality or size",
-      "description": "Compress an image, video, or audio file to the smallest size that clears a perceptual quality bar, or hit a byte budget and get the quality scored. AVIF, JPEG XL, AV1, Opus, and more.",
-      "datePublished": "2026-07-25",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 `compress.target` takes a media URL and a target, then searches candidate encodes for the smallest file that still clears the bar. Images are scored with SSIMULACRA2, video with VMAF, and every job returns a report: the achieved score, the compression ratio, and what the search did.
 
 <Check>

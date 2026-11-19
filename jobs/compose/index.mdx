@@ -7,22 +7,6 @@ keywords: ["video compose api", "json timeline to video", "video transitions api
 canonical: "https://rendobar.com/docs/jobs/compose"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/jobs/compose#article",
-      "headline": "Compose: render from a timeline",
-      "description": "Render a video from a declarative JSON timeline: tracks, clips, transitions, text, shapes, keyframes and effects.",
-      "datePublished": "2026-06-21",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 <Frame caption="An illustrated story rendered by Compose from the request below: each drawing sketches itself in, then fills with colour, under its caption.">
   <video src="https://cdn.rendobar.com/compose/site/make/subtitles.mp4?v=9" poster="https://cdn.rendobar.com/compose/site/make/subtitles.jpg?v=9" autoPlay loop muted playsInline controls />
 </Frame>
@@ -520,54 +504,54 @@ You can also write the timing out. This gives the same render, with the second c
 ]
 ```
 
-See [Transitions](/docs/jobs/compose/transitions) for the seven transition kinds, wipe shapes, directions and your own wipe patterns.
+See [Transitions](/jobs/compose/transitions) for the seven transition kinds, wipe shapes, directions and your own wipe patterns.
 
 ## Everything else
 
 <CardGroup cols={2}>
-  <Card title="How the timeline works" icon="layer-group" href="/docs/jobs/compose/timeline">
+  <Card title="How the timeline works" icon="layer-group" href="/jobs/compose/timeline">
     Tracks, clips, scenes, and when you can leave timing out.
   </Card>
-  <Card title="Media clips" icon="photo-film" href="/docs/jobs/compose/media">
+  <Card title="Media clips" icon="photo-film" href="/jobs/compose/media">
     Video, images, audio and Lottie, with trim, speed, opacity and blend modes.
   </Card>
-  <Card title="Placing and framing a clip" icon="crop-simple" href="/docs/jobs/compose/framing">
+  <Card title="Placing and framing a clip" icon="crop-simple" href="/jobs/compose/framing">
     Position, scale, rotate, crop, fit and pin a clip, each shown before and after.
   </Card>
-  <Card title="Text and titles" icon="font" href="/docs/jobs/compose/text">
+  <Card title="Text and titles" icon="font" href="/jobs/compose/text">
     Readable titles, entrances and exits, and kinetic titles a word at a time.
   </Card>
-  <Card title="Subtitles and timers" icon="closed-captioning" href="/docs/jobs/compose/captions">
+  <Card title="Subtitles and timers" icon="closed-captioning" href="/jobs/compose/captions">
     Every caption in one clip, from cues or an .srt file, and countdowns.
   </Card>
-  <Card title="Fonts and languages" icon="text-size" href="/docs/jobs/compose/fonts">
+  <Card title="Fonts and languages" icon="text-size" href="/jobs/compose/fonts">
     Google fonts by name, bundled families, your own files, and other scripts.
   </Card>
-  <Card title="Shapes" icon="shapes" href="/docs/jobs/compose/shapes">
+  <Card title="Shapes" icon="shapes" href="/jobs/compose/shapes">
     Bars, cards, circles and SVG paths, with gradients, outlines and shadows.
   </Card>
-  <Card title="Keyframes and easing" icon="chart-line" href="/docs/jobs/compose/motion">
+  <Card title="Keyframes and easing" icon="chart-line" href="/jobs/compose/motion">
     Animate anything numeric with 33 easings, and turn clips in 3D.
   </Card>
-  <Card title="Transitions" icon="shuffle" href="/docs/jobs/compose/transitions">
+  <Card title="Transitions" icon="shuffle" href="/jobs/compose/transitions">
     Crossfade, fade, slide, push, wipe and zoom, and your own wipe patterns.
   </Card>
-  <Card title="Effects" icon="wand-magic-sparkles" href="/docs/jobs/compose/effects">
+  <Card title="Effects" icon="wand-magic-sparkles" href="/jobs/compose/effects">
     Colour, looks, stylised filters, keying and every other filter by name.
   </Card>
-  <Card title="Audio and mixing" icon="waveform-lines" href="/docs/jobs/compose/audio">
+  <Card title="Audio and mixing" icon="waveform-lines" href="/jobs/compose/audio">
     Levels, ducking, panning, the mix, voice clean-up and audiograms.
   </Card>
-  <Card title="Output" icon="file-video" href="/docs/jobs/compose/output">
+  <Card title="Output" icon="file-video" href="/jobs/compose/output">
     Formats, size presets, frame rate, quality and transparent video.
   </Card>
-  <Card title="Pricing and validation" icon="receipt" href="/docs/jobs/compose/pricing">
+  <Card title="Pricing and validation" icon="receipt" href="/jobs/compose/pricing">
     One price per minute of output, and a free check before you render.
   </Card>
-  <Card title="Edit like a professional" icon="clapperboard" href="/docs/jobs/compose/craft">
+  <Card title="Edit like a professional" icon="clapperboard" href="/jobs/compose/craft">
     The pacing, transition and text conventions working editors follow.
   </Card>
-  <Card title="Reference" icon="table-list" href="/docs/jobs/compose/reference/timeline">
+  <Card title="Reference" icon="table-list" href="/jobs/compose/reference/timeline">
     Every field, generated from the schema the API validates with.
   </Card>
 </CardGroup>
@@ -575,9 +559,9 @@ See [Transitions](/docs/jobs/compose/transitions) for the seven transition kinds
 ## See also
 
 - [Compose features](https://rendobar.com/compose/features/): every engine feature, searchable, most shown before and after
-- [Job output](/docs/concepts/job#the-output): the output shape every job returns
-- [Animated captions](/docs/jobs/captions/animate): word-level captions over a rendered video
-- [Compress](/docs/jobs/compress): shrink the render to a size or quality budget
-- [FFmpeg](/docs/jobs/ffmpeg): drop to a raw command when the timeline cannot express it
-- [Webhooks](/docs/guides/webhooks): receive `job.completed` instead of polling
-- [Plan limits](/docs/support/limits): render duration and file-size caps per plan
+- [Job output](/concepts/job#the-output): the output shape every job returns
+- [Animated captions](/jobs/captions/animate): word-level captions over a rendered video
+- [Compress](/jobs/compress): shrink the render to a size or quality budget
+- [FFmpeg](/jobs/ffmpeg): drop to a raw command when the timeline cannot express it
+- [Webhooks](/guides/webhooks): receive `job.completed` instead of polling
+- [Plan limits](/support/limits): render duration and file-size caps per plan

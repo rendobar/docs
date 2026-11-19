@@ -7,22 +7,6 @@ keywords: ["rendobar error codes", "api error reference", "ffmpeg error troubles
 canonical: "https://rendobar.com/docs/support/errors"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/support/errors#article",
-      "headline": "API error codes reference",
-      "description": "Every API error code, its HTTP status, and recommended action. Errors follow the {error: {code, message}} envelope on all endpoints.",
-      "datePublished": "2026-03-20",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 Every error response uses the same shape:
 
 ```json
@@ -41,7 +25,7 @@ Check the HTTP status and `error.code` before reading `data`.
 | `INVALID_JOB_TYPE` | 400 | Job type not registered or not on your plan |
 | `FEATURE_NOT_ENABLED` | 400 | A compose job uses animated text or 3D turns, which are still rolling out and not enabled for your account yet. Render without them, or contact support to get access |
 | `INSUFFICIENT_CREDITS` | 402 | Top up at [app.rendobar.com/billing](https://app.rendobar.com/billing) |
-| `PLAN_LIMIT` | 403 | Plan limit hit (job timeout, GPU, a compose frame or frame rate above the plan). See [Limits](/docs/support/limits) and [which plan lifts it](#plan-limit-upgrade) |
+| `PLAN_LIMIT` | 403 | Plan limit hit (job timeout, GPU, a compose frame or frame rate above the plan). See [Limits](/support/limits) and [which plan lifts it](#plan-limit-upgrade) |
 | `RATE_LIMITED` | 429 | Back off per `Retry-After` header |
 | `NOT_FOUND` | 404 | Resource doesn't exist or isn't visible to your org |
 | `CONFLICT` | 409 | Request conflicts with current state (e.g. cancelling a complete job) |
