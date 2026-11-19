@@ -122,6 +122,22 @@ function main() {
     }
   }
 
+  // --- 4. Internal links written with the /docs prefix ---
+  // Mintlify adds the /docs subpath to every internal link itself, so a markdown
+  // link written ](/docs/jobs/ffmpeg) renders href="/docs/docs/jobs/ffmpeg", a 404.
+  // Measured on the live site 2026-11-19: ~30 such URLs sat in Search Console.
+  for (const file of walkPages(ROOT)) {
+    const lines = readFileSync(file, 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      if (/\]\(\/docs[/)#]|href="\/docs[/"#]/.test(line)) {
+        violations.push(
+          `${toSlug(file)}:${i + 1} links "/docs/..." but Mintlify prefixes /docs itself, ` +
+            `so the page ships a /docs/docs/... link. Write the path without /docs, e.g. ](/jobs/ffmpeg).`
+        );
+      }
+    });
+  }
+
   if (violations.length === 0) {
     console.log(
       `Checked ${pageSlugs.size} pages, ${navSlugs.size} nav entries, ` +
