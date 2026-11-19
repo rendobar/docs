@@ -7,22 +7,6 @@ keywords: ["callbacks", "job callback", "per-job callback", "cloudflare workflow
 canonical: "https://rendobar.com/docs/guides/callbacks"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/guides/callbacks#article",
-      "headline": "Per-job completion callbacks",
-      "description": "Attach a per-job completion callback that POSTs the job result to a URL you choose, and resume a Cloudflare Workflow without polling.",
-      "datePublished": "2026-07-25",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 A callback attaches a completion hook to one [job](/concepts/job). You pass `callback.url` when you create the job, and the moment that job reaches a terminal state Rendobar POSTs the result there. The body is byte-identical to the [webhook](/guides/webhooks) envelope, so the same receiver code handles both. The correlation lives in the URL you chose, so the receiver stays stateless and never polls `GET /jobs/{id}`.
 
 ## How do I attach a callback?

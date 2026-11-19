@@ -7,7 +7,7 @@ keywords: ["add subtitles to video api", "srt to video api", "countdown timer vi
 canonical: "https://rendobar.com/docs/jobs/compose/captions"
 ---
 
-A `subtitles` clip shows every caption of a video, each at its time. A `timer` counts over its own length. Both take the same `style` as a [text clip](/docs/jobs/compose/text): font, size, colour, stroke, shadow and background box.
+A `subtitles` clip shows every caption of a video, each at its time. A `timer` counts over its own length. Both take the same `style` as a [text clip](/jobs/compose/text): font, size, colour, stroke, shadow and background box.
 
 ## Subtitles
 
@@ -31,7 +31,7 @@ Each cue has a `start` and an `end`, in seconds from the clip's start, and its `
   <video src="https://cdn.rendobar.com/compose/showcase/subtitles/after.mp4" poster="https://cdn.rendobar.com/compose/showcase/subtitles/after.jpg" autoPlay loop muted playsInline controls />
 </Frame>
 
-Keep captions low in the frame and clear of the buttons phone apps draw on top. On a vertical video, keep them between 13.5% and 83% of the height. See [editing conventions](/docs/jobs/compose/craft#text-placement-and-size).
+Keep captions low in the frame and clear of the buttons phone apps draw on top. On a vertical video, keep them between 13.5% and 83% of the height. See [editing conventions](/jobs/compose/craft#text-placement-and-size).
 
 ### From a file
 
@@ -50,7 +50,7 @@ Point `src` at an `.srt` or `.vtt` file instead of listing cues. The file sets t
 | `line` | Appears whole at its start time. The default. |
 | `typewriter` | Types out word by word over the cue, as in social video. |
 
-For word-by-word captions made from the speech, with no cues to write, run [animated captions](/docs/jobs/captions/animate) on the finished video.
+For word-by-word captions made from the speech, with no cues to write, run [animated captions](/jobs/captions/animate) on the finished video.
 
 ## Timers
 
@@ -81,4 +81,4 @@ For word-by-word captions made from the speech, with no cues to write, run [anim
 
 Subtitles and timers take an entrance in `style.animate`, limited to `fade` and the four slides (`slideUp`, `slideDown`, `slideLeft`, `slideRight`). They reject `blur`, `scale`, a split with `by`, and an exit with `out`. Only a text clip takes an exit.
 
-Every field is in the [subtitles](/docs/jobs/compose/reference/subtitles) and [timer](/docs/jobs/compose/reference/timer) references.
+Every field is in the [subtitles](/jobs/compose/reference/subtitles) and [timer](/jobs/compose/reference/timer) references.

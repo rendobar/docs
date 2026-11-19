@@ -210,7 +210,7 @@ There is no `line` or `square` type. A line is a rect with a small height, and `
 
 ## Animation
 
-You animate a shape with [keyframes](/docs/jobs/compose/motion) on `position`, `size` and `rotate` in the transform, and on `color` and `radius` in the shape. For a progress bar, grow the width.
+You animate a shape with [keyframes](/jobs/compose/motion) on `position`, `size` and `rotate` in the transform, and on `color` and `radius` in the shape. For a progress bar, grow the width.
 
 ```json
 {
@@ -242,8 +242,8 @@ The engine has two ways to draw a shape, with different features. The API reject
 
 ## What else a shape takes
 
-[`blendMode`](/docs/jobs/compose/media#blend-modes) mixes a shape with the layer below. Effects apply to it as to any clip, and opacity keyframes fade it in and out. A track of only shapes renders as a base layer, so a solid colour background needs no files at all.
+[`blendMode`](/jobs/compose/media#blend-modes) mixes a shape with the layer below. Effects apply to it as to any clip, and opacity keyframes fade it in and out. A track of only shapes renders as a base layer, so a solid colour background needs no files at all.
 
 Shapes have no path stroke and no per-corner radius. For anything beyond that, use an `image` asset.
 
-Every shape field is in the [shape reference](/docs/jobs/compose/reference/shape).
+Every shape field is in the [shape reference](/jobs/compose/reference/shape).

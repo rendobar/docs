@@ -7,23 +7,7 @@ keywords: ["credit-based billing", "nanodollar pricing", "rendobar credits", "vi
 canonical: "https://rendobar.com/docs/concepts/credits"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/concepts/credits#article",
-      "headline": "Credits and billing",
-      "description": "Get per-job nanodollar billing from a prepaid credit balance. Free includes a signup grant, Pro and Studio add monthly credits, and credits never expire.",
-      "datePublished": "2026-03-20",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
-Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compose](/docs/jobs/compose/pricing) bills per minute of the video you get back. Every other job type bills for the compute it consumed, including jobs that fail.
+Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compose](/jobs/compose/pricing) bills per minute of the video you get back. Every other job type bills for the compute it consumed, including jobs that fail.
 
 ## Plans
 
@@ -44,7 +28,7 @@ Per-job billing from a prepaid credit balance. New accounts get $5 free. [Compos
 | GPU FFmpeg (NVENC/CUDA) | No | Yes | Yes |
 | Faster output delivery (an output of 512 MB or more streams into your bucket while it uploads) | No | No | Yes |
 
-`ffmpeg`, MCP, and webhooks are on every plan. Compose costs the same per output minute on every plan. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/docs/support/limits).
+`ffmpeg`, MCP, and webhooks are on every plan. Compose costs the same per output minute on every plan. Animated graphics above 1080p or 30 fps need an enterprise plan. Full limits table: [Limits](/support/limits).
 
 For a full pricing breakdown and plan comparison, see [rendobar.com/pricing/](https://rendobar.com/pricing/).
 
@@ -76,7 +60,7 @@ Because the submit gate checks `balance > 0` rather than an estimate, a single l
 
 `compose` bills per second of the video you get back, at \$0.04 per minute of output on every plan, with a 15-second minimum per render. Frame size and animated graphics do not change the rate. Plans differ in what they can render. 1440p needs Pro, 4K and 60 fps need Studio, and a video above your plan returns `403 PLAN_LIMIT` before it renders. An enterprise plan carries its own contract rate. Email `hello@rendobar.com`.
 
-A compose render that fails on Rendobar's side is free. When the failure may come from your input, such as the render tool exiting on a bad file, it pays for the compute it used at 2x. `POST /compose/validate` returns the price before you render. Full detail: [compose pricing](/docs/jobs/compose/pricing).
+A compose render that fails on Rendobar's side is free. When the failure may come from your input, such as the render tool exiting on a bad file, it pays for the compute it used at 2x. `POST /compose/validate` returns the price before you render. Full detail: [compose pricing](/jobs/compose/pricing).
 
 If your balance is at or below zero when you submit:
 
@@ -122,15 +106,15 @@ Returns daily usage by job type: count, amount charged, and compute seconds.
 
 ## See also
 
-- [Job lifecycle](/docs/concepts/job): where the debit happens
-- [Limits](/docs/support/limits): full quota table
-- [FFmpeg reference](/docs/jobs/ffmpeg): the per-compute-second cost model
-- [Compose pricing](/docs/jobs/compose/pricing): the per-output-minute cost model
+- [Job lifecycle](/concepts/job): where the debit happens
+- [Limits](/support/limits): full quota table
+- [FFmpeg reference](/jobs/ffmpeg): the per-compute-second cost model
+- [Compose pricing](/jobs/compose/pricing): the per-output-minute cost model
 
 ## Related
 
-- [Plan limits and quotas](/docs/support/limits): exact rate, file, and storage caps per plan
-- [Job lifecycle](/docs/concepts/job): when the debit lands and what statuses mean
-- [Error codes](/docs/support/errors): `INSUFFICIENT_CREDITS`, `PLAN_LIMIT`, and friends
+- [Plan limits and quotas](/support/limits): exact rate, file, and storage caps per plan
+- [Job lifecycle](/concepts/job): when the debit lands and what statuses mean
+- [Error codes](/support/errors): `INSUFFICIENT_CREDITS`, `PLAN_LIMIT`, and friends
 - [Pricing](https://rendobar.com/pricing/): plan comparison and credit packs
-- [FAQ on cost](/docs/support/faq): common pricing and billing questions
+- [FAQ on cost](/support/faq): common pricing and billing questions

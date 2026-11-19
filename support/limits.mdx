@@ -7,22 +7,6 @@ keywords: ["rendobar limits", "api rate limits", "plan limits", "file size limit
 canonical: "https://rendobar.com/docs/support/limits"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/support/limits#article",
-      "headline": "Plan limits and quotas",
-      "description": "Free, Pro and Studio plan limits: rate limits, file size caps, output retention, concurrent jobs, storage quotas and compose frames.",
-      "datePublished": "2026-03-20",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. For plan prices and credit packs, see [pricing](https://rendobar.com/pricing/).
 
 ## Plan limits
@@ -48,7 +32,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 | Audit log | No | No | Yes |
 | Priority support | No | No | Yes |
 
-`ffmpeg`, MCP, and webhooks are on every plan. A compose video above your plan's frame or frame rate returns `403 PLAN_LIMIT` before it renders, and `upgradeTo` in `error.details` names the plan that renders it. Animated graphics above 1080p or 30 fps need an enterprise plan. `GET /account/capabilities` returns these as `composeMaxPixels`, `composeMaxFps`, `composeAnimatedMaxPixels` and `composeAnimatedMaxFps`. See [compose pricing](/docs/jobs/compose/pricing).
+`ffmpeg`, MCP, and webhooks are on every plan. A compose video above your plan's frame or frame rate returns `403 PLAN_LIMIT` before it renders, and `upgradeTo` in `error.details` names the plan that renders it. Animated graphics above 1080p or 30 fps need an enterprise plan. `GET /account/capabilities` returns these as `composeMaxPixels`, `composeMaxFps`, `composeAnimatedMaxPixels` and `composeAnimatedMaxFps`. See [compose pricing](/jobs/compose/pricing).
 
 ## How long do output URLs last?
 
@@ -59,7 +43,7 @@ Every limit Rendobar enforces, by plan. Pulled from `PLAN_LIMITS` in the API. Fo
 
 ## Credit packs
 
-\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro and Studio add +25% to every purchase. Credits never expire. Failed jobs are not refunded automatically. See [credits and billing](/docs/concepts/credits) for what a failed job pays.
+\$10 / \$25 / \$50 / \$100 (or custom, \$10 minimum). Pro and Studio add +25% to every purchase. Credits never expire. Failed jobs are not refunded automatically. See [credits and billing](/concepts/credits) for what a failed job pays.
 
 ## API response limits
 

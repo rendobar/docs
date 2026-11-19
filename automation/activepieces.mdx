@@ -7,22 +7,6 @@ keywords: ["activepieces", "activepieces piece", "rendobar activepieces", "@rend
 canonical: "https://rendobar.com/docs/automation/activepieces"
 ---
 
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "@id": "https://rendobar.com/docs/automation/activepieces#article",
-      "headline": "Run media jobs from Activepieces",
-      "description": "Install the Rendobar piece on Activepieces, add an API key, and run media jobs that pause the flow until they finish, with a trigger for finished jobs.",
-      "datePublished": "2026-09-15",
-      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
-      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
-    })
-  }}
-/>
-
 The Rendobar piece runs FFmpeg commands, compression, captions and image generation from an Activepieces flow, and a trigger starts a flow when a job finishes. **Run a Media Job** pauses the flow while the job runs, so an hour-long render holds no worker and does not count against the flow's timeout.
 
 Overview and flow examples: [Rendobar for Activepieces](https://rendobar.com/integrations/activepieces/).
