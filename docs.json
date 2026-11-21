@@ -113,7 +113,9 @@
                 "pages": [
                   "jobs/image-generate",
                   "jobs/image-edit",
-                  "jobs/image-upscale"
+                  "jobs/image-upscale",
+                  "jobs/3d-generate",
+                  "jobs/3d-prepare"
                 ]
               }
             ]

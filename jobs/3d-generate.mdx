@@ -1,0 +1,227 @@
+---
+title: "Generate a 3D model from a photo or prompt"
+sidebarTitle: "3D generate"
+description: "Generate a 3D model from a photo or a text prompt. Name a printer to get it closed, sized, oriented and sliced, or leave it out for a textured model."
+icon: "cube"
+keywords: ["image to 3d api", "text to 3d api", "3d model generation api", "photo to 3d print", "stl api", "3mf api", "glb api", "ai 3d model api", "3d printing api"]
+canonical: "https://rendobar.com/docs/jobs/3d-generate"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/jobs/3d-generate#article",
+      "headline": "Generate a 3D model from a photo or prompt",
+      "description": "Generate a 3D model from a photo or a text prompt. Name a printer to get it closed, sized, oriented and sliced, or leave it out for a textured model.",
+      "datePublished": "2026-11-04",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
+    })
+  }}
+/>
+
+`3d.generate` makes a 3D model from a photo of an object, several photos of it, or a text prompt. Set `printer` and the model comes back closed, sized, oriented and sliced for that printer, with the print time and material. Leave `printer` out and you get a textured model for apps, engines and AR.
+
+A job runs for a few minutes on GPUs. Check the request first with [`POST /3d/validate`](#check-a-request-for-free), which is free.
+
+## Print a model from a photo
+
+<CodeGroup>
+
+```ts SDK
+import { createClient } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const request = {
+  type: "3d.generate" as const,
+  inputs: { front: "https://cdn.rendobar.com/assets/examples/3d-gnome.jpg" },
+  params: { printer: "bambu-a1", sizeMm: 100, formats: ["stl", "3mf"] },
+};
+
+const check = await client.mesh3d.validate(request);
+if (!check.valid) throw new Error(check.problems.map((p) => p.code).join(", "));
+
+const job = await client.jobs.run(request);
+for (const file of job.output?.files ?? []) console.log(file.path, file.url);
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "3d.generate",
+    "inputs": { "front": "https://cdn.rendobar.com/assets/examples/3d-gnome.jpg" },
+    "params": { "printer": "bambu-a1", "sizeMm": 100, "formats": ["stl", "3mf"] }
+  }'
+# Returns { "data": { "id": "job_...", "status": "waiting" } }.
+# Poll GET /jobs/{id} until "status": "complete".
+```
+
+</CodeGroup>
+
+## Generate a textured model from a prompt
+
+Without `printer`, the job returns a textured model. Give `sizeMm` the object's real size, because AR viewers and engines show the model at that size.
+
+```json
+{
+  "type": "3d.generate",
+  "params": {
+    "prompt": "a wooden treasure chest with gold trim, closed lid",
+    "enhancePrompt": true,
+    "sizeMm": 600,
+    "formats": ["glb", "usdz"],
+    "polycount": 20000
+  }
+}
+```
+
+## What does a 3D job return?
+
+`output.files` holds one file per requested format, then the sliced print file when a printer is set, then `reference.png`, the picture the shape was built from. With a prompt, the job draws that picture first.
+
+| File | When | Open it in |
+|---|---|---|
+| `model.stl`, `model.3mf`, `model.obj`, `model.glb` | The formats you asked for | A slicer for `stl` and `3mf`, any 3D app for the rest |
+| `model.usdz`, `model.fbx` | The formats you asked for | Apple AR Quick Look, Unity, Unreal |
+| `model.gcode.3mf` | FDM printer set, slicing on | The printer's slicer, already sliced. Print it as is. |
+| `model.goo` or `model.sl1` | Resin printer set, slicing on | Copy to the printer. `.goo` is the Elegoo Saturn 4 Ultra's own file. |
+| `part-1.stl` … and `pin.stl` | The model was split to fit the plate | Print each part, glue with the pins |
+| `reference.png` | Always | A preview of what the shape was built from |
+
+`output.data` reports what you got:
+
+| Field | Meaning |
+|---|---|
+| `target` | `print` or `asset` |
+| `mesh` | `triangles`, `watertight`, `bboxMm` (the real size), `volumeMm3` |
+| `seed` | Pass it back to reproduce this result |
+| `printability` | Print only. `status` (`ok`, `warning`, `error`), `parts.count`, `orientation`, `hollow` |
+| `slice` | Print only. `status`, `printTimeSeconds`, `filamentGrams` (FDM) or `resinMl` (resin), `fitsPlate`, `calibrated` |
+| `warnings` | Anything the job adjusted or skipped, with a stable `code` |
+
+Print time and material are slicer estimates. `calibrated: false` means resin exposure uses a standard resin's default: check it against your resin.
+
+## What it does and does not do
+
+- A textured model has at most 40,000 triangles, one material with 2048 px colour and metallic-roughness maps, and no normal map. Set `polycount` lower for a platform budget.
+- The model has no rig, no LODs and no quad topology. A character you want to animate needs rigging and usually retopology.
+- From one photo, the hidden sides are guessed. Add `back`, `left` and `right` photos of the same object when the back matters.
+- Generated models are not dimensionally accurate. A part that has to fit or carry load, such as a bracket, a gear or a ring band, belongs in CAD.
+
+## Get a good result
+
+- **Photo.** One object, whole and centred, nothing cropped. A plain background, soft even light without hard shadows, taken from a step back. Glass, chrome and printed text come out poorly.
+- **Prompt.** Name the object first, then its shape, material and style. Describe the object, not a photo of it: no lighting, camera or background. For a print, ask for chunky solid forms and leave out the stand, because `base` adds one.
+- **One object per job.** Several objects in one photo merge into one lump.
+
+## Printers
+
+| `printer` | Printer | Type | Plate (mm) |
+|---|---|---|---|
+| `bambu-a1` | Bambu Lab A1 | FDM | 256 × 256 × 256 |
+| `bambu-a1-mini` | Bambu Lab A1 mini | FDM | 180 × 180 × 180 |
+| `bambu-p1s` | Bambu Lab P1S | FDM | 256 × 256 × 250 |
+| `bambu-x1c` | Bambu Lab X1 Carbon | FDM | 256 × 256 × 250 |
+| `prusa-mk4s` | Prusa MK4S | FDM | 250 × 210 × 220 |
+| `elegoo-centauri-carbon` | Elegoo Centauri Carbon | FDM | 256 × 256 × 256 |
+| `elegoo-saturn-4-ultra` | Elegoo Saturn 4 Ultra | Resin | 218.88 × 122.88 × 220 |
+| `generic-fdm` | Any FDM printer | FDM | 220 × 220 × 250 |
+| `generic-resin` | Any resin printer | Resin | 130 × 80 × 160 |
+
+## Check a request for free
+
+`POST /3d/validate` takes the same `type`, `inputs` and `params` as `POST /jobs` and runs nothing. A valid request returns `resolved`, every setting the job would use with defaults filled in. An invalid one returns `problems`, each with a stable `code`:
+
+| Code | Fix |
+|---|---|
+| `images_or_prompt` | Send a `front` photo or a `prompt`, not both and not neither |
+| `view_without_front` | `back`, `left` and `right` need a `front` |
+| `printer_required` | A print format (`stl`, `3mf`) or a print option needs `printer` |
+| `hollow_requires_resin` | `hollow` works on resin printers only |
+| `fdm_option_on_resin` | `brim` and `infillPercent` are FDM options |
+| `exceeds_plate` | `sizeMm` is larger than the plate and `split` is off |
+| `premium_requires_front` | `quality: "premium"` refines against a photo |
+
+The same check is `mesh3d.validate` in the SDK and the `validate_3d` tool in the [MCP server](/mcp-server).
+
+## Inputs
+
+<ParamField body="front" type="string">
+  URL of a photo of the object from the front, or an uploaded asset's URL. Required unless you send `prompt`.
+</ParamField>
+
+<ParamField body="back" type="string">
+  Optional photo from behind. `left` and `right` work the same way. They need `front`.
+</ParamField>
+
+## Parameters
+
+<ParamField body="prompt" type="string">
+  Describe the object instead of sending a photo. Up to 2000 characters.
+</ParamField>
+
+<ParamField body="enhancePrompt" type="boolean" default="false">
+  Rewrite a short prompt into a fuller description before the picture is drawn. The rewrite becomes `prompt` and your text stays as `promptOriginal`.
+</ParamField>
+
+<ParamField body="printer" type="string">
+  The printer to prepare for, from the table above. Setting it turns on the print preparation.
+</ParamField>
+
+<ParamField body="sizeMm" type="number">
+  Longest side in mm, proportions kept. Default 100 with a printer, 1000 without.
+</ParamField>
+
+<ParamField body="formats" type="string[]">
+  Any of `glb`, `stl`, `3mf`, `usdz`, `fbx`, `obj`. Default `stl` with a printer, `glb` without.
+</ParamField>
+
+<ParamField body="quality" type="string" default="standard">
+  `premium` also refines the surface against the front photo for finer detail. It needs `front` and runs longer.
+</ParamField>
+
+<ParamField body="polycount" type="integer">
+  Upper bound on triangles. Default 500000 with a printer, 100000 without. A textured model has at most 40000.
+</ParamField>
+
+<ParamField body="candidates" type="integer">
+  Shapes to generate before keeping the one closest to the photo, 1 to 5. Default 1 on standard, 3 on premium.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Reproduces a run. Random when absent, and returned in `output.data.seed`.
+</ParamField>
+
+<ParamField body="removeBackground" type="boolean" default="true">
+  Cut the object out of its photo's background first.
+</ParamField>
+
+<ParamField body="minWallMm" type="number">
+  Print only. Close features thinner than this. Default 1.2 on FDM, 1.0 on resin, 0 turns it off. Set `remesh.thickenThinWalls` to thicken them instead.
+</ParamField>
+
+### Print options
+
+Each one applies only with a `printer`.
+
+| Option | What it does | Default |
+|---|---|---|
+| `orient.mode` | `photo` stands it as the photo shows, `auto` picks the pose needing least support, `keep` leaves it | `photo` |
+| `base.flattenMm` | Cut this much off the underside for a flat base | 1 (0 on resin) |
+| `base.plinth` | A round stand: `{ diameterMm, heightMm }` | none |
+| `hollow` | Resin only. `{}` hollows with the defaults, `wallMm` and `drainHoles` adjust it | off |
+| `split` | `mode` `auto` splits when an axis exceeds the plate, up to `maxParts` with `joint` `pin` | `auto`, 4 parts |
+| `slice.layerHeightMm` | 0.2, 0.12, 0.08, 0.05 or 0.03 | 0.2 FDM, 0.05 resin |
+| `slice.supports` | `tree`, `normal` or `none` | `tree` |
+| `slice.infillPercent` | FDM only | 15 |
+| `slice.enabled` | Turn slicing off for geometry only | true |
+
+## How is it billed?
+
+3D jobs run on every plan and bill on the compute each job uses, from your credit balance. The charge appears on the job when it settles. To make an existing mesh print-ready or convert it, use [`3d.prepare`](/jobs/3d-prepare).

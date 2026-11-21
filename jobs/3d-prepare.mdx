@@ -1,0 +1,87 @@
+---
+title: "Make a 3D model print-ready"
+sidebarTitle: "3D prepare"
+description: "Fix a mesh you already have and prepare it for your printer: rebuilt closed, thin walls fixed, oriented, hollowed, split and sliced, or converted."
+icon: "wrench"
+keywords: ["repair stl api", "make mesh watertight api", "3d print preparation api", "stl to 3mf api", "slice stl api", "hollow model api", "convert glb to usdz api"]
+canonical: "https://rendobar.com/docs/jobs/3d-prepare"
+---
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "@id": "https://rendobar.com/docs/jobs/3d-prepare#article",
+      "headline": "Make a 3D model print-ready",
+      "description": "Fix a mesh you already have and prepare it for your printer: rebuilt closed, thin walls fixed, oriented, hollowed, split and sliced, or converted.",
+      "datePublished": "2026-11-04",
+      "author": { "@type": "Organization", "@id": "https://rendobar.com/#organization" },
+      "publisher": { "@type": "Organization", "@id": "https://rendobar.com/#organization" }
+    })
+  }}
+/>
+
+`3d.prepare` takes a mesh you already have and runs the print preparation on it: rebuilt as a closed solid, walls too thin to print closed, scaled, oriented, given a flat base, hollowed for resin, split to fit the plate and sliced. Without a printer it converts the mesh to another format.
+
+It reads `glb`, `stl`, `obj`, `3mf` and `ply`. A `.gltf` with separate buffer files is not accepted, because one URL cannot carry them.
+
+## Prepare a mesh for a printer
+
+<CodeGroup>
+
+```ts SDK
+import { createClient } from "@rendobar/sdk";
+
+const client = createClient({ apiKey: "rb_YOUR_KEY" });
+
+const job = await client.jobs.run({
+  type: "3d.prepare",
+  inputs: { mesh: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Binary/Avocado.glb" },
+  params: { printer: "bambu-a1", sizeMm: 80, formats: ["stl", "3mf"] },
+});
+
+for (const file of job.output?.files ?? []) console.log(file.path, file.url);
+```
+
+```bash cURL
+curl -X POST "https://api.rendobar.com/jobs" \
+  -H "Authorization: Bearer rb_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "3d.prepare",
+    "inputs": { "mesh": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Binary/Avocado.glb" },
+    "params": { "printer": "bambu-a1", "sizeMm": 80, "formats": ["stl", "3mf"] }
+  }'
+```
+
+</CodeGroup>
+
+<Warning>
+Always set `sizeMm`. Without it the mesh is scaled to the default, 100 mm with a printer and 1000 mm without, not kept at its own size.
+</Warning>
+
+## Inputs
+
+<ParamField body="mesh" type="string" required>
+  URL of the mesh, or an uploaded asset's URL. `glb`, `stl`, `obj`, `3mf` or `ply`.
+</ParamField>
+
+<ParamField body="front" type="string">
+  A photo of the object. Needed for `quality: "premium"`, which refines the surface against it, and to texture a mesh without a printer.
+</ParamField>
+
+## Parameters
+
+`3d.prepare` takes the same parameters as [`3d.generate`](/jobs/3d-generate#parameters) except `prompt`, `enhancePrompt` and `candidates`: `printer`, `sizeMm`, `formats`, `quality`, `polycount`, `minWallMm` and every [print option](/jobs/3d-generate#print-options). The printer list, the output files and `output.data` are the same too.
+
+Without a photo, `orient.mode` defaults to `auto`, which picks the pose needing the least support.
+
+## Check a request for free
+
+`POST /3d/validate` with `"type": "3d.prepare"` returns every setting the job would use, or each problem with a stable code. See the [code table](/jobs/3d-generate#check-a-request-for-free).
+
+## How is it billed?
+
+On every plan, on the compute each job uses. The charge appears on the job when it settles.
