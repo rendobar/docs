@@ -134,6 +134,8 @@
             "icon": "code",
             "pages": [
               "sdk",
+              "sdk/python",
+              "sdk/go",
               "cli",
               "mcp-server"
             ]
@@ -226,10 +228,6 @@
     {
       "source": "/mcp/:slug*",
       "destination": "/mcp-server"
-    },
-    {
-      "source": "/sdk/:slug*",
-      "destination": "/sdk"
     },
     {
       "source": "/n8n/:slug*",

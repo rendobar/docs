@@ -1,0 +1,324 @@
+---
+title: "Use the Go SDK"
+sidebarTitle: "Go SDK"
+description: "Submit a job from Go with rendobar-go, wait for it under a context, and read the signed output URL, with a params struct per job type that the compiler checks."
+icon: "golang"
+keywords: ["go sdk", "golang sdk", "rendobar-go", "go video api", "Jobs.Run", "Jobs.Wait", "webhooks.Parse", "FfmpegParams", "go get rendobar"]
+canonical: "https://rendobar.com/docs/sdk/go"
+---
+
+`github.com/rendobar/rendobar-go` is the official Go client for Rendobar's media processing and AI generation API: a params struct per job type, a `context.Context` on every call, retries that never create a second job, and responses already unwrapped from the `{ data }` envelope. It needs Go 1.23 or later.
+
+Overview and examples: [Go SDK integration](https://rendobar.com/integrations/go-sdk/).
+
+```bash
+go get github.com/rendobar/rendobar-go
+```
+
+```go title="main.go"
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/rendobar/rendobar-go"
+)
+
+func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	rb := rendobar.New() // reads RENDOBAR_API_KEY
+
+	job, err := rb.Jobs.Run(ctx, rendobar.CreateParams{
+		Params: rendobar.FfmpegParams{Command: "ffmpeg -i source.mp4 -vf scale=1280:-2 -c:v libx264 -crf 23 out.mp4"},
+		Inputs: map[string]rendobar.Input{"source.mp4": rendobar.URL("https://cdn.rendobar.com/assets/examples/sample.mp4")},
+	}, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(job.Complete.Output.File.URL) // signed download URL
+}
+```
+
+`Jobs.Run` submits the job and waits until it completes, fails or is cancelled. A failed or cancelled job returns `*rendobar.JobFailedError` with the job attached, so after a nil error `job.Complete` is set.
+
+## Client options
+
+```go
+func newClient() *rendobar.Client {
+	return rendobar.New(
+		rendobar.WithAPIKey(os.Getenv("RENDOBAR_API_KEY")),
+		rendobar.WithTimeout(time.Minute),
+		rendobar.WithMaxRetries(2),
+		rendobar.WithApp("my-app"),
+	)
+}
+```
+
+| Option | Default | Purpose |
+|---|---|---|
+| `WithAPIKey` | `RENDOBAR_API_KEY` | `rb_` key from [Settings, API keys](https://app.rendobar.com). |
+| `WithBaseURL` | `https://api.rendobar.com` | API origin. Override for staging or a test server. |
+| `WithTimeout` | 30 s | Bound on each attempt, including reading the body. |
+| `WithMaxRetries` | 2 | Retries for 429, 5xx and connection errors. |
+| `WithHTTPClient` | a new `http.Client` | The HTTP client. The one you pass is copied, never changed. |
+| `WithApp` | none | Your app's name, sent in `X-Rendobar-Client`. |
+| `WithDeprecationHandler` | logs to stderr | Called once per deprecated endpoint you use. |
+
+With no key, `Jobs.Types` and `Jobs.Schema` still work. Every other call fails with `CodeMissingAPIKey` before it sends anything.
+
+## Jobs
+
+Every method takes a `ctx` first.
+
+| Method | Returns |
+|---|---|
+| `Jobs.Create(ctx, CreateParams)` | `*Created` with the job id, or `Replayed` set when the key was used before |
+| `Jobs.Wait(ctx, id, *WaitOptions)` | the job once it is `complete`, `failed`, or `cancelled` |
+| `Jobs.Run(ctx, CreateParams, *WaitOptions)` | `Create` plus `Wait`, a failed job as `*JobFailedError` |
+| `Jobs.Get(ctx, id)` | one job |
+| `Jobs.List(ctx, ListParams)` | one page |
+| `Jobs.All(ctx, ListParams)` | an iterator across every page |
+| `Jobs.Cancel(ctx, id)` | an error, nil once cancelled |
+| `Jobs.Download(ctx, id)` | the output file as a stream |
+| `Jobs.Logs(ctx, id)` | execution log lines |
+| `Jobs.Types(ctx)` | job types available to your org |
+| `Jobs.Schema(ctx, type)` | one job type's params |
+
+`CreateParams` carries `Params`, `Inputs`, `IdempotencyKey`, `Label`, `Destinations`, `Callback` and `ForceAsync`. `Params` and `Inputs` are per [job type](/jobs/ffmpeg).
+
+### Typed params
+
+Each job type has its own params struct, generated from the API's schema: `FfmpegParams`, `FfprobeParams`, `CompressTargetParams`, `CaptionBurnParams`, `ImageUpscaleParams`, and one per model for image generation and editing. The struct sets the job type, so a misspelt field or a wrong value type fails to compile.
+
+```go
+func upscale(ctx context.Context, rb *rendobar.Client) (*rendobar.Job, error) {
+	return rb.Jobs.Run(ctx, rendobar.CreateParams{
+		Params: rendobar.ImageUpscaleParams{
+			Model:  rendobar.ImageUpscaleModelSeedvr27b,
+			Sizing: rendobar.ImageUpscaleSizingHeight{Height: rendobar.Ptr[int64](2160)},
+		},
+		Inputs: map[string]rendobar.Input{"source": rendobar.URL("https://example.com/photo.jpg")},
+	}, nil)
+}
+```
+
+A field with a fixed set of values has its own type and constants. Every number and boolean is a pointer, which `rendobar.Ptr` makes. `Jobs.Create` checks the params against the schema before it sends anything, and refuses them with an `*rendobar.Error` whose code is `INVALID_ARGUMENT`, one `Problem` per mistake.
+
+An input is `rendobar.URL(...)`, `rendobar.URLs{...}` for a list, `rendobar.Content(...)` for a small inline text file, `rendobar.FromJob("job_...")` for another job's output, or `rendobar.Fonts{...}`. `rendobar.CustomParams{Type, Fields}` submits a job type newer than your SDK, and `compose`, whose nested timeline the SDK leaves untyped. The API checks it.
+
+### Wait
+
+```go
+func waitForJob(ctx context.Context, rb *rendobar.Client, id string) (*rendobar.Job, error) {
+	return rb.Jobs.Wait(ctx, id, &rendobar.WaitOptions{
+		Timeout:    10 * time.Minute,
+		OnProgress: func(j *rendobar.Job) { fmt.Println(j.Status()) },
+	})
+}
+```
+
+`Wait` polls until the job is `complete`, `failed`, or `cancelled`. Polling starts at 2 s and backs off to 10 s. Past the timeout it returns `*rendobar.WaitTimeoutError` with the job id, the last status and the last job read. The job may still finish.
+
+With no `Timeout`, the wait allows 5 minutes. Once the job reports its own time limit from your plan, the wait extends to that limit plus 2 minutes, so a long job is never reported as timed out while it runs. `Wait` returns a failed or cancelled job with a nil error. Only `Run` turns those into `*JobFailedError`.
+
+When your `ctx` ends during a wait, `Run` and `Wait` return `*rendobar.ContextError`. The job keeps running, and its `JobID` lets you call `Jobs.Get`, `Jobs.Wait` or `Jobs.Cancel` later.
+
+### Read the output
+
+A `rendobar.Job` has one field set per status: `Waiting`, `Dispatched`, `Running`, `Complete`, `Failed` or `Cancelled`. Check the status before reading the output:
+
+```go
+func printResult(job *rendobar.Job) {
+	switch {
+	case job.Complete != nil:
+		for _, f := range job.Complete.Output.Files {
+			fmt.Println(f.URL)
+		}
+	case job.Failed != nil:
+		fmt.Println(job.Failed.Error.Code, job.Failed.Error.Message)
+	default:
+		fmt.Println(job.ID(), job.Status())
+	}
+}
+```
+
+`Output.File` is the headline file (the single file, or the HLS or DASH manifest) and is nil for data-only jobs. The [output shape](/concepts/job#the-output) is the same for every job type. `JobComplete.Ffprobe()` reads an ffprobe job's result as the typed `FfprobeResult`. A status newer than your SDK leaves all six fields nil, and `job.ID()`, `job.Status()` and `job.IsTerminal()` still answer.
+
+`Jobs.Download` streams a job's output file. Close the body when you are done. `WithTimeout` bounds only the wait for the response headers, so a large file takes as long as your `ctx` allows.
+
+## Uploads and assets
+
+`Uploads.Create` sends a local file and returns the ready `*rendobar.Asset`. It takes an `io.ReaderAt` and the size, so an `*os.File` works. A large file goes up in parts, five at a time by default, and each part is retried up to 3 times:
+
+```go
+func uploadAndTrim(ctx context.Context, rb *rendobar.Client, path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil {
+		return "", err
+	}
+	asset, err := rb.Uploads.Create(ctx, f, info.Size(), rendobar.UploadParams{Filename: "clip.mp4"})
+	if err != nil {
+		return "", err
+	}
+	job, err := rb.Jobs.Run(ctx, rendobar.CreateParams{
+		Params: rendobar.FfmpegParams{Command: "ffmpeg -i clip.mp4 -t 5 out.mp4"},
+		Inputs: map[string]rendobar.Input{"clip.mp4": rendobar.URL("asset://" + asset.ID)},
+	}, nil)
+	if err != nil {
+		return "", err
+	}
+	return job.Complete.Output.File.URL, nil
+}
+```
+
+Each `Inputs` key is the filename staged in the working directory, and the command refers to it by that bare name. An upload expires after 24 hours unless `UploadParams.Persist` is set. `Assets.List`, `Assets.Get`, `Assets.Delete` and `Assets.Download` manage what the workspace holds.
+
+To deliver outputs to a [connected bucket](/storage), set `Destinations: []string{"storage://<id>/<folder>"}` on `CreateParams`.
+
+## Errors
+
+Check an error with `errors.As` and compare its `Code` with the `rendobar.Code...` constants:
+
+```go
+func explain(err error) {
+	var apiErr *rendobar.Error
+	if errors.As(err, &apiErr) {
+		switch apiErr.Code {
+		case rendobar.CodeNotFound:
+			fmt.Println("the job does not exist")
+		case rendobar.CodeRateLimited:
+			fmt.Println("retry after", apiErr.RetryAfter)
+		default:
+			fmt.Println(apiErr.Code, apiErr.StatusCode, apiErr.RequestID) // quote RequestID to support
+		}
+	}
+}
+```
+
+The API may add codes, so keep a default branch. `Error.Problems` lists what a refusal found wrong, each with a `Path`, a `Message` and, for a plan limit, the `UpgradeTo` plan. Calls that fail before anything is sent have `StatusCode` 0: `CodeMissingAPIKey`, `CodeInvalidAPIKey` and `CodeInvalidArgument`. The codes are in the [error catalogue](/support/errors).
+
+## Retries and idempotency
+
+A 429 is retried twice on every call. A 500, 502, 503 or 504 and a connection error are retried twice on a read and on a job submit, which carries its idempotency key. A create, update or delete that fails that way returns the error at once, because the API may have acted on it. Retries back off from half a second and honour a `Retry-After` of up to 60 seconds. `rendobar.WithMaxRetries(0)` sends each request once.
+
+A retried submit never creates a second job. Each `Jobs.Create` call sends one idempotency key on every retry. Pass `IdempotencyKey` yourself, or one from `rendobar.GenerateIdempotencyKey`, to make separate calls safe to repeat. A repeat with the same params returns the first job with `Created.Replayed` set. The same key with different params returns a 409 with code `CONFLICT`.
+
+When a submit fails in a way that may have created the job (your `ctx` ending, a connection error, a 429 or 5xx after the last retry), `Jobs.Create` returns `*rendobar.SubmitError`. Submit again with its key to get that job:
+
+```go
+func submitOnce(ctx context.Context, rb *rendobar.Client, params rendobar.CreateParams) (*rendobar.Created, error) {
+	created, err := rb.Jobs.Create(ctx, params)
+	var cutOff *rendobar.SubmitError
+	if errors.As(err, &cutOff) {
+		params.IdempotencyKey = cutOff.IdempotencyKey
+		return rb.Jobs.Create(ctx, params) // the same job, never a second one
+	}
+	return created, err
+}
+```
+
+## Webhooks
+
+`Webhooks.Create` registers an endpoint and returns its `SigningSecret`, in full only there and in `RotateSecret`. `Test`, `ListDeliveries` and `RetryDelivery` operate it.
+
+Import `github.com/rendobar/rendobar-go/webhooks` to verify and read every delivery:
+
+```go
+func handleWebhook(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20)) // the exact bytes the signature covers
+	if err != nil {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	}
+	event, err := webhooks.Parse(body, r.Header, os.Getenv("RENDOBAR_WEBHOOK_SECRET"))
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized) // errors.Is(err, webhooks.ErrSignature) and the like name why
+		return
+	}
+	payload, err := event.Payload()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	switch data := payload.(type) {
+	case *webhooks.JobCompletedData:
+		if data.Output != nil && data.Output.File != nil { // a data job, such as ffprobe, has no file
+			log.Println(data.JobID, data.Output.File.URL)
+		}
+	case *webhooks.JobFailedData:
+		log.Println(data.JobID, data.Error.Code)
+	default:
+		// an event this handler ignores, or *webhooks.UnknownPayload for one newer than the SDK
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+```
+
+Pass the raw body, never re-encoded JSON. `Parse` checks the HMAC over `{timestamp}.{body}`, refuses deliveries more than 5 minutes old (`ErrTimestamp`), a signature that does not match (`ErrSignature`) and an empty secret (`ErrNoSecret`), and accepts the previous secret during a rotation. `event.ID` is the delivery id, the same on every retry of one delivery. `webhooks.Verify` is the signature check alone, as a bool. Event payloads are in the [webhooks guide](/guides/webhooks).
+
+## Realtime
+
+Import `github.com/rendobar/rendobar-go/realtime` to stream events over a WebSocket. It is its own package, so programs that do not import it do not build in its WebSocket library. `Client.Job` follows one job and returns after its final status:
+
+```go
+func follow(ctx context.Context, jobID string) error {
+	rt := realtime.New() // reads RENDOBAR_API_KEY, like rendobar.New
+	for ev, err := range rt.Job(ctx, jobID) {
+		if err != nil {
+			return err
+		}
+		switch e := ev.(type) {
+		case *realtime.JobProgress:
+			if e.Progress != nil {
+				fmt.Printf("%s %.0f%%\n", e.Phase, *e.Progress*100)
+			}
+		case *realtime.JobStatusChanged:
+			fmt.Println("status", e.Status)
+		}
+	}
+	return nil
+}
+```
+
+`Client.Events` streams every event in the org until your `ctx` ends. Both reconnect with backoff and resume after the last event they yielded, so you never see one twice. The key travels in the `Authorization` header, never in the URL.
+
+## Pagination
+
+`Jobs.List` returns one page, up to 100 jobs. `Jobs.All` fetches every page for you as you range over it:
+
+```go
+func listFailed(ctx context.Context, rb *rendobar.Client) error {
+	for job, err := range rb.Jobs.All(ctx, rendobar.ListParams{Status: rendobar.StatusFailed}) {
+		if err != nil {
+			return err
+		}
+		fmt.Println(job.ID(), job.Type(), job.CreatedAt())
+	}
+	return nil
+}
+```
+
+## Examples
+
+The [examples folder](https://github.com/rendobar/rendobar-go/tree/main/examples) has small programs that use the SDK end to end: a quickstart, an upload trimmed and streamed back to disk, a batch worker with idempotency keys and every error type, a `net/http` webhook receiver that manages its own endpoint, and an account admin. CI runs every one.
+
+## Versioning
+
+The module follows semantic versioning. While it is at 0.x, a minor release may tighten types, and the changelog says so. Deprecations are announced before anything is removed. CI tests Go 1.23 and the two newest Go releases. See [versioning and deprecations](/support/versioning) and the [changelog](https://rendobar.com/changelog/).
+
+## See also
+
+- [Job types](/jobs/ffmpeg): the type, inputs, and params for every job
+- [How a job works](/concepts/job): statuses and the output shape
+- [Webhooks](/guides/webhooks): event payloads and delivery retries
+- [Error codes](/support/errors): every code a request or job returns

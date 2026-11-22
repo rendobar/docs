@@ -1,0 +1,279 @@
+---
+title: "Use the Python SDK"
+sidebarTitle: "Python SDK"
+description: "Submit a job from Python with the rendobar package, wait for it with a sync or asyncio client, and read the signed output URL and typed results."
+icon: "python"
+keywords: ["python sdk", "rendobar python", "pip install rendobar", "python video api", "asyncio client", "jobs.run", "jobs.wait", "webhooks.parse", "AsyncRendobar"]
+canonical: "https://rendobar.com/docs/sdk/python"
+---
+
+`rendobar` is the official Python client for Rendobar's media processing and AI generation API: sync and asyncio clients, params typed per job type, retries that never create a second job, and responses already unwrapped from the `{ data }` envelope. It runs on Python 3.10 to 3.13.
+
+Overview and examples: [Python SDK integration](https://rendobar.com/integrations/python-sdk/).
+
+```bash
+pip install rendobar
+```
+
+```python title="transcode.py"
+from rendobar import Rendobar
+
+with Rendobar() as rb:  # reads RENDOBAR_API_KEY
+    job = rb.jobs.run({
+        "type": "ffmpeg",
+        "inputs": {"source.mp4": "https://cdn.rendobar.com/assets/examples/sample.mp4"},
+        "params": {"command": "ffmpeg -i source.mp4 -vf scale=1280:-2 -c:v libx264 -crf 23 out.mp4"},
+    })
+
+print(job.output.files[0].url)  # signed download URL
+```
+
+`jobs.run` submits the job and waits for it. It returns a `JobComplete`, and raises `JobFailedError` when the job fails or is cancelled. The `with` block closes the client's connections when it ends. A client you keep for the life of your app can skip it and call `rb.close()` at shutdown.
+
+## Client options
+
+```python
+from rendobar import Rendobar
+
+rb = Rendobar(
+    api_key="rb_YOUR_KEY",              # default: the RENDOBAR_API_KEY environment variable
+    base_url="https://api.rendobar.com",
+    timeout=30.0,                       # seconds per HTTP request
+    max_retries=2,                      # retries of a 429, a 5xx or a failed connection
+    app="my-app",                       # sent in X-Rendobar-Client, so your jobs show where they came from
+)
+```
+
+With no key and no `RENDOBAR_API_KEY`, `jobs.types()` and `jobs.schema()` still work, since they need no key. Every other call raises `AuthenticationError` with code `MISSING_API_KEY` before it sends anything.
+
+### asyncio
+
+```python
+import asyncio
+
+from rendobar import AsyncRendobar
+
+
+async def main() -> None:
+    async with AsyncRendobar() as rb:
+        job = await rb.jobs.run({"type": "ffprobe", "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"}})
+        print(job.output.data)
+
+
+asyncio.run(main())
+```
+
+`AsyncRendobar` takes the same arguments and has the same methods as `Rendobar`, awaited. Every example below works on both.
+
+## Jobs
+
+| Method | Returns |
+|---|---|
+| `jobs.create(job, **options)` | `JobCreated`, `JobCompletedOnSubmit` for a job that finished during the request, or `JobReplayed` |
+| `jobs.wait(job_id, **options)` | the job once it is `complete`, `failed`, or `cancelled` |
+| `jobs.run(job, **options)` | `create` plus `wait`, the `JobComplete` |
+| `jobs.get(job_id)` | one job |
+| `jobs.list(status, type, limit, offset)` | a `Page` of jobs |
+| `jobs.list_all(**filters)` | an iterator across every page |
+| `jobs.cancel(job_id)` | `JobCancellation` |
+| `jobs.download(job_id, to)` | bytes written, streamed to a path or an open file |
+| `jobs.logs(job_id)` | execution log lines |
+| `jobs.types()` | job types available to your org |
+| `jobs.schema(type)` | one job type's params |
+
+The first argument says what to run: `type`, `params` and, for job types that read files, `inputs`. Each is per [job type](/jobs/ffmpeg). Everything about how to run it is a keyword argument: `idempotency_key`, `label`, `destinations`, `callback` and `force_async` on `create`, and `timeout`, `interval`, `max_interval`, `on_progress` and `throw_on_failure` on `wait`. `run` takes all of them.
+
+### Typed params
+
+The job dict is typed per job type. Pyright, mypy and your editor know each type's params, so a misspelt or missing param, a wrong value type, or an unknown job type fails the type check before anything runs. Enum params are closed sets, so `"compute": "tpu"` fails too.
+
+A dict built in a variable first needs the annotation, or the checker infers a plain `dict`:
+
+```python
+from rendobar import Rendobar, SubmitJob
+
+rb = Rendobar()
+probe: SubmitJob = {"type": "ffprobe", "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"}}
+rb.jobs.create(probe, label="probe")
+```
+
+`UntypedJob(type, params)` submits a job type newer than your installed SDK, and `compose`, whose nested timeline the SDK leaves untyped. The API validates it.
+
+### Wait
+
+```python
+from rendobar import Rendobar
+
+rb = Rendobar()
+created = rb.jobs.create({"type": "ffprobe", "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"}})
+job = rb.jobs.wait(created.id, timeout=600, on_progress=lambda j: print(j.status))
+```
+
+`wait` polls until the job is `complete`, `failed`, or `cancelled`. Polling starts at 2 s and backs off to 10 s. Past the timeout it raises `WaitTimeoutError` with the job id and the last status seen. The job may still finish.
+
+With no `timeout`, the wait allows 5 minutes. Once the job reports its own budget (your plan's per-job limit), the wait extends to that budget plus 2 minutes, so a long job is never reported as timed out while it runs. `wait` returns a failed job unless you pass `throw_on_failure=True`.
+
+### Read the output
+
+A job is one class per status. Only a `JobComplete` has `output`, and only a `JobFailed` has `error`, so check which one you have:
+
+```python
+from rendobar import JobComplete, JobFailed, Rendobar
+
+rb = Rendobar()
+job = rb.jobs.get("job_abc123")
+if isinstance(job, JobComplete):
+    print(job.output.files[0].url)  # every file is in output.files
+elif isinstance(job, JobFailed):
+    print(job.error.code, job.error.message)
+```
+
+`output.file` is the headline file (the single file, or the HLS or DASH manifest) and is `None` for data-only jobs. The [output shape](/concepts/job#the-output) is the same for every job type. A job type with a typed result reads it with `output_data`. Today that is ffprobe:
+
+```python
+from rendobar import FfprobeResult, Rendobar, output_data
+
+rb = Rendobar()
+probe = rb.jobs.run({"type": "ffprobe", "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"}})
+result = output_data(probe, FfprobeResult)
+if result.summary is not None:
+    print(result.summary)
+```
+
+A job whose status is newer than your SDK comes back as `UnknownJob` with `id`, `status` and `raw`, rather than raising.
+
+## Uploads and assets
+
+`uploads.create` sends a local file (a path, or bytes with a `filename`) to storage on presigned URLs and returns the ready `Asset`. A large file goes up in parts, in parallel, and a file on disk is streamed, never read into memory whole. A job reads the asset as `asset://<id>`:
+
+```python
+from rendobar import Rendobar
+
+
+def trim(rb: Rendobar, path: str) -> str:
+    asset = rb.uploads.create(path, content_type="video/mp4", on_progress=lambda p: print(p.loaded, "of", p.total))
+    job = rb.jobs.run({
+        "type": "ffmpeg",
+        "inputs": {"clip.mp4": f"asset://{asset.id}"},
+        "params": {"command": "ffmpeg -i clip.mp4 -t 5 out.mp4"},
+    })
+    rb.assets.delete(asset.id)
+    return job.output.files[0].url
+```
+
+Each `inputs` key is the filename staged in the working directory, and the command refers to it by that bare name. An upload expires after 24 hours unless you pass `persist=True`. `assets.list`, `assets.get`, `assets.delete` and `assets.download` manage what the workspace holds.
+
+To deliver outputs to a [connected bucket](/storage), pass `destinations=["storage://<id>/<folder>"]` to `jobs.create` or `jobs.run`.
+
+## Errors
+
+Everything the SDK raises is a `RendobarError` with a `code`. API refusals raise a subclass per status: `BadRequestError` (400), `AuthenticationError` (401), `InsufficientCreditsError` (402), `PermissionDeniedError` (403), `NotFoundError` (404), `ConflictError` (409), `RateLimitError` (429) and `InternalServerError` (5xx). Each carries `status_code` and `request_id`.
+
+```python
+from rendobar import NotFoundError, Rendobar, RendobarError
+
+rb = Rendobar()
+try:
+    rb.jobs.get("job_missing")
+except NotFoundError as err:
+    print(err.code)  # "NOT_FOUND"
+except RendobarError as err:
+    print(err.status_code, err.code, err.request_id)  # quote request_id to support
+```
+
+A refusal that lists what is wrong has `problems`, each with a `path`, a `message` and, on a plan refusal, `upgrade_to`. `APIConnectionError` and `APITimeoutError` mean no response arrived. `JobFailedError`, `WaitTimeoutError` and `WebhookSignatureError` come from `run`, `wait` and webhook parsing. Compare `code` with strings, since a newer API can send a code your SDK does not list. The codes are in the [error catalogue](/support/errors).
+
+## Retries and idempotency
+
+429, 500, 502, 503, 504 and a connection that could not be made are retried twice by default (`max_retries`). A 5xx is retried only for a request that is safe to repeat: a read, a job submit, a cancel. A write such as `webhooks.create()` raises at once, since it may have taken effect. The client honours `Retry-After` up to 60 seconds, and otherwise backs off from half a second with jitter.
+
+A retried submit never creates a second job. With no `idempotency_key`, `jobs.create` generates one for that call and sends it on every retry. Pass your own key, such as an order id, to make separate calls safe to repeat:
+
+```python
+from rendobar import JobReplayed, Rendobar, SubmitJob
+
+rb = Rendobar()
+job: SubmitJob = {"type": "ffprobe", "params": {"command": "https://cdn.rendobar.com/assets/examples/sample.mp4"}}
+first = rb.jobs.create(job, idempotency_key="order-1042")
+again = rb.jobs.create(job, idempotency_key="order-1042")
+print(isinstance(again, JobReplayed), again.id == first.id)  # True True
+```
+
+The same key with different params raises `ConflictError` (409). When a submit fails in a way that may still have created the job, the error's `idempotency_key` holds the key that was sent. Submit again with it to get that job, not a second one. `generate_idempotency_key()` makes keys of the same kind.
+
+## Webhooks
+
+`webhooks.create(name=..., url=..., subscribed_events=[...])` registers an endpoint and returns its `signing_secret`, in plaintext only there and in `rotate_secret()`. `test`, `list_deliveries` and `retry_delivery` operate it.
+
+Verify and read every delivery with `rendobar.webhooks.parse`:
+
+```python
+import os
+from typing import Mapping
+
+from rendobar import WebhookSignatureError
+from rendobar.webhooks import JobCompletedWebhookEvent, JobFailedWebhookEvent, parse
+
+
+def handle_rendobar_webhook(raw_body: bytes, headers: Mapping[str, str]) -> int:
+    try:
+        event = parse(raw_body, headers, os.environ["RENDOBAR_WEBHOOK_SECRET"])
+    except WebhookSignatureError:
+        return 401
+    if isinstance(event, JobCompletedWebhookEvent):
+        print(event.data.job_id, [file.url for file in event.data.output.files])
+    elif isinstance(event, JobFailedWebhookEvent):
+        print(event.data.job_id, event.data.error.code)
+    return 200  # acknowledge every genuine delivery, including events you do not handle
+```
+
+Pass the raw body, never parsed JSON. `parse` checks the HMAC over `{timestamp}.{body}`, rejects deliveries more than 5 minutes old, and accepts the previous secret during a rotation. It returns the event typed by name, and an event newer than your SDK as `UnknownWebhookEvent`, never as an exception. `verify()` is the signature check alone, as a bool. Event payloads are in the [webhooks guide](/guides/webhooks).
+
+## Realtime
+
+`realtime.subscribe_job` streams one job over a WebSocket and stops after its final status. `realtime.connect` streams every event in the org. Both need the `realtime` extra:
+
+```bash
+pip install "rendobar[realtime]"
+```
+
+```python
+from rendobar import Rendobar, realtime
+
+
+def follow(rb: Rendobar, job_id: str) -> None:
+    for event in rb.realtime.subscribe_job(job_id, timeout=600):
+        if isinstance(event, realtime.JobProgress):
+            print(event.phase, event.progress)  # 0 to 1, or None when it cannot be told
+        elif isinstance(event, realtime.JobStatusChanged):
+            print("status", event.status, event.final)
+```
+
+Both reconnect with backoff and resume after the last event they yielded, so you never see one twice. The key travels in the `Authorization` header, never in the URL. On `AsyncRendobar` the same methods return async generators.
+
+## Pagination
+
+A list comes back as a `Page`: iterate it, or read `data` and `meta.total`. `jobs.list_all` fetches every page as you iterate, 100 jobs at a time:
+
+```python
+from rendobar import Rendobar
+
+rb = Rendobar()
+for job in rb.jobs.list_all(status="failed"):
+    print(job.id, job.status)
+```
+
+## Examples
+
+The [examples folder](https://github.com/rendobar/rendobar-python/tree/main/examples) has small projects that run end to end: a quickstart, an upload trimmed by ffmpeg and streamed back to disk, a batch worker with idempotency keys and error handling, a webhook receiver, an account admin script, and a job followed live over the event stream. It also has a FastAPI app and Django views that submit a job and verify a webhook.
+
+## Versioning
+
+The package follows semantic versioning. While it is at 0.x, a minor release may tighten types, and the changelog says so. Deprecations are announced before anything is removed. See [versioning and deprecations](/support/versioning) and the [changelog](https://rendobar.com/changelog/).
+
+## See also
+
+- [Job types](/jobs/ffmpeg): the type, inputs, and params for every job
+- [How a job works](/concepts/job): statuses and the output shape
+- [Webhooks](/guides/webhooks): event payloads and delivery retries
+- [Error codes](/support/errors): every code a request or job returns
